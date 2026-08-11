@@ -1,0 +1,53 @@
+name: "myjob"
+seed: 0
+
+log_wandb: false
+disable_tqdm: true
+mode: "train"
+
+
+
+defaults:
+  - train: exomild
+  - eval: default
+  - model: exomild
+  - data/detection: default
+  - data/train: default
+  - data/inference: default
+  - sampler: exomild
+  - cluster: jeanzay
+  - _self_
+
+
+stdout: INFO
+hydra:
+  run:
+    #dir: "./data/${mode}/${now:%Y-%m-%d_%H-%M-%S}/${id}"
+    #dir: "./data/run/${mode}/${now:%Y-%m-%d_%H-%M-%S}/${name}"
+    dir: .
+  sweep:
+    dir: "./data/run/${mode}/${now:%Y-%m-%d_%H-%M-%S}_mr_${cluster.id}"
+    #subdir: "${hydra.job.num}_${name}"
+    subdir: "${hydra.job.num}_${data.grid_detection.filenames}_${seed}_${name}"
+  job_logging:
+    version: 1
+    formatters:
+      simple:
+        format: '[%(name)s][%(levelname)s] - %(message)s'
+      detailed:
+        format: '[%(asctime)s][%(name)s][%(levelname)s] - %(message)s'
+    handlers:
+      console:
+        class: logging.StreamHandler
+        formatter: simple
+        level: ${stdout}
+        stream: ext://sys.stdout
+      file:
+        class : logging.handlers.RotatingFileHandler
+        formatter: detailed
+        level: DEBUG
+        filename: debug.log
+    root:
+      handlers: [console, file]
+
+    disable_existing_loggers: false

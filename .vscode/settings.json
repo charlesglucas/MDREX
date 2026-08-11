@@ -1,0 +1,30 @@
+{
+    "git.ignoreLimitWarning": true,
+    
+    // Python interpreter sur le serveur distant
+    "python.pythonPath": "/usr/bin/python3",
+
+    // Jupyter intégré pour plots inline
+    "jupyter.notebookFileRoot": "${workspaceFolder}",
+    "jupyter.askForKernelRestart": false,
+    
+    // Matplotlib settings pour SSH headless
+    "python.dataScience.showPlotViewer": true,
+    
+    // Terminal SSH
+    "remote.SSH.showLoginTerminal": true,
+    
+    // Activer l’extension Remote-SSH
+    "remote.SSH.remotePlatform": {
+        "edgar": "linux"
+    },
+
+    // (Optionnel) Timeout et debugging
+    "remote.SSH.connectTimeout": 30,
+    "remote.SSH.enableDynamicForwarding": true,
+
+     // 🔧 X11 FORWARDING VSCode
+    "remote.SSH.remoteForwardX11": true,
+    "remote.SSH.remoteX11Display": "auto",
+    "remote.SSH.useLocalServer": false
+}

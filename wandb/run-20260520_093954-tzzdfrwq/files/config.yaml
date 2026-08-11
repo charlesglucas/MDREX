@@ -1,0 +1,1199 @@
+_wandb:
+    value:
+        cli_version: 0.26.1
+        e:
+            2rqpxssvujsdpl1yo1az8xzcbx1nrlkz:
+                args:
+                    - name=exomild
+                    - log_wandb=true
+                    - data.train.num_workers=16
+                codePath: main.py
+                codePathLocal: main.py
+                cpu_count: 64
+                cpu_count_logical: 128
+                cudaVersion: "13.0"
+                disk:
+                    /:
+                        total: "30333186048"
+                        used: "20870365184"
+                email: cglucas1@gmail.com
+                executable: /srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/.venv/bin/python
+                git:
+                    commit: 8d12b6e3e0831c4db71d07f707fcb2cd0aecd7cf
+                    remote: git@github.com:charlesglucas/EXMILDPACO.git
+                gpu: NVIDIA RTX 6000 Ada Generation
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Ada
+                      cudaCores: 18176
+                      memoryTotal: "51527024640"
+                      name: NVIDIA RTX 6000 Ada Generation
+                      uuid: GPU-878daae3-9c8d-57b9-8976-d711b28b033f
+                host: vercors14-4.grenoble.grid5000.fr
+                memory:
+                    total: "270108983296"
+                os: Linux-5.10.0-38-amd64-x86_64-with-glibc2.31
+                program: /srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/main.py
+                python: CPython 3.9.2
+                root: /srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
+                startedAt: "2026-05-20T07:39:54.018885Z"
+                writerId: 2rqpxssvujsdpl1yo1az8xzcbx1nrlkz
+        m: []
+        python_version: 3.9.2
+        t:
+            "1":
+                - 1
+                - 5
+                - 50
+                - 51
+                - 53
+            "2":
+                - 1
+                - 5
+                - 50
+                - 51
+                - 53
+            "3":
+                - 13
+                - 16
+                - 41
+            "4": 3.9.2
+            "5": 0.26.1
+            "12": 0.26.1
+            "13": linux-x86_64
+cluster.account:
+    value: ofy
+cluster.array_arg:
+    value: null
+cluster.array_max:
+    value: 9
+cluster.cleanup:
+    value: module purge
+cluster.cmd:
+    value: sbatch
+cluster.cpus_task:
+    value: 10
+cluster.directive:
+    value: '#SBATCH'
+cluster.engine:
+    value: SLURM
+cluster.gpus:
+    value: 1
+cluster.id:
+    value: jz
+cluster.launchers.0:
+    value: default
+cluster.launchers.1:
+    value: besteffort
+cluster.name:
+    value: jeanzay
+cluster.node:
+    value: null
+cluster.nodes:
+    value: 1
+cluster.partition:
+    value: v100-16g
+cluster.qos:
+    value: qos_gpu-t3
+cluster.shell.bin_path:
+    value: /usr/bin/bash
+cluster.shell.config_path:
+    value: ~/.bashrc
+cluster.tasks_node:
+    value: 1
+cluster.user:
+    value: uzm62av
+cluster.walltime:
+    value: "19:59:59"
+cluster.workspace:
+    value: /gpfswork/rech/ofy/uzm62av
+data.detection.alpha_max:
+    value: 0.0001
+data.detection.alpha_min:
+    value: 0
+data.detection.batch_size:
+    value: 1
+data.detection.crop:
+    value: 10
+data.detection.crop_bg:
+    value: 40
+data.detection.dataset_params.channel_idx:
+    value: 0
+data.detection.dataset_params.clips_per_obs_max:
+    value: 1
+data.detection.dataset_params.dilation:
+    value: 1
+data.detection.dataset_params.drop_short_clips:
+    value: false
+data.detection.dataset_params.filter_obs_params.dual_filter:
+    value: DB_H23
+data.detection.dataset_params.filter_obs_params.frame_quality:
+    value: 0
+data.detection.dataset_params.filter_obs_params.n_frames_min:
+    value: 16
+data.detection.dataset_params.filter_obs_params.obs_category:
+    value: null
+data.detection.dataset_params.filter_obs_params.obs_id:
+    value: HD_216803__2015-06-27__09-36-00
+data.detection.dataset_params.filter_obs_params.rot_min:
+    value: 0
+data.detection.dataset_params.filter_obs_params.split:
+    value: null
+data.detection.dataset_params.filter_obs_params.status.0:
+    value: 0
+data.detection.dataset_params.multibands:
+    value: false
+data.detection.dataset_params.n_frames:
+    value: 64
+data.detection.dataset_params.path_db:
+    value: /scratch/vasher/tbodrito/exo/data/db_new
+data.detection.dataset_params.rot_scale:
+    value: 1
+data.detection.dataset_params.stride:
+    value: 1
+data.detection.dataset_params.suffix_lmdb:
+    value: lmdb_256
+data.detection.distance_min:
+    value: 25
+data.detection.exp_coeff:
+    value: 7
+data.detection.flip_rot:
+    value: false
+data.detection.force_n_frames_post:
+    value: null
+data.detection.force_n_frames_pre:
+    value: null
+data.detection.force_rot_post:
+    value: null
+data.detection.force_rot_pre:
+    value: null
+data.detection.interpolation:
+    value: linear
+data.detection.n_cubes:
+    value: 5
+data.detection.n_max:
+    value: 15
+data.detection.n_min:
+    value: 3
+data.detection.n_repeat:
+    value: 100
+data.detection.name:
+    value: detection
+data.detection.num_workers:
+    value: 0
+data.detection.obj_size:
+    value: 256
+data.detection.obs_id:
+    value: HD_216803__2015-06-27__09-36-00
+data.detection.psf_model:
+    value: gaussian_2d
+data.detection.psf_size_inj:
+    value: null
+data.detection.range_max_adaptive:
+    value: 4
+data.detection.repeat_idx:
+    value: null
+data.detection.reverse_rot_post:
+    value: true
+data.detection.rv_mode:
+    value: linear
+data.detection.sampling_mode:
+    value: cartesian
+data.detection.scale:
+    value: 1
+data.detection.seed:
+    value: 0
+data.detection.sep_max:
+    value: 1.38
+data.detection.shuffle:
+    value: false
+data.detection.subset:
+    value: null
+data.detection.use_adaptive:
+    value: true
+data.inference.batch_size:
+    value: 1
+data.inference.channel_idx:
+    value: null
+data.inference.channel_sortframes:
+    value: 0
+data.inference.crop:
+    value: 10
+data.inference.crop_bg:
+    value: 40
+data.inference.crop_center:
+    value: 256
+data.inference.filter_name:
+    value: DB_H23
+data.inference.interpolation:
+    value: linear
+data.inference.n_repeat:
+    value: 100
+data.inference.name:
+    value: inference
+data.inference.num_workers:
+    value: 0
+data.inference.path_root:
+    value: null
+data.inference.psf_model:
+    value: gaussian_2d
+data.inference.psf_size_inj:
+    value: null
+data.inference.recursive:
+    value: false
+data.inference.repeat_idx:
+    value: null
+data.inference.subset:
+    value: null
+data.inference.use_amp:
+    value: false
+data.inference.use_centered:
+    value: false
+data.train.alpha_max:
+    value: 3e-05
+data.train.alpha_min:
+    value: 1e-06
+data.train.augmentations.0:
+    value: rot90
+data.train.augmentations.1:
+    value: time_flip
+data.train.augmentations.2:
+    value: spatial_flip
+data.train.augmentations.3:
+    value: rot_flip
+data.train.augmentations.4:
+    value: rot_reverse
+data.train.augmentations.5:
+    value: shuffle_frames
+data.train.batch_size:
+    value: 1
+data.train.crop:
+    value: 10
+data.train.crop_bg:
+    value: 40
+data.train.dataset_params_train.channel_idx:
+    value: 0
+data.train.dataset_params_train.clips_per_obs_max:
+    value: null
+data.train.dataset_params_train.dilation:
+    value: 1
+data.train.dataset_params_train.drop_short_clips:
+    value: true
+data.train.dataset_params_train.filter_obs_params.dual_filter:
+    value: DB_H23
+data.train.dataset_params_train.filter_obs_params.frame_quality:
+    value: 2
+data.train.dataset_params_train.filter_obs_params.n_frames_min:
+    value: 16
+data.train.dataset_params_train.filter_obs_params.obs_category:
+    value: null
+data.train.dataset_params_train.filter_obs_params.obs_id:
+    value: null
+data.train.dataset_params_train.filter_obs_params.rot_min:
+    value: 0
+data.train.dataset_params_train.filter_obs_params.split:
+    value: train
+data.train.dataset_params_train.filter_obs_params.status.0:
+    value: 0
+data.train.dataset_params_train.multibands:
+    value: false
+data.train.dataset_params_train.n_frames:
+    value: 64
+data.train.dataset_params_train.n_obs_max:
+    value: null
+data.train.dataset_params_train.n_repeat:
+    value: null
+data.train.dataset_params_train.path_db:
+    value: ../DiscDSM/data/db_new
+data.train.dataset_params_train.rot_scale:
+    value: 1
+data.train.dataset_params_train.stride:
+    value: 1
+data.train.dataset_params_train.suffix_lmdb:
+    value: lmdb_256
+data.train.dataset_params_val.channel_idx:
+    value: 0
+data.train.dataset_params_val.clips_per_obs_max:
+    value: 1
+data.train.dataset_params_val.dilation:
+    value: 1
+data.train.dataset_params_val.drop_short_clips:
+    value: true
+data.train.dataset_params_val.filter_obs_params.dual_filter:
+    value: DB_H23
+data.train.dataset_params_val.filter_obs_params.frame_quality:
+    value: 2
+data.train.dataset_params_val.filter_obs_params.n_frames_min:
+    value: 16
+data.train.dataset_params_val.filter_obs_params.obs_category:
+    value: null
+data.train.dataset_params_val.filter_obs_params.obs_id:
+    value: HD_216803__2015-06-27__09-36-00
+data.train.dataset_params_val.filter_obs_params.rot_min:
+    value: 10
+data.train.dataset_params_val.filter_obs_params.split:
+    value: null
+data.train.dataset_params_val.filter_obs_params.status.0:
+    value: 0
+data.train.dataset_params_val.multibands:
+    value: false
+data.train.dataset_params_val.n_frames:
+    value: 64
+data.train.dataset_params_val.n_repeat:
+    value: 20
+data.train.dataset_params_val.path_db:
+    value: data/db_new
+data.train.dataset_params_val.rot_scale:
+    value: 1
+data.train.dataset_params_val.stride:
+    value: 1
+data.train.dataset_params_val.suffix_lmdb:
+    value: lmdb_256
+data.train.distance_min:
+    value: 25
+data.train.exp_coeff:
+    value: null
+data.train.force_rot:
+    value: null
+data.train.interpolation:
+    value: linear
+data.train.n_max:
+    value: 10
+data.train.n_min:
+    value: 3
+data.train.name:
+    value: train
+data.train.num_workers:
+    value: 16
+data.train.obj_size:
+    value: 256
+data.train.psf_model:
+    value: gaussian_2d
+data.train.psf_size_inj:
+    value: null
+data.train.range_max_adaptive:
+    value: 4
+data.train.repeat_train:
+    value: null
+data.train.rv_mode:
+    value: linear
+data.train.sampling_mode:
+    value: cartesian
+data.train.scale:
+    value: 1
+data.train.sep_max:
+    value: 1.38
+data.train.subset:
+    value: null
+data.train.symmetric_flux_train:
+    value: false
+data.train.use_adaptive:
+    value: true
+disable_tqdm:
+    value: true
+eval.dilation_t:
+    value: 1
+eval.erode:
+    value: 1
+eval.iou_thresh:
+    value: 0
+eval.labels_pred_method:
+    value: contiguous
+eval.main_threshold:
+    value: 5
+eval.max_iter:
+    value: null
+eval.max_threshold:
+    value: null
+eval.n_bins:
+    value: 30
+eval.n_snr:
+    value: 300
+eval.offset_t:
+    value: 0
+eval.radius_gt:
+    value: 10
+eval.run_name:
+    value: exomild
+eval.save_output:
+    value: false
+eval.sep_max:
+    value: 1.38
+eval.snr_max:
+    value: 5
+eval.snr_min:
+    value: 1
+eval.use_amp:
+    value: false
+eval.verbose:
+    value: false
+eval.window_size:
+    value: 4
+log_wandb:
+    value: true
+mode:
+    value: train
+model.batch_size:
+    value: null
+model.ckpt:
+    value: null
+model.filter_alpha:
+    value: true
+model.gate_type:
+    value: unet_normal
+model.grad_astrometry:
+    value: false
+model.grad_iterative:
+    value: true
+model.grad_params:
+    value: true
+model.image_size:
+    value: 256
+model.interpolation:
+    value: bicubic
+model.is_residual:
+    value: false
+model.iterative:
+    value: false
+model.learnable_proj:
+    value: true
+model.learnable_weights:
+    value: true
+model.linalg_library:
+    value: cusolver
+model.low_memory_mode:
+    value: false
+model.n_channels:
+    value: 1
+model.n_iter:
+    value: 20
+model.n_sources_max:
+    value: 16
+model.name:
+    value: exomild
+model.oracle:
+    value: false
+model.params_terms.0.batch_size:
+    value: null
+model.params_terms.0.denoise_mean:
+    value: false
+model.params_terms.0.dilation:
+    value: 1
+model.params_terms.0.dim_prefeatures:
+    value: h w
+model.params_terms.0.dim_samples:
+    value: t l
+model.params_terms.0.grad_params:
+    value: true
+model.params_terms.0.groups:
+    value: 1
+model.params_terms.0.low_memory_mode:
+    value: false
+model.params_terms.0.mode_ab:
+    value: left
+model.params_terms.0.name:
+    value: p8_s1
+model.params_terms.0.params_pipeline.0.is_identity:
+    value: false
+model.params_terms.0.params_pipeline.0.learnable:
+    value: true
+model.params_terms.0.params_pipeline.0.patch_wise:
+    value: false
+model.params_terms.0.params_pipeline.0.size_in:
+    value: 64
+model.params_terms.0.params_pipeline.0.size_out:
+    value: 64
+model.params_terms.0.params_pipeline.0.type:
+    value: linear
+model.params_terms.0.patch_size:
+    value: 8
+model.params_terms.0.repeat:
+    value: 1
+model.params_terms.0.stride:
+    value: 4
+model.params_terms.0.symmetry:
+    value: 1
+model.params_terms.0.temporal_dilation:
+    value: 1
+model.params_terms.0.temporal_length:
+    value: null
+model.params_terms.0.temporal_stride:
+    value: 1
+model.params_terms.0.type:
+    value: spatial
+model.params_terms.0.use_dataparallel:
+    value: false
+model.params_terms.1.batch_size:
+    value: null
+model.params_terms.1.dilation:
+    value: 1
+model.params_terms.1.dim_prefeatures:
+    value: h w
+model.params_terms.1.dim_samples:
+    value: t l
+model.params_terms.1.grad_params:
+    value: true
+model.params_terms.1.groups:
+    value: 1
+model.params_terms.1.low_memory_mode:
+    value: false
+model.params_terms.1.mode_ab:
+    value: left
+model.params_terms.1.name:
+    value: p8_s2
+model.params_terms.1.params_pipeline.0.is_identity:
+    value: false
+model.params_terms.1.params_pipeline.0.learnable:
+    value: true
+model.params_terms.1.params_pipeline.0.patch_wise:
+    value: false
+model.params_terms.1.params_pipeline.0.size_in:
+    value: 128
+model.params_terms.1.params_pipeline.0.size_out:
+    value: 64
+model.params_terms.1.params_pipeline.0.type:
+    value: linear
+model.params_terms.1.patch_size:
+    value: 8
+model.params_terms.1.repeat:
+    value: 0
+model.params_terms.1.stride:
+    value: 4
+model.params_terms.1.symmetry:
+    value: 2
+model.params_terms.1.temporal_dilation:
+    value: 1
+model.params_terms.1.temporal_length:
+    value: null
+model.params_terms.1.temporal_stride:
+    value: 1
+model.params_terms.1.type:
+    value: spatial
+model.params_terms.1.use_dataparallel:
+    value: false
+model.params_terms.2.batch_size:
+    value: null
+model.params_terms.2.dilation:
+    value: 1
+model.params_terms.2.dim_prefeatures:
+    value: h w
+model.params_terms.2.dim_samples:
+    value: t l
+model.params_terms.2.grad_params:
+    value: true
+model.params_terms.2.groups:
+    value: 1
+model.params_terms.2.low_memory_mode:
+    value: false
+model.params_terms.2.mode_ab:
+    value: left
+model.params_terms.2.name:
+    value: p8_s4
+model.params_terms.2.params_pipeline.0.is_identity:
+    value: false
+model.params_terms.2.params_pipeline.0.learnable:
+    value: true
+model.params_terms.2.params_pipeline.0.patch_wise:
+    value: false
+model.params_terms.2.params_pipeline.0.size_in:
+    value: 256
+model.params_terms.2.params_pipeline.0.size_out:
+    value: 64
+model.params_terms.2.params_pipeline.0.type:
+    value: linear
+model.params_terms.2.patch_size:
+    value: 8
+model.params_terms.2.repeat:
+    value: 0
+model.params_terms.2.stride:
+    value: 4
+model.params_terms.2.symmetry:
+    value: 4
+model.params_terms.2.temporal_dilation:
+    value: 1
+model.params_terms.2.temporal_length:
+    value: null
+model.params_terms.2.temporal_stride:
+    value: 1
+model.params_terms.2.type:
+    value: spatial
+model.params_terms.2.use_dataparallel:
+    value: false
+model.params_terms.3.batch_size:
+    value: null
+model.params_terms.3.dilation:
+    value: 1
+model.params_terms.3.dim_prefeatures:
+    value: h w
+model.params_terms.3.dim_samples:
+    value: t l
+model.params_terms.3.grad_params:
+    value: true
+model.params_terms.3.groups:
+    value: 1
+model.params_terms.3.low_memory_mode:
+    value: false
+model.params_terms.3.mode_ab:
+    value: left
+model.params_terms.3.name:
+    value: p16_s1
+model.params_terms.3.params_pipeline.0.is_identity:
+    value: false
+model.params_terms.3.params_pipeline.0.learnable:
+    value: true
+model.params_terms.3.params_pipeline.0.patch_wise:
+    value: false
+model.params_terms.3.params_pipeline.0.size_in:
+    value: 256
+model.params_terms.3.params_pipeline.0.size_out:
+    value: 64
+model.params_terms.3.params_pipeline.0.type:
+    value: linear
+model.params_terms.3.patch_size:
+    value: 16
+model.params_terms.3.repeat:
+    value: 1
+model.params_terms.3.stride:
+    value: 8
+model.params_terms.3.symmetry:
+    value: 1
+model.params_terms.3.temporal_dilation:
+    value: 1
+model.params_terms.3.temporal_length:
+    value: null
+model.params_terms.3.temporal_stride:
+    value: 1
+model.params_terms.3.type:
+    value: spatial
+model.params_terms.3.use_dataparallel:
+    value: false
+model.params_terms.4.batch_size:
+    value: null
+model.params_terms.4.dilation:
+    value: 1
+model.params_terms.4.dim_prefeatures:
+    value: h w
+model.params_terms.4.dim_samples:
+    value: t l
+model.params_terms.4.grad_params:
+    value: true
+model.params_terms.4.groups:
+    value: 1
+model.params_terms.4.low_memory_mode:
+    value: false
+model.params_terms.4.mode_ab:
+    value: left
+model.params_terms.4.name:
+    value: p16_s2
+model.params_terms.4.params_pipeline.0.is_identity:
+    value: false
+model.params_terms.4.params_pipeline.0.learnable:
+    value: true
+model.params_terms.4.params_pipeline.0.patch_wise:
+    value: false
+model.params_terms.4.params_pipeline.0.size_in:
+    value: 512
+model.params_terms.4.params_pipeline.0.size_out:
+    value: 64
+model.params_terms.4.params_pipeline.0.type:
+    value: linear
+model.params_terms.4.patch_size:
+    value: 16
+model.params_terms.4.repeat:
+    value: 0
+model.params_terms.4.stride:
+    value: 8
+model.params_terms.4.symmetry:
+    value: 2
+model.params_terms.4.temporal_dilation:
+    value: 1
+model.params_terms.4.temporal_length:
+    value: null
+model.params_terms.4.temporal_stride:
+    value: 1
+model.params_terms.4.type:
+    value: spatial
+model.params_terms.4.use_dataparallel:
+    value: false
+model.params_terms.5.batch_size:
+    value: null
+model.params_terms.5.dilation:
+    value: 1
+model.params_terms.5.dim_prefeatures:
+    value: h w
+model.params_terms.5.dim_samples:
+    value: t l
+model.params_terms.5.grad_params:
+    value: true
+model.params_terms.5.groups:
+    value: 1
+model.params_terms.5.low_memory_mode:
+    value: false
+model.params_terms.5.mode_ab:
+    value: left
+model.params_terms.5.name:
+    value: p16_s4
+model.params_terms.5.params_pipeline.0.is_identity:
+    value: false
+model.params_terms.5.params_pipeline.0.learnable:
+    value: true
+model.params_terms.5.params_pipeline.0.patch_wise:
+    value: false
+model.params_terms.5.params_pipeline.0.size_in:
+    value: 1024
+model.params_terms.5.params_pipeline.0.size_out:
+    value: 64
+model.params_terms.5.params_pipeline.0.type:
+    value: linear
+model.params_terms.5.patch_size:
+    value: 16
+model.params_terms.5.repeat:
+    value: 0
+model.params_terms.5.stride:
+    value: 8
+model.params_terms.5.symmetry:
+    value: 4
+model.params_terms.5.temporal_dilation:
+    value: 1
+model.params_terms.5.temporal_length:
+    value: null
+model.params_terms.5.temporal_stride:
+    value: 1
+model.params_terms.5.type:
+    value: spatial
+model.params_terms.5.use_dataparallel:
+    value: false
+model.params_terms.6.batch_size:
+    value: null
+model.params_terms.6.dilation:
+    value: 1
+model.params_terms.6.dim_prefeatures:
+    value: h w
+model.params_terms.6.dim_samples:
+    value: t l
+model.params_terms.6.grad_params:
+    value: true
+model.params_terms.6.groups:
+    value: 1
+model.params_terms.6.low_memory_mode:
+    value: false
+model.params_terms.6.mode_ab:
+    value: left
+model.params_terms.6.name:
+    value: p32_s1
+model.params_terms.6.params_pipeline.0.is_identity:
+    value: false
+model.params_terms.6.params_pipeline.0.learnable:
+    value: true
+model.params_terms.6.params_pipeline.0.patch_wise:
+    value: false
+model.params_terms.6.params_pipeline.0.size_in:
+    value: 1024
+model.params_terms.6.params_pipeline.0.size_out:
+    value: 64
+model.params_terms.6.params_pipeline.0.type:
+    value: linear
+model.params_terms.6.patch_size:
+    value: 32
+model.params_terms.6.repeat:
+    value: 1
+model.params_terms.6.stride:
+    value: 16
+model.params_terms.6.symmetry:
+    value: 1
+model.params_terms.6.temporal_dilation:
+    value: 1
+model.params_terms.6.temporal_length:
+    value: null
+model.params_terms.6.temporal_stride:
+    value: 1
+model.params_terms.6.type:
+    value: spatial
+model.params_terms.6.use_dataparallel:
+    value: false
+model.params_terms.7.batch_size:
+    value: null
+model.params_terms.7.dilation:
+    value: 1
+model.params_terms.7.dim_prefeatures:
+    value: h w
+model.params_terms.7.dim_samples:
+    value: t l
+model.params_terms.7.grad_params:
+    value: true
+model.params_terms.7.groups:
+    value: 1
+model.params_terms.7.low_memory_mode:
+    value: false
+model.params_terms.7.mode_ab:
+    value: left
+model.params_terms.7.name:
+    value: p32_s2
+model.params_terms.7.params_pipeline.0.is_identity:
+    value: false
+model.params_terms.7.params_pipeline.0.learnable:
+    value: true
+model.params_terms.7.params_pipeline.0.patch_wise:
+    value: false
+model.params_terms.7.params_pipeline.0.size_in:
+    value: 2048
+model.params_terms.7.params_pipeline.0.size_out:
+    value: 64
+model.params_terms.7.params_pipeline.0.type:
+    value: linear
+model.params_terms.7.patch_size:
+    value: 32
+model.params_terms.7.repeat:
+    value: 0
+model.params_terms.7.stride:
+    value: 16
+model.params_terms.7.symmetry:
+    value: 2
+model.params_terms.7.temporal_dilation:
+    value: 1
+model.params_terms.7.temporal_length:
+    value: null
+model.params_terms.7.temporal_stride:
+    value: 1
+model.params_terms.7.type:
+    value: spatial
+model.params_terms.7.use_dataparallel:
+    value: false
+model.params_terms.8.batch_size:
+    value: null
+model.params_terms.8.dilation:
+    value: 1
+model.params_terms.8.dim_prefeatures:
+    value: h w
+model.params_terms.8.dim_samples:
+    value: t l
+model.params_terms.8.grad_params:
+    value: true
+model.params_terms.8.groups:
+    value: 1
+model.params_terms.8.low_memory_mode:
+    value: false
+model.params_terms.8.mode_ab:
+    value: left
+model.params_terms.8.name:
+    value: p32_s4
+model.params_terms.8.params_pipeline.0.is_identity:
+    value: false
+model.params_terms.8.params_pipeline.0.learnable:
+    value: true
+model.params_terms.8.params_pipeline.0.patch_wise:
+    value: false
+model.params_terms.8.params_pipeline.0.size_in:
+    value: 4096
+model.params_terms.8.params_pipeline.0.size_out:
+    value: 64
+model.params_terms.8.params_pipeline.0.type:
+    value: linear
+model.params_terms.8.patch_size:
+    value: 32
+model.params_terms.8.repeat:
+    value: 0
+model.params_terms.8.stride:
+    value: 16
+model.params_terms.8.symmetry:
+    value: 4
+model.params_terms.8.temporal_dilation:
+    value: 1
+model.params_terms.8.temporal_length:
+    value: null
+model.params_terms.8.temporal_stride:
+    value: 1
+model.params_terms.8.type:
+    value: spatial
+model.params_terms.8.use_dataparallel:
+    value: false
+model.params_terms.9.batch_size:
+    value: null
+model.params_terms.9.dilation:
+    value: 1
+model.params_terms.9.dim_prefeatures:
+    value: h w
+model.params_terms.9.dim_samples:
+    value: t l
+model.params_terms.9.grad_params:
+    value: true
+model.params_terms.9.groups:
+    value: 1
+model.params_terms.9.low_memory_mode:
+    value: false
+model.params_terms.9.mode_ab:
+    value: left
+model.params_terms.9.name:
+    value: p64_s1
+model.params_terms.9.params_pipeline.0.is_identity:
+    value: false
+model.params_terms.9.params_pipeline.0.learnable:
+    value: true
+model.params_terms.9.params_pipeline.0.patch_wise:
+    value: false
+model.params_terms.9.params_pipeline.0.size_in:
+    value: 4096
+model.params_terms.9.params_pipeline.0.size_out:
+    value: 64
+model.params_terms.9.params_pipeline.0.type:
+    value: linear
+model.params_terms.9.patch_size:
+    value: 64
+model.params_terms.9.repeat:
+    value: 1
+model.params_terms.9.stride:
+    value: 32
+model.params_terms.9.symmetry:
+    value: 1
+model.params_terms.9.temporal_dilation:
+    value: 1
+model.params_terms.9.temporal_length:
+    value: null
+model.params_terms.9.temporal_stride:
+    value: 1
+model.params_terms.9.type:
+    value: spatial
+model.params_terms.9.use_dataparallel:
+    value: false
+model.params_terms.10.batch_size:
+    value: null
+model.params_terms.10.dilation:
+    value: 1
+model.params_terms.10.dim_prefeatures:
+    value: h w
+model.params_terms.10.dim_samples:
+    value: t l
+model.params_terms.10.grad_params:
+    value: true
+model.params_terms.10.groups:
+    value: 1
+model.params_terms.10.low_memory_mode:
+    value: false
+model.params_terms.10.mode_ab:
+    value: left
+model.params_terms.10.name:
+    value: p64_s2
+model.params_terms.10.params_pipeline.0.is_identity:
+    value: false
+model.params_terms.10.params_pipeline.0.learnable:
+    value: true
+model.params_terms.10.params_pipeline.0.patch_wise:
+    value: false
+model.params_terms.10.params_pipeline.0.size_in:
+    value: 8192
+model.params_terms.10.params_pipeline.0.size_out:
+    value: 64
+model.params_terms.10.params_pipeline.0.type:
+    value: linear
+model.params_terms.10.patch_size:
+    value: 64
+model.params_terms.10.repeat:
+    value: 0
+model.params_terms.10.stride:
+    value: 32
+model.params_terms.10.symmetry:
+    value: 2
+model.params_terms.10.temporal_dilation:
+    value: 1
+model.params_terms.10.temporal_length:
+    value: null
+model.params_terms.10.temporal_stride:
+    value: 1
+model.params_terms.10.type:
+    value: spatial
+model.params_terms.10.use_dataparallel:
+    value: false
+model.params_terms.11.batch_size:
+    value: null
+model.params_terms.11.dilation:
+    value: 1
+model.params_terms.11.dim_prefeatures:
+    value: h w
+model.params_terms.11.dim_samples:
+    value: t l
+model.params_terms.11.grad_params:
+    value: true
+model.params_terms.11.groups:
+    value: 1
+model.params_terms.11.low_memory_mode:
+    value: false
+model.params_terms.11.mode_ab:
+    value: left
+model.params_terms.11.name:
+    value: p64_s2
+model.params_terms.11.params_pipeline.0.is_identity:
+    value: false
+model.params_terms.11.params_pipeline.0.learnable:
+    value: true
+model.params_terms.11.params_pipeline.0.patch_wise:
+    value: false
+model.params_terms.11.params_pipeline.0.size_in:
+    value: 8192
+model.params_terms.11.params_pipeline.0.size_out:
+    value: 64
+model.params_terms.11.params_pipeline.0.type:
+    value: linear
+model.params_terms.11.patch_size:
+    value: 64
+model.params_terms.11.repeat:
+    value: 0
+model.params_terms.11.stride:
+    value: 32
+model.params_terms.11.symmetry:
+    value: 4
+model.params_terms.11.temporal_dilation:
+    value: 1
+model.params_terms.11.temporal_length:
+    value: null
+model.params_terms.11.temporal_stride:
+    value: 1
+model.params_terms.11.type:
+    value: spatial
+model.params_terms.11.use_dataparallel:
+    value: false
+model.patch_wise:
+    value: false
+model.pixel_wise_weights:
+    value: true
+model.repeats.0:
+    value: 1
+model.repeats.1:
+    value: 0
+model.repeats.2:
+    value: 0
+model.repeats.3:
+    value: 1
+model.repeats.4:
+    value: 0
+model.repeats.5:
+    value: 0
+model.repeats.6:
+    value: 1
+model.repeats.7:
+    value: 0
+model.repeats.8:
+    value: 0
+model.repeats.9:
+    value: 1
+model.repeats.10:
+    value: 0
+model.repeats.11:
+    value: 0
+model.rot_zero_init:
+    value: true
+model.skip_norm_unet:
+    value: false
+model.symmetry:
+    value: normal
+model.timesteps:
+    value: null
+model.use_dataparallel:
+    value: false
+model.use_local_max:
+    value: false
+model.use_modelco_loss:
+    value: false
+name:
+    value: exomild
+sampler.name:
+    value: exomild
+sampler.path_calib:
+    value: null
+sampler.path_ckpts:
+    value: null
+sampler.skip_filter:
+    value: false
+seed:
+    value: 0
+stdout:
+    value: INFO
+train.eval_astro:
+    value: true
+train.eval_charac:
+    value: true
+train.eval_detection:
+    value: true
+train.name:
+    value: exomild
+train.params.T:
+    value: null
+train.params.aligned_on:
+    value: obj
+train.params.astro_interval:
+    value: 1000
+train.params.bak_interval:
+    value: 1000
+train.params.detection_interval:
+    value: 2500
+train.params.differential_mode:
+    value: false
+train.params.ema_decay:
+    value: 0.99
+train.params.gamma_bce:
+    value: 0
+train.params.k_max:
+    value: null
+train.params.log_interval:
+    value: 100
+train.params.loss_type:
+    value: nll
+train.params.lr:
+    value: 5e-05
+train.params.lr_gamma:
+    value: 0.33
+train.params.lr_step:
+    value: 20000
+train.params.micro_batchsize:
+    value: 1
+train.params.n_iter:
+    value: 50000
+train.params.overfit_batch:
+    value: false
+train.params.patch_size:
+    value: null
+train.params.patch_size_loss:
+    value: 3
+train.params.progressive:
+    value: false
+train.params.save_interval:
+    value: null
+train.params.save_steps.0:
+    value: 1000
+train.params.save_steps.1:
+    value: 2000
+train.params.save_steps.2:
+    value: 5000
+train.params.save_steps.3:
+    value: 10000
+train.params.save_steps.4:
+    value: 25000
+train.params.save_steps.5:
+    value: 30000
+train.params.save_steps.6:
+    value: 35000
+train.params.save_steps.7:
+    value: 40000
+train.params.source_type:
+    value: temporal
+train.params.target_type:
+    value: temporal
+train.params.use_amp:
+    value: false
+train.params.use_cat:
+    value: false
+train.params.use_class_weight_bce:
+    value: false
+train.params.use_error_register:
+    value: false
+train.params.use_profiler:
+    value: false
+train.params.use_weight_obs:
+    value: false
+train.params.val_interval:
+    value: 1000
+train.params.weight_decay:
+    value: 0
+train.params.weight_sources:
+    value: 1
+train.params.with_log:
+    value: true

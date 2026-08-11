@@ -1,0 +1,43 @@
+{
+  "os":  "Linux-5.10.0-37-amd64-x86_64-with-glibc2.31",
+  "python":  "CPython 3.9.2",
+  "startedAt":  "2026-05-20T10:03:47.013494Z",
+  "args":  [
+    "name=diskNN",
+    "log_wandb=true",
+    "data.train.num_workers=16"
+  ],
+  "program":  "-m main",
+  "git":  {
+    "remote":  "git@github.com:charlesglucas/EXMILDPACO.git",
+    "commit":  "8d12b6e3e0831c4db71d07f707fcb2cd0aecd7cf"
+  },
+  "email":  "cglucas1@gmail.com",
+  "root":  "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO",
+  "host":  "vercors18-1.grenoble.grid5000.fr",
+  "executable":  "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/.venv/bin/python",
+  "cpu_count":  48,
+  "cpu_count_logical":  96,
+  "gpu":  "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+  "gpu_count":  1,
+  "disk":  {
+    "/":  {
+      "total":  "30333186048",
+      "used":  "20747558912"
+    }
+  },
+  "memory":  {
+    "total":  "540684218368"
+  },
+  "gpu_nvidia":  [
+    {
+      "name":  "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+      "memoryTotal":  "102641958912",
+      "cudaCores":  24064,
+      "architecture":  "Blackwell",
+      "uuid":  "GPU-d39298d8-2cf5-0a2c-4249-f3ed70554ec2"
+    }
+  ],
+  "cudaVersion":  "13.0",
+  "writerId":  "aipo722gak22x274dx83g21dm89nnqaq"
+}

@@ -1,0 +1,947 @@
+WANDB logger initialized
+CWD: /srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
+[ExoMILD] self.use_modelco_loss=False
+i=0 params={'type': 'spatial', 'name': 'p8_s1', 'repeat': 1, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'denoise_mean': False, 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 64, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p8_s1', 'repeat': 1, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'denoise_mean': False, 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 64, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p8_s1'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=3969
+[SpatialTerm] self.symmetry=1
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=None
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (8)] spatial stride: 4
+[SpatialPatchesHandler (8)] spatial patch_size: 8
+i=1 params={'type': 'spatial', 'name': 'p8_s2', 'repeat': 0, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 128, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p8_s2', 'repeat': 0, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 128, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+i=2 params={'type': 'spatial', 'name': 'p8_s4', 'repeat': 0, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 256, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p8_s4', 'repeat': 0, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 256, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+i=3 params={'type': 'spatial', 'name': 'p16_s1', 'repeat': 1, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 256, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p16_s1', 'repeat': 1, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 256, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p16_s1'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=961
+[SpatialTerm] self.symmetry=1
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=None
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (16)] spatial stride: 8
+[SpatialPatchesHandler (16)] spatial patch_size: 16
+i=4 params={'type': 'spatial', 'name': 'p16_s2', 'repeat': 0, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 512, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p16_s2', 'repeat': 0, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 512, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+i=5 params={'type': 'spatial', 'name': 'p16_s4', 'repeat': 0, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 1024, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p16_s4', 'repeat': 0, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 1024, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+i=6 params={'type': 'spatial', 'name': 'p32_s1', 'repeat': 1, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 1024, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p32_s1', 'repeat': 1, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 1024, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p32_s1'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=225
+[SpatialTerm] self.symmetry=1
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=None
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (32)] spatial stride: 16
+[SpatialPatchesHandler (32)] spatial patch_size: 32
+i=7 params={'type': 'spatial', 'name': 'p32_s2', 'repeat': 0, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 2048, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p32_s2', 'repeat': 0, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 2048, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+i=8 params={'type': 'spatial', 'name': 'p32_s4', 'repeat': 0, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 4096, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p32_s4', 'repeat': 0, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 4096, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+i=9 params={'type': 'spatial', 'name': 'p64_s1', 'repeat': 1, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 4096, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p64_s1', 'repeat': 1, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 4096, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p64_s1'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=49
+[SpatialTerm] self.symmetry=1
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=None
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (64)] spatial stride: 32
+[SpatialPatchesHandler (64)] spatial patch_size: 64
+i=10 params={'type': 'spatial', 'name': 'p64_s2', 'repeat': 0, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 8192, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p64_s2', 'repeat': 0, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 8192, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+i=11 params={'type': 'spatial', 'name': 'p64_s2', 'repeat': 0, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 8192, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p64_s2', 'repeat': 0, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 8192, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[ExoMILD] self.G_tot=4
+all_terms=[SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+)]
+[ExoMILD] self.learnable_weights=True
+[ExoMILD] self.pixel_wise_weights=True
+[ExoMILD] self.use_local_max=False
+[ExoMILD] self.n_sources_max=16
+[ExoMILD] self.iterative=False
+[ExoMILD] self.oracle=False
+[Filter] self.is_residual=False
+[Filter] self.gate_type='unet_normal'
+[U-Net] self.skip_norm=False
+[UNet] False
+[ExoMILD] linalg_library='cusolver'
+[ExoMILD] self.grad_iterative=True
+[ExoMILD] self.grad_astrometry=False
+N params model: 1.170 M
+ExoMILD(
+  (all_terms): ModuleList(
+    (0-3): 4 x SpatialTerm(
+      (engine): EngineSpatial(
+        (features_pipeline): FeaturesPipeline(
+          (transforms): ModuleList(
+            (0): LinearFeatures()
+          )
+        )
+        (psf_sampler_shift): BatchPSFSampler()
+        (psf_sampler_center): BatchPSFSampler()
+      )
+      (patch_formatter): PatchFormatter()
+      (wavelength_aligner): WavelengthAligner()
+    )
+  )
+  (filter): Filter(
+    (psf_sampler_center): BatchPSFSampler()
+    (unet): UNet(
+      (image_proj): Conv2d(1, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (time_emb): TimeEmbedding(
+        (lin1): Linear(in_features=16, out_features=64, bias=True)
+        (act): Swish()
+        (lin2): Linear(in_features=64, out_features=64, bias=True)
+      )
+      (down): ModuleList(
+        (0): DownBlock(
+          (res): ResidualBlock(
+            (norm1): GroupNorm(16, 16, eps=1e-05, affine=True)
+            (norm2): GroupNorm(16, 16, eps=1e-05, affine=True)
+            (act1): Swish()
+            (conv1): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (act2): Swish()
+            (conv2): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (shortcut): Identity()
+            (time_emb): Linear(in_features=64, out_features=16, bias=True)
+            (time_act): Swish()
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (attn): Identity()
+        )
+        (1): Downsample(
+          (conv): Conv2d(16, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+        )
+        (2): DownBlock(
+          (res): ResidualBlock(
+            (norm1): GroupNorm(16, 16, eps=1e-05, affine=True)
+            (norm2): GroupNorm(16, 32, eps=1e-05, affine=True)
+            (act1): Swish()
+            (conv1): Conv2d(16, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (act2): Swish()
+            (conv2): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (shortcut): Conv2d(16, 32, kernel_size=(1, 1), stride=(1, 1))
+            (time_emb): Linear(in_features=64, out_features=32, bias=True)
+            (time_act): Swish()
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (attn): Identity()
+        )
+        (3): Downsample(
+          (conv): Conv2d(32, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+        )
+        (4): DownBlock(
+          (res): ResidualBlock(
+            (norm1): GroupNorm(16, 32, eps=1e-05, affine=True)
+            (norm2): GroupNorm(16, 64, eps=1e-05, affine=True)
+            (act1): Swish()
+            (conv1): Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (act2): Swish()
+            (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (shortcut): Conv2d(32, 64, kernel_size=(1, 1), stride=(1, 1))
+            (time_emb): Linear(in_features=64, out_features=64, bias=True)
+            (time_act): Swish()
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (attn): AttentionBlock(
+            (norm): GroupNorm(16, 64, eps=1e-05, affine=True)
+            (projection): Linear(in_features=64, out_features=192, bias=True)
+            (output): Linear(in_features=64, out_features=64, bias=True)
+          )
+        )
+      )
+      (middle): MiddleBlock(
+        (res1): ResidualBlock(
+          (norm1): GroupNorm(16, 64, eps=1e-05, affine=True)
+          (norm2): GroupNorm(16, 64, eps=1e-05, affine=True)
+          (act1): Swish()
+          (conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (act2): Swish()
+          (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (shortcut): Identity()
+          (time_emb): Linear(in_features=64, out_features=64, bias=True)
+          (time_act): Swish()
+          (dropout): Dropout(p=0.1, inplace=False)
+        )
+        (attn): AttentionBlock(
+          (norm): GroupNorm(16, 64, eps=1e-05, affine=True)
+          (projection): Linear(in_features=64, out_features=192, bias=True)
+          (output): Linear(in_features=64, out_features=64, bias=True)
+        )
+        (res2): ResidualBlock(
+          (norm1): GroupNorm(16, 64, eps=1e-05, affine=True)
+          (norm2): GroupNorm(16, 64, eps=1e-05, affine=True)
+          (act1): Swish()
+          (conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (act2): Swish()
+          (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (shortcut): Identity()
+          (time_emb): Linear(in_features=64, out_features=64, bias=True)
+          (time_act): Swish()
+          (dropout): Dropout(p=0.1, inplace=False)
+        )
+      )
+      (up): ModuleList(
+        (0): UpBlock(
+          (res): ResidualBlock(
+            (norm1): GroupNorm(16, 128, eps=1e-05, affine=True)
+            (norm2): GroupNorm(16, 64, eps=1e-05, affine=True)
+            (act1): Swish()
+            (conv1): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (act2): Swish()
+            (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (shortcut): Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1))
+            (time_emb): Linear(in_features=64, out_features=64, bias=True)
+            (time_act): Swish()
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (attn): AttentionBlock(
+            (norm): GroupNorm(16, 64, eps=1e-05, affine=True)
+            (projection): Linear(in_features=64, out_features=192, bias=True)
+            (output): Linear(in_features=64, out_features=64, bias=True)
+          )
+        )
+        (1): UpBlock(
+          (res): ResidualBlock(
+            (norm1): GroupNorm(16, 96, eps=1e-05, affine=True)
+            (norm2): GroupNorm(16, 32, eps=1e-05, affine=True)
+            (act1): Swish()
+            (conv1): Conv2d(96, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (act2): Swish()
+            (conv2): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (shortcut): Conv2d(96, 32, kernel_size=(1, 1), stride=(1, 1))
+            (time_emb): Linear(in_features=64, out_features=32, bias=True)
+            (time_act): Swish()
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (attn): AttentionBlock(
+            (norm): GroupNorm(16, 32, eps=1e-05, affine=True)
+            (projection): Linear(in_features=32, out_features=96, bias=True)
+            (output): Linear(in_features=32, out_features=32, bias=True)
+          )
+        )
+        (2): Upsample(
+          (conv): ConvTranspose2d(32, 32, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1))
+        )
+        (3): UpBlock(
+          (res): ResidualBlock(
+            (norm1): GroupNorm(16, 64, eps=1e-05, affine=True)
+            (norm2): GroupNorm(16, 32, eps=1e-05, affine=True)
+            (act1): Swish()
+            (conv1): Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (act2): Swish()
+            (conv2): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (shortcut): Conv2d(64, 32, kernel_size=(1, 1), stride=(1, 1))
+            (time_emb): Linear(in_features=64, out_features=32, bias=True)
+            (time_act): Swish()
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (attn): Identity()
+        )
+        (4): UpBlock(
+          (res): ResidualBlock(
+            (norm1): GroupNorm(16, 48, eps=1e-05, affine=True)
+            (norm2): GroupNorm(16, 16, eps=1e-05, affine=True)
+            (act1): Swish()
+            (conv1): Conv2d(48, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (act2): Swish()
+            (conv2): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (shortcut): Conv2d(48, 16, kernel_size=(1, 1), stride=(1, 1))
+            (time_emb): Linear(in_features=64, out_features=16, bias=True)
+            (time_act): Swish()
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (attn): Identity()
+        )
+        (5): Upsample(
+          (conv): ConvTranspose2d(16, 16, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1))
+        )
+        (6-7): 2 x UpBlock(
+          (res): ResidualBlock(
+            (norm1): GroupNorm(16, 32, eps=1e-05, affine=True)
+            (norm2): GroupNorm(16, 16, eps=1e-05, affine=True)
+            (act1): Swish()
+            (conv1): Conv2d(32, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (act2): Swish()
+            (conv2): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (shortcut): Conv2d(32, 16, kernel_size=(1, 1), stride=(1, 1))
+            (time_emb): Linear(in_features=64, out_features=16, bias=True)
+            (time_act): Swish()
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (attn): Identity()
+        )
+      )
+      (norm): GroupNorm(8, 16, eps=1e-05, affine=True)
+      (act): Swish()
+      (final): Conv2d(16, 1, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    )
+  )
+  (psf_sampler_center): BatchPSFSampler()
+  (injector): Injector(
+    (psf_sampler_shift): BatchPSFSampler()
+  )
+  (local_masker): LocalMasker()
+)
+path_db='/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/DiscDSM/data/db_new'
+AUGMENTATION: RandomRot90 instanciated
+AUGMENTATION: RandomTimeFlip instanciated
+AUGMENTATION: RandomSpatialFlip instanciated
+AUGMENTATION: RandomRotationFlip instanciated
+Train shuffler initialized
+AUGMENTATION: FramesShuffler instanciated
+[CoordsSampler] self.adaptive=True
+[UniformSampler] self.sampling_mode='cartesian'
+[UniformSampler] self.n_channels=1
+[UniformSampler] self.rv_mode='linear'
+[UniformSampler] self.exp_coeff=None
+[UniformSampler] self.seed=0
+[UniformSampler] self.size=256
+[UniformSampler] self.effective_size=246
+FilterReal instanciated
+Adding filter: <datasets.transforms.coords_sampler.FilterReal object at 0x7f935ab27bb0>
+coords sampler status changed: self.REQUIRES_REAL=True
+FilterSynthetic instanciated, self.radius=25
+Adding filter: <datasets.transforms.coords_sampler.FilterSynthetic object at 0x7f935ab27a30>
+FilterSep instanciated: sep_max=1.38, PIX2AS=0.01225, self.sep_pix=112.65306122448979 self.center=128
+Adding filter: <datasets.transforms.coords_sampler.FilterSep object at 0x7f93596329d0>
+self.symmetric_flux=False
+[CoordsSampler] self.range_max=4.0
+[CoordsSampler] self.alpha_min=1e-06 - self.alpha_max=3e-05
+[CoordsSampler] self.adaptive=True
+[UniformSampler] self.sampling_mode='cartesian'
+[UniformSampler] self.n_channels=1
+[UniformSampler] self.rv_mode='linear'
+[UniformSampler] self.exp_coeff=None
+[UniformSampler] self.seed=0
+[UniformSampler] self.size=256
+[UniformSampler] self.effective_size=246
+FilterReal instanciated
+Adding filter: <datasets.transforms.coords_sampler.FilterReal object at 0x7f93596325e0>
+coords sampler status changed: self.REQUIRES_REAL=True
+FilterSynthetic instanciated, self.radius=25
+Adding filter: <datasets.transforms.coords_sampler.FilterSynthetic object at 0x7f935963d5e0>
+FilterSep instanciated: sep_max=1.38, PIX2AS=0.01225, self.sep_pix=112.65306122448979 self.center=128
+Adding filter: <datasets.transforms.coords_sampler.FilterSep object at 0x7f9359641070>
+self.symmetric_flux=False
+[CoordsSampler] self.range_max=4.0
+[CoordsSampler] self.alpha_min=1e-06 - self.alpha_max=3e-05
+[Injector3D] self.psf_model='gaussian_2d'
+[FramePadder] self.n_frames=64
+[FramePadder] self.n_frames=64
+
+INITIALIZING TRAIN DATASET
+[LMDBDataset] self.n_frames=64
+[LMDBDataset] self.stride=1
+[LMDBDataset] self.dilation=1
+[LMDBDataset] self.drop_short_clips=True
+[LMDBDataset] self.clips_per_obs_max=None
+[LMDBDataset] self.rot_scale=1
+[LMDBDataset] self.n_obs_max=None
+[LMDBDataset] self.channel_idx=0
+[LMDBDataset] self.multibands=False
+lmdb_path: /srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/DiscDSM/data/db_new/lmdb_256
+[LMDBDataset] Filtering obs..
+[LMDBDataset] split='train'
+[LMDBDataset] obs_id=None
+[LMDBDataset] rot_min=0
+[LMDBDataset] n_frames_min=16
+[LMDBDataset] frame_quality=2
+[LMDBDataset] dual_filter='DB_H23'
+[LMDBDataset] status=[0]
+[LMDBDataset] obs_category=None
+n_calib=20
+mask_n_frames: 304/317
+mask_rot: 317/317
+mask_filter: 266/317
+mask_status: 255/317
+N observations: 220
+pre-filter:                                             obs_id   rot_max  n_frames infrared_filter  missing_psf  split  status_obs
+0    2MASS_J00172353-6645124__2015-10-01__05-06-04  -17.3792        48          DB_H23            0  train         0.0
+2    2MASS_J00172353-6645124__2016-09-17__05-06-54  -29.3731        76          DB_H23            0    val         0.0
+3    2MASS_J00172353-6645124__2017-11-06__02-01-55  -17.4301        32          DB_H23            0  train         0.0
+4    2MASS_J06255610-6003273__2015-02-07__01-33-14  -33.1256        76          DB_H23            0  train         0.0
+5    2MASS_J07065772-5353463__2017-02-11__02-46-03  -38.9737        80          DB_H23            0  calib         0.0
+7    2MASS_J20013718-3313139__2015-09-30__00-10-10  -87.6604        64          DB_H23            0  train         0.0
+8    2MASS_J22021626-4210329__2016-06-11__09-29-34  -49.5200        49          DB_H23            0  train         0.0
+10                 HD_100453__2016-01-21__05-34-59   -7.6309       176          DB_H23            0  train         0.0
+16                 HD_101615__2016-06-02__00-32-53  -28.8783        48          DB_H23            0  train         0.0
+17                 HD_102647__2015-05-31__02-07-12   14.3709       800          DB_H23            0  train         0.0
+18                 HD_102647__2015-05-31__23-39-09   29.7157      1024          DB_H23            0   test         0.0
+19                 HD_103599__2015-06-02__23-29-37  -30.9616        64          DB_H23            0  train         0.0
+20                 HD_104125__2015-06-03__23-27-24  -28.5488        64          DB_H23            0  train         0.0
+21                 HD_104125__2016-03-30__04-41-34  -28.3986        52          DB_H23            0  train         0.0
+22                    HD_105__2015-09-26__03-36-17  -44.9821        72          DB_H23            0  train         0.0
+23                 HD_106048__2016-06-13__23-30-15  -23.6663        48          DB_H23            0  train         0.0
+24                 HD_106048__2017-05-07__01-28-26  -44.9046        91          DB_H23            0  train         0.0
+25                 HD_106048__2018-03-30__03-48-28  -47.2734        60          DB_H23            0  train         0.0
+26                 HD_107301__2015-06-05__23-37-34  -22.1160        60          DB_H23            0  train         0.0
+27                 HD_107301__2016-01-19__06-40-27  -20.5240       128          DB_H23            0  train         0.0
+28                 HD_107821__2015-02-04__08-27-21  -37.1763        92          DB_H23            0  train         0.0
+29                HD_108767B__2016-06-11__23-43-59   99.2574        80          DB_H23            0  train         0.0
+30                 HD_108767__2018-01-25__08-46-24   94.4343        72          DB_H23            0  train         0.0
+31                 HD_109536__2016-04-21__03-19-59  -55.0011       216          DB_H23            0  train         0.0
+32                 HD_109536__2018-06-18__23-28-19  -40.6089        48          DB_H23            0  calib         0.0
+34                 HD_110411__2016-06-11__00-13-20   30.2266        72          DB_H23            0  train         0.0
+35                 HD_113457__2016-04-17__04-19-01  -30.4166        80          DB_H23            0  calib         0.0
+36                 HD_115383__2015-05-06__03-19-20   29.6223       896          DB_H23            0  train         0.0
+37                 HD_115383__2015-06-03__01-11-22   28.8594       256          DB_H23            0  calib         0.0
+39                 HD_115383__2016-03-29__05-49-19   31.2393       104          DB_H23            0  train         0.0
+40                 HD_115383__2017-02-10__08-50-22   31.1881       112          DB_H23            0  train         0.0
+41                 HD_115383__2018-04-13__04-58-18   30.2492        90          DB_H23            0  train         0.0
+42                 HD_115470__2016-04-01__05-36-30  -44.7010        64          DB_H23            0   test         0.0
+46                 HD_116434__2016-05-31__01-33-30  -34.2228        64          DB_H23            0  train         0.0
+47                 HD_116434__2016-06-26__23-59-43  -42.1808        80          DB_H23            0  train         0.0
+48                 HD_116434__2017-02-07__08-36-46  -44.2689        80          DB_H23            0  train         0.0
+51                 HD_118100__2016-06-27__23-49-18   52.0442        64          DB_H23            0   test         0.0
+52                 HD_118588__2015-05-15__02-41-39  -33.6535        48          DB_H23            0  train         0.0
+53                 HD_118697__2016-06-02__02-08-17  -38.2930        80          DB_H23            0  train         0.0
+54                 HD_122705__2015-03-31__05-47-53  -35.0545        64          DB_H23            0  train         0.0
+55                 HD_122705__2016-03-30__06-08-16  -27.7344        40          DB_H23            0   test         0.0
+56                 HD_125451__2016-06-12__01-39-47   25.9683       128          DB_H23            0  train         0.0
+57                 HD_128819__2016-04-17__06-04-03  -49.9924        64          DB_H23            0   test         0.0
+58                 HD_128819__2017-03-19__07-35-26  -67.6098        77          DB_H23            0  train         0.0
+59                 HD_128987__2016-06-01__02-51-53   69.3824        96          DB_H23            0  train         0.0
+62                 HD_133803__2016-04-21__05-24-48  -93.8481        64          DB_H23            0  train         0.0
+64                 HD_138204__2016-03-29__07-23-28  -55.9299        64          DB_H23            0   test         0.0
+65                 HD_140840__2016-04-21__07-08-29  -56.5720        64          DB_H23            0  train         0.0
+66                 HD_141190__2015-03-31__08-08-20 -115.4226        60          DB_H23            0  train         0.0
+67                 HD_141378__2015-06-05__03-13-45   39.4190        64          DB_H23            0  train         0.0
+71                  HD_14228__2015-09-26__07-10-54  -36.7125       512          DB_H23            0   test         0.0
+72                  HD_14228__2016-09-17__07-03-47  -40.2497       512          DB_H23            0  train         0.0
+75                 HD_142705__2015-05-09__04-57-46    8.5918        26          DB_H23            0  train         0.0
+76                 HD_142851__2015-06-03__04-11-46  -91.8449        64          DB_H23            0  train         0.0
+77                 HD_143488__2015-05-09__06-23-56  -36.4340        48          DB_H23            0  train         0.0
+78                 HD_143488__2016-06-11__03-31-24  -67.9741        65          DB_H23            0  train         0.0
+79                 HD_143567__2015-05-04__06-05-18  147.9516        60          DB_H23            0  train         0.0
+80                 HD_143637__2015-06-01__04-01-40 -106.1448        64          DB_H23            0  calib         0.0
+81                 HD_143637__2015-06-04__03-02-47 -123.5640        68          DB_H23            0  train         0.0
+83                 HD_143637__2017-03-20__08-45-00 -115.9709        67          DB_H23            0  train         0.0
+84                   HD_1466__2015-10-26__03-01-44  -24.9978        64          DB_H23            0  train         0.0
+85                   HD_1466__2016-09-18__05-32-12  -31.0696        80          DB_H23            0  train         0.0
+86                 HD_147553__2015-05-30__05-02-09  -88.8515       136          DB_H23            0  train         0.0
+87                 HD_147553__2016-03-28__08-37-36  -70.3199        45          DB_H23            0  train         0.0
+88                 HD_147553__2018-06-18__03-58-47  -59.2457        40          DB_H23            0  train         0.0
+90                 HD_148055__2016-03-29__08-59-17  -54.2841        64          DB_H23            0  train         0.0
+92                 HD_151726__2016-04-01__09-11-13  -78.5460        80          DB_H23            0  train         0.0
+93                 HD_151726__2017-05-18__06-18-50  -64.8128        68          DB_H23            0  train         0.0
+94                 HD_151798__2016-06-12__03-47-07   58.9373        64          DB_H23            0    val         0.0
+95                 HD_152391__2015-06-05__05-03-34   35.0348        64          DB_H23            0  train         0.0
+97                 HD_159492__2016-06-11__05-40-25  -25.9217        95          DB_H23            0  train         0.0
+98                 HD_159911__2015-05-12__07-17-59   65.2939        64          DB_H23            0  train         0.0
+99                 HD_159911__2016-04-16__09-34-10   54.5905        80          DB_H23            0   test         0.0
+100                HD_159911__2016-05-22__06-07-40   71.4837        70          DB_H23            0  train         0.0
+101                HD_159911__2018-04-12__09-18-25   72.7179        50          DB_H23            0  train         0.0
+102                HD_160305__2015-05-13__07-26-52  -34.6040        64          DB_H23            0    val         0.0
+103                HD_164249__2015-06-01__05-54-21  -33.9258        64          DB_H23            0  train         0.0
+104                HD_164249__2016-04-17__09-37-17  -37.2858        61          DB_H23            0   test         0.0
+105                HD_164249__2018-04-11__09-42-29  -31.9463        40          DB_H23            0   test         0.0
+108                 HD_16978__2015-10-01__06-39-32  -34.6156       608          DB_H23            0  train         0.0
+109                 HD_16978__2016-09-16__07-30-31  -29.0598       160          DB_H23            0    val         0.0
+112                HD_172555__2015-05-11__07-51-19  -19.2948       192          DB_H23            0  train         0.0
+113                HD_174429__2015-05-06__09-49-25  -11.4059        82          DB_H23            0  train         0.0
+114                HD_174429__2015-05-31__06-34-52   -9.2883        32          DB_H23            0  train         0.0
+115                HD_174429__2016-09-16__23-53-41  -29.0445        80          DB_H23            0  train         0.0
+116                HD_174429__2017-05-18__08-01-51  -33.1492        60          DB_H23            0  train         0.0
+120                HD_176367__2015-06-07__07-25-32  -85.1473        80          DB_H23            0   test         0.0
+121                HD_177724__2015-06-28__05-32-37   29.8796       560          DB_H23            0  train         0.0
+122                HD_177724__2016-05-31__07-06-55   33.1213      1120          DB_H23            0  calib         0.0
+123                HD_178253__2015-06-06__07-40-23  -49.7435       256          DB_H23            0  train         0.0
+124                HD_181296__2015-05-05__09-22-43  -46.8276       168          DB_H23            0  train         0.0
+126                HD_181327__2015-05-10__09-12-24  -31.1248        56          DB_H23            0  train         0.0
+127                HD_181869__2015-05-13__09-10-43  -52.8385       256          DB_H23            0  train         0.0
+128                HD_181869__2016-05-21__07-53-18  -71.4899       176          DB_H23            0  train         0.0
+129                HD_181869__2018-05-08__09-04-47  -26.6603        70          DB_H23            0  calib         0.0
+130                HD_188228__2015-05-12__09-04-54  -22.3432       256          DB_H23            0  train         0.0
+131                HD_188228__2015-06-01__07-40-44  -27.6181       320          DB_H23            0   test         0.0
+132                HD_188228__2015-07-01__05-14-12  -21.2979       128          DB_H23            0  train         0.0
+133                HD_188228__2016-05-25__09-18-36  -35.4357       416          DB_H23            0  train         0.0
+135                HD_189285__2015-06-03__07-33-54   40.8715        64          DB_H23            0  train         0.0
+136                HD_189285__2016-05-29__08-29-20   58.9779        72          DB_H23            0  train         0.0
+137                HD_189285__2018-05-07__09-40-24   50.2683        50          DB_H23            0  train         0.0
+139                HD_192425__2015-09-28__00-51-15   25.2150       256          DB_H23            0  train         0.0
+140                HD_192425__2016-06-11__07-27-45   35.6974        96          DB_H23            0  train         0.0
+141                 HD_19545__2016-10-13__05-55-29 -145.1609        90          DB_H23            0  calib         0.0
+149                HD_197890__2015-06-04__08-15-32  -61.5179        64          DB_H23            0  train         0.0
+150                HD_201184__2015-09-29__00-46-20   80.5715       256          DB_H23            0  train         0.0
+151                HD_201919__2015-06-03__09-04-45   92.8512        64          DB_H23            0  train         0.0
+152                HD_202917__2015-05-31__09-36-58  -49.5564        86          DB_H23            0  train         0.0
+153                HD_202917__2016-05-31__09-18-22  -32.6789        64          DB_H23            0    val         0.0
+154                 HD_20630__2015-12-27__01-22-43   33.2458       480          DB_H23            0  train         0.0
+155                HD_206860__2015-09-30__01-47-41   25.6903       256          DB_H23            0   test         0.0
+156                HD_210049__2015-07-01__08-29-23  -85.2939        64          DB_H23            0  train         0.0
+157                HD_210049__2016-09-17__03-22-07  -87.6297       420          DB_H23            0  train         0.0
+158                HD_210049__2016-10-14__01-15-39  -84.1233        80          DB_H23            0  train         0.0
+159                HD_216803__2015-06-27__09-36-00 -100.7280       512          DB_H23            0   test         0.0
+165                HD_218396__2016-11-18__01-21-08   16.8358        64          DB_H23            0  train         0.0
+166                HD_218396__2017-06-15__10-12-26   19.2834       144          DB_H23            0  train         0.0
+171                HD_218396__2018-06-19__09-15-26   34.3997        64          DB_H23            0  calib         0.0
+172                HD_219482__2015-10-01__03-40-26  -25.6397       240          DB_H23            0  calib         0.0
+173                HD_220825__2015-09-25__03-36-55   41.3384       300          DB_H23            0  train         0.0
+174                HD_224228__2015-10-25__02-26-04  -59.2862        64          DB_H23            0  train         0.0
+177                 HD_24636__2016-01-03__01-01-11  -25.5061        80          DB_H23            0  train         0.0
+178                 HD_25284__2015-09-30__07-14-00  -38.7530       128          DB_H23            0  train         0.0
+180                 HD_29391__2015-12-26__02-28-43   37.5614       256          DB_H23            0  train         0.0
+181                 HD_29391__2016-01-16__01-44-58   41.8108       256          DB_H23            0  train         0.0
+182                 HD_29391__2016-12-12__04-52-59   25.2580        54          DB_H23            0   test         0.0
+183                 HD_29391__2016-12-13__03-48-07   45.0270        72          DB_H23            0  train         0.0
+186                  HD_3003__2016-09-16__05-31-23  -31.5309        80          DB_H23            0  train         0.0
+187                 HD_30447__2015-12-01__03-58-58  -37.1473        78          DB_H23            0   test         0.0
+188                 HD_30447__2015-12-29__01-40-09  -16.7973        96          DB_H23            0  calib         0.0
+191                 HD_32195__2015-09-30__09-05-02  -16.5749        56          DB_H23            0  train         0.0
+193                 HD_35114__2017-02-12__01-09-44  -72.9412        96          DB_H23            0  train         0.0
+194                 HD_35650__2015-12-28__03-24-06  -56.6699        64          DB_H23            0    val         0.0
+195                   HD_377__2016-10-14__02-57-13   35.7508        80          DB_H23            0  train         0.0
+196                 HD_38678__2017-02-11__00-52-32   83.5267       288          DB_H23            0   test         0.0
+213                 HD_44627__2015-02-06__02-21-02  -28.2812        64          DB_H23            0  train         0.0
+214                 HD_45270__2016-01-16__03-24-43  -28.3446       256          DB_H23            0  train         0.0
+215                 HD_51797__2016-01-03__04-28-49  -39.5316        64          DB_H23            0  train         0.0
+216                 HD_55279__2015-12-27__05-19-54  -19.2161        64          DB_H23            0  train         0.0
+217                 HD_55279__2017-02-08__02-59-38  -32.2407        78          DB_H23            0  train         0.0
+218                 HD_56022__2015-12-29__06-30-09  -34.7126       128          DB_H23            0    val         0.0
+219                 HD_56022__2016-03-30__00-11-02  -47.7005        80          DB_H23            0  train         0.0
+222                 HD_71155__2016-01-19__05-00-11   40.4293       448          DB_H23            0  train         0.0
+224                 HD_74576__2016-01-03__06-20-39  -62.8840       512          DB_H23            0    val         0.0
+225                 HD_74576__2016-03-28__00-10-22  -42.5758        64          DB_H23            0  train         0.0
+226                 HD_74576__2016-12-12__07-55-28  -55.9169        54          DB_H23            0  train         0.0
+227                 HD_75416__2016-01-02__07-07-51  -24.1688        80          DB_H23            0  train         0.0
+228                 HD_75416__2016-12-13__07-47-26  -28.4732        90          DB_H23            0  train         0.0
+229                 HD_75505__2015-02-06__04-17-12  -30.4175        84          DB_H23            0  train         0.0
+230                 HD_75505__2018-01-06__05-11-44  -27.4253        60          DB_H23            0  train         0.0
+231                 HD_77825__2016-04-17__00-37-21   78.3281        57          DB_H23            0  train         0.0
+233                 HD_84075__2015-02-05__04-36-52   -7.1735        24          DB_H23            0  train         0.0
+234                 HD_84075__2016-01-18__06-13-16  -24.3869        80          DB_H23            0  train         0.0
+235                 HD_84075__2017-02-11__04-54-44  -24.4086        80          DB_H23            0  train         0.0
+236                  HD_8558__2015-09-24__06-06-43  -28.7776        64          DB_H23            0  train         0.0
+237                  HD_8558__2015-10-28__03-08-29  -28.2168        64          DB_H23            0   test         0.0
+238                  HD_8558__2016-10-14__05-09-10  -28.1611        64          DB_H23            0  train         0.0
+240                 HD_88955__2016-03-27__02-19-10  -40.6608       100          DB_H23            0  train         0.0
+241                 HD_88955__2018-01-05__08-09-37  -44.3999       675          DB_H23            0  train         0.0
+242                 HD_88955__2018-02-27__04-08-45  -55.5528       140          DB_H23            0   test         0.0
+243                  HD_9054__2015-09-30__05-10-46  -46.3504       160          DB_H23            0  train         0.0
+244                  HD_9054__2017-09-29__05-43-40  -37.0002        40          DB_H23            0   test         0.0
+245                 HD_90712__2016-01-03__08-04-45  -74.7722        64          DB_H23            0  train         0.0
+246                 HD_95086__2015-05-05__00-00-28  -22.4351        64          DB_H23            0   test         0.0
+248                 HD_95086__2015-05-11__23-44-00  -22.4828        64          DB_H23            0  train         0.0
+250                 HD_95086__2016-04-16__01-47-40  -28.1427        80          DB_H23            0  train         0.0
+256                 HD_96064__2016-04-21__01-42-09   42.8656        64          DB_H23            0  train         0.0
+257                 HD_96064__2017-02-09__07-00-09   49.8644        58          DB_H23            0   test         0.0
+258                 HD_96338__2015-02-06__06-28-32  -39.2406        64          DB_H23            0  train         0.0
+259                   HD_987__2016-10-15__03-30-20  -29.6775        90          DB_H23            0  train         0.0
+260               HIP_107345__2015-07-05__07-01-35  -26.0206        64          DB_H23            0  train         0.0
+261               HIP_112312__2015-10-01__02-04-36  -54.7331       128          DB_H23            0   test         0.0
+262               HIP_113201__2016-09-18__03-41-55  -43.3656       144          DB_H23            0  train         0.0
+264                 HIP_1993__2015-11-29__01-10-02  -25.7806        64          DB_H23            0  train         0.0
+265                HIP_23200__2015-09-28__08-50-29   32.8749        64          DB_H23            0  train         0.0
+266                HIP_23309__2016-01-03__02-49-24  -28.9295        64          DB_H23            0  train         0.0
+267                HIP_31878__2016-01-02__04-48-37  -26.0551        64          DB_H23            0    val         0.0
+268                HIP_37288__2015-12-01__08-03-25   32.8472        64          DB_H23            0  train         0.0
+269                HIP_37288__2017-02-13__03-24-12   38.4030        80          DB_H23            0   test         0.0
+270                HIP_37766__2015-12-26__06-00-18   32.3445        64          DB_H23            0  train         0.0
+271                HIP_39826__2017-02-12__03-12-32   23.7213        70          DB_H23            0  train         0.0
+272                HIP_51317__2016-01-01__08-10-38   34.5565        64          DB_H23            0  train         0.0
+273                 HIP_6276__2015-12-02__00-49-59   50.9651        64          DB_H23            0  train         0.0
+275                HIP_81084__2015-05-11__05-47-39   53.7476        64          DB_H23            0    val         0.0
+277           TYC_1090-543-1__2015-06-06__09-18-00   25.8813        64          DB_H23            0  train         0.0
+278           TYC_1090-543-1__2016-09-17__01-28-31   37.4706        75          DB_H23            0  train         0.0
+279           TYC_1090-543-1__2018-05-13__09-10-02   22.6746        41          DB_H23            0   test         0.0
+280           TYC_1355-214-1__2015-02-07__03-32-34   27.2162        76          DB_H23            0  train         0.0
+281           TYC_1355-214-1__2017-02-10__02-57-36   27.3001        80          DB_H23            0  train         0.0
+282           TYC_486-4943-1__2015-05-31__07-41-39   32.1260        64          DB_H23            0   test         0.0
+283           TYC_5164-567-1__2015-05-15__09-17-27   40.3472        64          DB_H23            0  train         0.0
+284          TYC_5882-1169-1__2016-09-18__09-13-52   87.6469        76          DB_H23            0  train         0.0
+287            TYC_5899-26-1__2016-01-18__01-13-47   90.7406        72          DB_H23            0  calib         0.0
+288           TYC_7026-325-1__2016-01-02__00-53-50  -67.8072        64          DB_H23            0    val         0.0
+289           TYC_7084-794-1__2015-11-29__06-14-34  -38.9461        32          DB_H23            0  train         0.0
+292           TYC_7084-794-1__2019-03-06__01-35-45  -10.0294        20          DB_H23            0  train         0.0
+293          TYC_7183-1477-1__2016-03-30__02-14-07  -91.8208        60          DB_H23            0  train         0.0
+294          TYC_7190-2111-1__2015-05-09__23-57-36  -73.9969        60          DB_H23            0  train         0.0
+295          TYC_7190-2111-1__2017-02-07__06-41-05  -90.9373       163          DB_H23            0  calib         0.0
+296           TYC_7286-248-1__2015-05-13__03-59-04  -82.4168        64          DB_H23            0  train         0.0
+297          TYC_7443-1102-1__2015-05-04__09-26-47  -81.5298        64          DB_H23            0  calib         0.0
+299          TYC_7443-1102-1__2015-06-09__07-33-40  -66.5530        32          DB_H23            0  train         0.0
+300           TYC_7617-549-1__2016-12-13__05-46-04  -63.9913        80          DB_H23            0  train         0.0
+301           TYC_8047-232-1__2015-09-25__06-19-09  -81.5414       160          DB_H23            0  calib         0.0
+302           TYC_8047-232-1__2016-01-17__00-50-17  -14.3210        40          DB_H23            0  train         0.0
+303          TYC_8060-1673-1__2015-09-24__08-00-43  -47.9920        72          DB_H23            0  train         0.0
+304          TYC_8060-1673-1__2015-12-28__01-45-20  -42.1130        64          DB_H23            0  train         0.0
+305          TYC_8128-1946-1__2015-11-30__07-50-30  -36.7927        64          DB_H23            0  train         0.0
+306          TYC_8137-2609-1__2015-11-29__07-52-38  -58.5739        80          DB_H23            0  train         0.0
+307          TYC_8137-2609-1__2018-01-26__03-25-50  -43.0628        47          DB_H23            0  train         0.0
+308           TYC_8404-354-1__2015-05-09__09-45-09  -34.2531        64          DB_H23            0  train         0.0
+309           TYC_8404-354-1__2015-05-30__07-28-42  -31.0247        64          DB_H23            0  train         0.0
+310          TYC_8728-2262-1__2015-06-03__05-56-44  -30.7881        64          DB_H23            0    val         0.0
+311          TYC_8760-1468-1__2015-06-27__05-23-59  -39.3022        80          DB_H23            0  train         0.0
+312          TYC_8760-1468-1__2018-04-19__09-32-42  -36.1891        50          DB_H23            0   test         0.0
+313           TYC_9073-762-1__2015-05-16__07-55-40  -25.8808        64          DB_H23            0  train         0.0
+314           TYC_9340-437-1__2015-10-25__00-30-26  -35.3562        80          DB_H23            0  train         0.0
+315           TYC_9340-437-1__2016-06-27__09-30-54  -42.7163       115          DB_H23            0   test         0.0
+316           TYC_9482-121-1__2016-06-28__08-13-14  -16.6353        56          DB_H23            0  train         0.0
+mask_cat: 165/220
+N observations: 165
+obs_id:                                             obs_id   rot_max  n_frames infrared_filter
+0    2MASS_J00172353-6645124__2015-10-01__05-06-04  -17.3792        48          DB_H23
+1    2MASS_J00172353-6645124__2017-11-06__02-01-55  -17.4301        32          DB_H23
+2    2MASS_J06255610-6003273__2015-02-07__01-33-14  -33.1256        76          DB_H23
+3    2MASS_J20013718-3313139__2015-09-30__00-10-10  -87.6604        64          DB_H23
+4    2MASS_J22021626-4210329__2016-06-11__09-29-34  -49.5200        49          DB_H23
+5                  HD_100453__2016-01-21__05-34-59   -7.6309       176          DB_H23
+6                  HD_101615__2016-06-02__00-32-53  -28.8783        48          DB_H23
+7                  HD_102647__2015-05-31__02-07-12   14.3709       800          DB_H23
+8                  HD_103599__2015-06-02__23-29-37  -30.9616        64          DB_H23
+9                  HD_104125__2015-06-03__23-27-24  -28.5488        64          DB_H23
+10                 HD_104125__2016-03-30__04-41-34  -28.3986        52          DB_H23
+11                    HD_105__2015-09-26__03-36-17  -44.9821        72          DB_H23
+12                 HD_106048__2016-06-13__23-30-15  -23.6663        48          DB_H23
+13                 HD_106048__2017-05-07__01-28-26  -44.9046        91          DB_H23
+14                 HD_106048__2018-03-30__03-48-28  -47.2734        60          DB_H23
+15                 HD_107301__2015-06-05__23-37-34  -22.1160        60          DB_H23
+16                 HD_107301__2016-01-19__06-40-27  -20.5240       128          DB_H23
+17                 HD_107821__2015-02-04__08-27-21  -37.1763        92          DB_H23
+18                HD_108767B__2016-06-11__23-43-59   99.2574        80          DB_H23
+19                 HD_108767__2018-01-25__08-46-24   94.4343        72          DB_H23
+20                 HD_109536__2016-04-21__03-19-59  -55.0011       216          DB_H23
+21                 HD_110411__2016-06-11__00-13-20   30.2266        72          DB_H23
+22                 HD_115383__2015-05-06__03-19-20   29.6223       896          DB_H23
+23                 HD_115383__2016-03-29__05-49-19   31.2393       104          DB_H23
+24                 HD_115383__2017-02-10__08-50-22   31.1881       112          DB_H23
+25                 HD_115383__2018-04-13__04-58-18   30.2492        90          DB_H23
+26                 HD_116434__2016-05-31__01-33-30  -34.2228        64          DB_H23
+27                 HD_116434__2016-06-26__23-59-43  -42.1808        80          DB_H23
+28                 HD_116434__2017-02-07__08-36-46  -44.2689        80          DB_H23
+29                 HD_118588__2015-05-15__02-41-39  -33.6535        48          DB_H23
+30                 HD_118697__2016-06-02__02-08-17  -38.2930        80          DB_H23
+31                 HD_122705__2015-03-31__05-47-53  -35.0545        64          DB_H23
+32                 HD_125451__2016-06-12__01-39-47   25.9683       128          DB_H23
+33                 HD_128819__2017-03-19__07-35-26  -67.6098        77          DB_H23
+34                 HD_128987__2016-06-01__02-51-53   69.3824        96          DB_H23
+35                 HD_133803__2016-04-21__05-24-48  -93.8481        64          DB_H23
+36                 HD_140840__2016-04-21__07-08-29  -56.5720        64          DB_H23
+37                 HD_141190__2015-03-31__08-08-20 -115.4226        60          DB_H23
+38                 HD_141378__2015-06-05__03-13-45   39.4190        64          DB_H23
+39                  HD_14228__2016-09-17__07-03-47  -40.2497       512          DB_H23
+40                 HD_142705__2015-05-09__04-57-46    8.5918        26          DB_H23
+41                 HD_142851__2015-06-03__04-11-46  -91.8449        64          DB_H23
+42                 HD_143488__2015-05-09__06-23-56  -36.4340        48          DB_H23
+43                 HD_143488__2016-06-11__03-31-24  -67.9741        65          DB_H23
+44                 HD_143567__2015-05-04__06-05-18  147.9516        60          DB_H23
+45                 HD_143637__2015-06-04__03-02-47 -123.5640        68          DB_H23
+46                 HD_143637__2017-03-20__08-45-00 -115.9709        67          DB_H23
+47                   HD_1466__2015-10-26__03-01-44  -24.9978        64          DB_H23
+48                   HD_1466__2016-09-18__05-32-12  -31.0696        80          DB_H23
+49                 HD_147553__2015-05-30__05-02-09  -88.8515       136          DB_H23
+50                 HD_147553__2016-03-28__08-37-36  -70.3199        45          DB_H23
+51                 HD_147553__2018-06-18__03-58-47  -59.2457        40          DB_H23
+52                 HD_148055__2016-03-29__08-59-17  -54.2841        64          DB_H23
+53                 HD_151726__2016-04-01__09-11-13  -78.5460        80          DB_H23
+54                 HD_151726__2017-05-18__06-18-50  -64.8128        68          DB_H23
+55                 HD_152391__2015-06-05__05-03-34   35.0348        64          DB_H23
+56                 HD_159492__2016-06-11__05-40-25  -25.9217        95          DB_H23
+57                 HD_159911__2015-05-12__07-17-59   65.2939        64          DB_H23
+58                 HD_159911__2016-05-22__06-07-40   71.4837        70          DB_H23
+59                 HD_159911__2018-04-12__09-18-25   72.7179        50          DB_H23
+60                 HD_164249__2015-06-01__05-54-21  -33.9258        64          DB_H23
+61                  HD_16978__2015-10-01__06-39-32  -34.6156       608          DB_H23
+62                 HD_172555__2015-05-11__07-51-19  -19.2948       192          DB_H23
+63                 HD_174429__2015-05-06__09-49-25  -11.4059        82          DB_H23
+64                 HD_174429__2015-05-31__06-34-52   -9.2883        32          DB_H23
+65                 HD_174429__2016-09-16__23-53-41  -29.0445        80          DB_H23
+66                 HD_174429__2017-05-18__08-01-51  -33.1492        60          DB_H23
+67                 HD_177724__2015-06-28__05-32-37   29.8796       560          DB_H23
+68                 HD_178253__2015-06-06__07-40-23  -49.7435       256          DB_H23
+69                 HD_181296__2015-05-05__09-22-43  -46.8276       168          DB_H23
+70                 HD_181327__2015-05-10__09-12-24  -31.1248        56          DB_H23
+71                 HD_181869__2015-05-13__09-10-43  -52.8385       256          DB_H23
+72                 HD_181869__2016-05-21__07-53-18  -71.4899       176          DB_H23
+73                 HD_188228__2015-05-12__09-04-54  -22.3432       256          DB_H23
+74                 HD_188228__2015-07-01__05-14-12  -21.2979       128          DB_H23
+75                 HD_188228__2016-05-25__09-18-36  -35.4357       416          DB_H23
+76                 HD_189285__2015-06-03__07-33-54   40.8715        64          DB_H23
+77                 HD_189285__2016-05-29__08-29-20   58.9779        72          DB_H23
+78                 HD_189285__2018-05-07__09-40-24   50.2683        50          DB_H23
+79                 HD_192425__2015-09-28__00-51-15   25.2150       256          DB_H23
+80                 HD_192425__2016-06-11__07-27-45   35.6974        96          DB_H23
+81                 HD_197890__2015-06-04__08-15-32  -61.5179        64          DB_H23
+82                 HD_201184__2015-09-29__00-46-20   80.5715       256          DB_H23
+83                 HD_201919__2015-06-03__09-04-45   92.8512        64          DB_H23
+84                 HD_202917__2015-05-31__09-36-58  -49.5564        86          DB_H23
+85                  HD_20630__2015-12-27__01-22-43   33.2458       480          DB_H23
+86                 HD_210049__2015-07-01__08-29-23  -85.2939        64          DB_H23
+87                 HD_210049__2016-09-17__03-22-07  -87.6297       420          DB_H23
+88                 HD_210049__2016-10-14__01-15-39  -84.1233        80          DB_H23
+89                 HD_218396__2016-11-18__01-21-08   16.8358        64          DB_H23
+90                 HD_218396__2017-06-15__10-12-26   19.2834       144          DB_H23
+91                 HD_220825__2015-09-25__03-36-55   41.3384       300          DB_H23
+92                 HD_224228__2015-10-25__02-26-04  -59.2862        64          DB_H23
+93                  HD_24636__2016-01-03__01-01-11  -25.5061        80          DB_H23
+94                  HD_25284__2015-09-30__07-14-00  -38.7530       128          DB_H23
+95                  HD_29391__2015-12-26__02-28-43   37.5614       256          DB_H23
+96                  HD_29391__2016-01-16__01-44-58   41.8108       256          DB_H23
+97                  HD_29391__2016-12-13__03-48-07   45.0270        72          DB_H23
+98                   HD_3003__2016-09-16__05-31-23  -31.5309        80          DB_H23
+99                  HD_32195__2015-09-30__09-05-02  -16.5749        56          DB_H23
+100                 HD_35114__2017-02-12__01-09-44  -72.9412        96          DB_H23
+101                   HD_377__2016-10-14__02-57-13   35.7508        80          DB_H23
+102                 HD_44627__2015-02-06__02-21-02  -28.2812        64          DB_H23
+103                 HD_45270__2016-01-16__03-24-43  -28.3446       256          DB_H23
+104                 HD_51797__2016-01-03__04-28-49  -39.5316        64          DB_H23
+105                 HD_55279__2015-12-27__05-19-54  -19.2161        64          DB_H23
+106                 HD_55279__2017-02-08__02-59-38  -32.2407        78          DB_H23
+107                 HD_56022__2016-03-30__00-11-02  -47.7005        80          DB_H23
+108                 HD_71155__2016-01-19__05-00-11   40.4293       448          DB_H23
+109                 HD_74576__2016-03-28__00-10-22  -42.5758        64          DB_H23
+110                 HD_74576__2016-12-12__07-55-28  -55.9169        54          DB_H23
+111                 HD_75416__2016-01-02__07-07-51  -24.1688        80          DB_H23
+112                 HD_75416__2016-12-13__07-47-26  -28.4732        90          DB_H23
+113                 HD_75505__2015-02-06__04-17-12  -30.4175        84          DB_H23
+114                 HD_75505__2018-01-06__05-11-44  -27.4253        60          DB_H23
+115                 HD_77825__2016-04-17__00-37-21   78.3281        57          DB_H23
+116                 HD_84075__2015-02-05__04-36-52   -7.1735        24          DB_H23
+117                 HD_84075__2016-01-18__06-13-16  -24.3869        80          DB_H23
+118                 HD_84075__2017-02-11__04-54-44  -24.4086        80          DB_H23
+119                  HD_8558__2015-09-24__06-06-43  -28.7776        64          DB_H23
+120                  HD_8558__2016-10-14__05-09-10  -28.1611        64          DB_H23
+121                 HD_88955__2016-03-27__02-19-10  -40.6608       100          DB_H23
+122                 HD_88955__2018-01-05__08-09-37  -44.3999       675          DB_H23
+123                  HD_9054__2015-09-30__05-10-46  -46.3504       160          DB_H23
+124                 HD_90712__2016-01-03__08-04-45  -74.7722        64          DB_H23
+125                 HD_95086__2015-05-11__23-44-00  -22.4828        64          DB_H23
+126                 HD_95086__2016-04-16__01-47-40  -28.1427        80          DB_H23
+127                 HD_96064__2016-04-21__01-42-09   42.8656        64          DB_H23
+128                 HD_96338__2015-02-06__06-28-32  -39.2406        64          DB_H23
+129                   HD_987__2016-10-15__03-30-20  -29.6775        90          DB_H23
+130               HIP_107345__2015-07-05__07-01-35  -26.0206        64          DB_H23
+131               HIP_113201__2016-09-18__03-41-55  -43.3656       144          DB_H23
+132                 HIP_1993__2015-11-29__01-10-02  -25.7806        64          DB_H23
+133                HIP_23200__2015-09-28__08-50-29   32.8749        64          DB_H23
+134                HIP_23309__2016-01-03__02-49-24  -28.9295        64          DB_H23
+135                HIP_37288__2015-12-01__08-03-25   32.8472        64          DB_H23
+136                HIP_37766__2015-12-26__06-00-18   32.3445        64          DB_H23
+137                HIP_39826__2017-02-12__03-12-32   23.7213        70          DB_H23
+138                HIP_51317__2016-01-01__08-10-38   34.5565        64          DB_H23
+139                 HIP_6276__2015-12-02__00-49-59   50.9651        64          DB_H23
+140           TYC_1090-543-1__2015-06-06__09-18-00   25.8813        64          DB_H23
+141           TYC_1090-543-1__2016-09-17__01-28-31   37.4706        75          DB_H23
+142           TYC_1355-214-1__2015-02-07__03-32-34   27.2162        76          DB_H23
+143           TYC_1355-214-1__2017-02-10__02-57-36   27.3001        80          DB_H23
+144           TYC_5164-567-1__2015-05-15__09-17-27   40.3472        64          DB_H23
+145          TYC_5882-1169-1__2016-09-18__09-13-52   87.6469        76          DB_H23
+146           TYC_7084-794-1__2015-11-29__06-14-34  -38.9461        32          DB_H23
+147           TYC_7084-794-1__2019-03-06__01-35-45  -10.0294        20          DB_H23
+148          TYC_7183-1477-1__2016-03-30__02-14-07  -91.8208        60          DB_H23
+149          TYC_7190-2111-1__2015-05-09__23-57-36  -73.9969        60          DB_H23
+150           TYC_7286-248-1__2015-05-13__03-59-04  -82.4168        64          DB_H23
+151          TYC_7443-1102-1__2015-06-09__07-33-40  -66.5530        32          DB_H23
+152           TYC_7617-549-1__2016-12-13__05-46-04  -63.9913        80          DB_H23
+153           TYC_8047-232-1__2016-01-17__00-50-17  -14.3210        40          DB_H23
+154          TYC_8060-1673-1__2015-09-24__08-00-43  -47.9920        72          DB_H23
+155          TYC_8060-1673-1__2015-12-28__01-45-20  -42.1130        64          DB_H23
+156          TYC_8128-1946-1__2015-11-30__07-50-30  -36.7927        64          DB_H23
+157          TYC_8137-2609-1__2015-11-29__07-52-38  -58.5739        80          DB_H23
+158          TYC_8137-2609-1__2018-01-26__03-25-50  -43.0628        47          DB_H23
+159           TYC_8404-354-1__2015-05-09__09-45-09  -34.2531        64          DB_H23
+160           TYC_8404-354-1__2015-05-30__07-28-42  -31.0247        64          DB_H23
+161          TYC_8760-1468-1__2015-06-27__05-23-59  -39.3022        80          DB_H23
+162           TYC_9073-762-1__2015-05-16__07-55-40  -25.8808        64          DB_H23
+163           TYC_9340-437-1__2015-10-25__00-30-26  -35.3562        80          DB_H23
+164           TYC_9482-121-1__2016-06-28__08-13-14  -16.6353        56          DB_H23
+[LMDBDataset] Init frames index..
+[LMDBDataset] no n_obs_max
+All clips:
+len(self.all_clips)=5196
+all_clips['obs_id']:
+HD_210049__2016-09-17__03-22-07
+HD_159911__2016-05-22__06-07-40
+HD_3003__2016-09-16__05-31-23
+HD_178253__2015-06-06__07-40-23
+HD_115383__2018-04-13__04-58-18
+TYC_7286-248-1__2015-05-13__03-59-04
+HD_108767__2018-01-25__08-46-24
+HD_108767B__2016-06-11__23-43-59
+HD_88955__2016-03-27__02-19-10
+HD_35114__2017-02-12__01-09-44
+HD_16978__2015-10-01__06-39-32
+HD_377__2016-10-14__02-57-13
+HD_181869__2015-05-13__09-10-43
+HD_192425__2016-06-11__07-27-45
+HD_172555__2015-05-11__07-51-19
+HD_71155__2016-01-19__05-00-11
+HD_151726__2016-04-01__09-11-13
+HD_174429__2015-05-06__09-49-25
+HD_75416__2016-12-13__07-47-26
+TYC_1090-543-1__2016-09-17__01-28-31
+HD_125451__2016-06-12__01-39-47
+HD_45270__2016-01-16__03-24-43
+HD_181296__2015-05-05__09-22-43
+HD_188228__2015-05-12__09-04-54
+HD_55279__2017-02-08__02-59-38
+HD_100453__2016-01-21__05-34-59
+HD_106048__2017-05-07__01-28-26
+HD_107301__2016-01-19__06-40-27
+HD_142851__2015-06-03__04-11-46
+HD_55279__2015-12-27__05-19-54
+HD_987__2016-10-15__03-30-20
+HD_29391__2016-01-16__01-44-58
+TYC_5882-1169-1__2016-09-18__09-13-52
+HD_25284__2015-09-30__07-14-00
+HD_159492__2016-06-11__05-40-25
+HD_201184__2015-09-29__00-46-20
+HIP_23200__2015-09-28__08-50-29
+HD_102647__2015-05-31__02-07-12
+HD_14228__2016-09-17__07-03-47
+HD_84075__2017-02-11__04-54-44
+HD_181869__2016-05-21__07-53-18
+TYC_8760-1468-1__2015-06-27__05-23-59
+HD_210049__2016-10-14__01-15-39
+HD_20630__2015-12-27__01-22-43
+HIP_113201__2016-09-18__03-41-55
+HD_115383__2015-05-06__03-19-20
+HD_218396__2017-06-15__10-12-26
+HD_115383__2017-02-10__08-50-22
+HD_220825__2015-09-25__03-36-55
+HD_177724__2015-06-28__05-32-37
+HD_188228__2016-05-25__09-18-36
+HD_192425__2015-09-28__00-51-15
+HD_1466__2016-09-18__05-32-12
+HD_118697__2016-06-02__02-08-17
+HD_29391__2015-12-26__02-28-43
+TYC_7617-549-1__2016-12-13__05-46-04
+HD_116434__2016-06-26__23-59-43
+HD_188228__2015-07-01__05-14-12
+HD_56022__2016-03-30__00-11-02
+HD_88955__2018-01-05__08-09-37
+HD_9054__2015-09-30__05-10-46
+TYC_9340-437-1__2015-10-25__00-30-26
+HD_147553__2015-05-30__05-02-09
+HD_109536__2016-04-21__03-19-59
+df_global_selected saved to:
+/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/df_global_selected_train.csv
+[LMDBDataset] counting frames ..
+[LMDBDataset] n_frames=9228
+[LMDBDataset] length dataset: 5196
+
+INITIALIZING VAL DATASET
+[LMDBDataset] self.n_frames=64
+[LMDBDataset] self.stride=1
+[LMDBDataset] self.dilation=1
+[LMDBDataset] self.drop_short_clips=True
+[LMDBDataset] self.clips_per_obs_max=1
+[LMDBDataset] self.rot_scale=1
+[LMDBDataset] self.n_obs_max=None
+[LMDBDataset] self.channel_idx=0
+[LMDBDataset] self.multibands=False
+lmdb_path: /srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/DiscDSM/data/db_new/lmdb_256
+Error executing job with overrides: ['name=exomild', 'log_wandb=true', 'data.train.num_workers=16']
+Traceback (most recent call last):
+  File "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/main.py", line 22, in main
+    return train(cfg)
+  File "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/trainer.py", line 322, in train
+    dataloaders = get_dataloaders(**cfg.data.train)
+  File "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/datasets/dataloaders/__init__.py", line 7, in get_dataloaders
+    return get_dataloaders_train(**kwargs)
+  File "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/datasets/dataloaders/train.py", line 280, in get_dataloaders_train
+    dataset_val = LMDBDataset(
+  File "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/datasets/lmdb_dataset.py", line 111, in __init__
+    self.lmdb_reader = LMDBReader(path=path_lmdb)
+  File "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/database/lmdb_utils.py", line 98, in __init__
+    self.env = lmdb.open(
+lmdb.Error: The environment '/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/DiscDSM/data/db_new/lmdb_256' is already open in this process.
+
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.

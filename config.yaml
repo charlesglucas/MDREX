@@ -1,0 +1,605 @@
+train:
+  name: exomild
+  eval_detection: true
+  eval_charac: true
+  eval_astro: true
+  params:
+    use_cat: false
+    progressive: false
+    weight_sources: 1.0
+    differential_mode: false
+    patch_size_loss: 3
+    micro_batchsize: 1
+    use_class_weight_bce: false
+    with_log: true
+    gamma_bce: 0.0
+    k_max: null
+    use_profiler: false
+    aligned_on: obj
+    patch_size: null
+    use_weight_obs: false
+    T: null
+    target_type: temporal
+    source_type: temporal
+    use_error_register: false
+    n_iter: 50000
+    lr: 5.0e-05
+    weight_decay: 0.0
+    lr_step: 20000
+    lr_gamma: 0.33
+    ema_decay: 0.99
+    log_interval: 100
+    val_interval: 1000
+    bak_interval: 1000
+    detection_interval: 2500
+    astro_interval: 1000
+    save_interval: null
+    overfit_batch: false
+    loss_type: nll
+    use_amp: false
+    save_steps:
+    - 1000
+    - 2000
+    - 5000
+    - 10000
+    - 25000
+    - 30000
+    - 35000
+    - 40000
+eval:
+  snr_min: 1
+  snr_max: 5
+  n_snr: 300
+  radius_gt: 10
+  iou_thresh: 0
+  n_bins: 30
+  erode: 1
+  dilation_t: 1
+  offset_t: 0
+  window_size: 4
+  save_output: false
+  verbose: false
+  max_iter: null
+  labels_pred_method: contiguous
+  run_name: ${name}
+  sep_max: 1.38
+  main_threshold: 5.0
+  max_threshold: null
+  use_amp: false
+model:
+  name: exomild
+  use_local_max: false
+  interpolation: bicubic
+  filter_alpha: true
+  skip_norm_unet: false
+  is_residual: false
+  gate_type: unet_normal
+  learnable_weights: true
+  pixel_wise_weights: true
+  oracle: false
+  n_sources_max: 16
+  iterative: false
+  n_iter: 20
+  linalg_library: cusolver
+  use_dataparallel: false
+  grad_iterative: true
+  grad_astrometry: false
+  grad_params: true
+  patch_wise: false
+  use_modelco_loss: false
+  n_channels: 1
+  learnable_proj: true
+  repeats:
+  - 1
+  - 0
+  - 0
+  - 1
+  - 0
+  - 0
+  - 1
+  - 0
+  - 0
+  - 1
+  - 0
+  - 0
+  batch_size: null
+  low_memory_mode: false
+  rot_zero_init: true
+  params_terms:
+  - type: spatial
+    name: p8_s1
+    repeat: ${model.repeats.0}
+    patch_size: 8
+    stride: 4
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: t l
+    dim_prefeatures: h w
+    denoise_mean: false
+    groups: 1
+    mode_ab: left
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    symmetry: 1
+    params_pipeline:
+    - type: linear
+      patch_wise: ${model.patch_wise}
+      size_in: 64
+      size_out: 64
+      learnable: ${model.learnable_proj}
+      is_identity: false
+  - type: spatial
+    name: p8_s2
+    repeat: ${model.repeats.1}
+    patch_size: 8
+    stride: 4
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: t l
+    dim_prefeatures: h w
+    groups: 1
+    mode_ab: left
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    symmetry: 2
+    params_pipeline:
+    - type: linear
+      patch_wise: ${model.patch_wise}
+      size_in: 128
+      size_out: 64
+      learnable: ${model.learnable_proj}
+      is_identity: false
+  - type: spatial
+    name: p8_s4
+    repeat: ${model.repeats.2}
+    patch_size: 8
+    stride: 4
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: t l
+    dim_prefeatures: h w
+    groups: 1
+    mode_ab: left
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    symmetry: 4
+    params_pipeline:
+    - type: linear
+      patch_wise: ${model.patch_wise}
+      size_in: 256
+      size_out: 64
+      learnable: ${model.learnable_proj}
+      is_identity: false
+  - type: spatial
+    name: p16_s1
+    repeat: ${model.repeats.3}
+    patch_size: 16
+    stride: 8
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: t l
+    dim_prefeatures: h w
+    groups: 1
+    mode_ab: left
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    symmetry: 1
+    params_pipeline:
+    - type: linear
+      patch_wise: ${model.patch_wise}
+      size_in: 256
+      size_out: 64
+      learnable: ${model.learnable_proj}
+      is_identity: false
+  - type: spatial
+    name: p16_s2
+    repeat: ${model.repeats.4}
+    patch_size: 16
+    stride: 8
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: t l
+    dim_prefeatures: h w
+    groups: 1
+    mode_ab: left
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    symmetry: 2
+    params_pipeline:
+    - type: linear
+      patch_wise: ${model.patch_wise}
+      size_in: 512
+      size_out: 64
+      learnable: ${model.learnable_proj}
+      is_identity: false
+  - type: spatial
+    name: p16_s4
+    repeat: ${model.repeats.5}
+    patch_size: 16
+    stride: 8
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: t l
+    dim_prefeatures: h w
+    groups: 1
+    mode_ab: left
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    symmetry: 4
+    params_pipeline:
+    - type: linear
+      patch_wise: ${model.patch_wise}
+      size_in: 1024
+      size_out: 64
+      learnable: ${model.learnable_proj}
+      is_identity: false
+  - type: spatial
+    name: p32_s1
+    repeat: ${model.repeats.6}
+    patch_size: 32
+    stride: 16
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: t l
+    dim_prefeatures: h w
+    groups: 1
+    mode_ab: left
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    symmetry: 1
+    params_pipeline:
+    - type: linear
+      patch_wise: ${model.patch_wise}
+      size_in: 1024
+      size_out: 64
+      learnable: ${model.learnable_proj}
+      is_identity: false
+  - type: spatial
+    name: p32_s2
+    repeat: ${model.repeats.7}
+    patch_size: 32
+    stride: 16
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: t l
+    dim_prefeatures: h w
+    groups: 1
+    mode_ab: left
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: null
+    low_memory_mode: ${model.low_memory_mode}
+    symmetry: 2
+    params_pipeline:
+    - type: linear
+      patch_wise: ${model.patch_wise}
+      size_in: 2048
+      size_out: 64
+      learnable: ${model.learnable_proj}
+      is_identity: false
+  - type: spatial
+    name: p32_s4
+    repeat: ${model.repeats.8}
+    patch_size: 32
+    stride: 16
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: t l
+    dim_prefeatures: h w
+    groups: 1
+    mode_ab: left
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    symmetry: 4
+    params_pipeline:
+    - type: linear
+      patch_wise: ${model.patch_wise}
+      size_in: 4096
+      size_out: 64
+      learnable: ${model.learnable_proj}
+      is_identity: false
+  - type: spatial
+    name: p64_s1
+    repeat: ${model.repeats.9}
+    patch_size: 64
+    stride: 32
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: t l
+    dim_prefeatures: h w
+    groups: 1
+    mode_ab: left
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    symmetry: 1
+    params_pipeline:
+    - type: linear
+      patch_wise: ${model.patch_wise}
+      size_in: 4096
+      size_out: 64
+      learnable: ${model.learnable_proj}
+      is_identity: false
+  - type: spatial
+    name: p64_s2
+    repeat: ${model.repeats.10}
+    patch_size: 64
+    stride: 32
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: t l
+    dim_prefeatures: h w
+    groups: 1
+    mode_ab: left
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    symmetry: 2
+    params_pipeline:
+    - type: linear
+      patch_wise: ${model.patch_wise}
+      size_in: 8192
+      size_out: 64
+      learnable: ${model.learnable_proj}
+      is_identity: false
+  - type: spatial
+    name: p64_s2
+    repeat: ${model.repeats.11}
+    patch_size: 64
+    stride: 32
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: t l
+    dim_prefeatures: h w
+    groups: 1
+    mode_ab: left
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    symmetry: 4
+    params_pipeline:
+    - type: linear
+      patch_wise: ${model.patch_wise}
+      size_in: 8192
+      size_out: 64
+      learnable: ${model.learnable_proj}
+      is_identity: false
+  ckpt: null
+  image_size: 256
+  symmetry: normal
+  timesteps: null
+data:
+  detection:
+    name: detection
+    batch_size: 1
+    interpolation: linear
+    seed: 0
+    repeat_idx: null
+    n_repeat: 100
+    obj_size: 256
+    num_workers: 0
+    crop: 10
+    crop_bg: 40
+    n_min: 3
+    n_max: 15
+    alpha_min: 0
+    alpha_max: 0.0001
+    use_adaptive: true
+    distance_min: 25
+    sampling_mode: cartesian
+    rv_mode: linear
+    exp_coeff: 7
+    subset: null
+    scale: 1
+    sep_max: 1.38
+    psf_model: gaussian_2d
+    psf_size_inj: null
+    shuffle: false
+    flip_rot: false
+    obs_id: HD_216803__2015-06-27__09-36-00
+    range_max_adaptive: 4.0
+    n_cubes: 5
+    force_rot_pre: null
+    force_rot_post: null
+    reverse_rot_post: true
+    force_n_frames_pre: null
+    force_n_frames_post: null
+    dataset_params:
+      path_db: /scratch/vasher/tbodrito/exo/data/db_new
+      suffix_lmdb: lmdb_256
+      n_frames: 64
+      stride: 1
+      dilation: 1
+      drop_short_clips: false
+      rot_scale: 1
+      clips_per_obs_max: 1
+      multibands: false
+      channel_idx: 0
+      filter_obs_params:
+        n_frames_min: 16
+        rot_min: 0
+        frame_quality: 0
+        dual_filter: DB_H23
+        split: null
+        status:
+        - 0
+        obs_id: ${data.detection.obs_id}
+        obs_category: null
+  train:
+    name: train
+    batch_size: 1
+    interpolation: linear
+    repeat_train: null
+    obj_size: 256
+    num_workers: 0
+    crop: 10
+    crop_bg: 40
+    n_min: 3
+    n_max: 10
+    alpha_min: 1.0e-06
+    alpha_max: 3.0e-05
+    distance_min: 25
+    sampling_mode: cartesian
+    rv_mode: linear
+    exp_coeff: null
+    symmetric_flux_train: false
+    subset: null
+    scale: 1
+    sep_max: 1.38
+    psf_model: gaussian_2d
+    psf_size_inj: null
+    use_adaptive: true
+    range_max_adaptive: 4.0
+    augmentations:
+    - rot90
+    - time_flip
+    - spatial_flip
+    - rot_flip
+    - rot_reverse
+    - shuffle_frames
+    force_rot: null
+    dataset_params_train:
+      path_db: /srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/DiscDSM/data/db_new
+      suffix_lmdb: lmdb_256
+      n_frames: 64
+      stride: 1
+      dilation: 1
+      drop_short_clips: true
+      rot_scale: 1
+      clips_per_obs_max: null
+      multibands: false
+      channel_idx: 0
+      n_repeat: null
+      n_obs_max: null
+      filter_obs_params:
+        n_frames_min: 16
+        rot_min: 0
+        frame_quality: 2
+        dual_filter: DB_H23
+        split: train
+        status:
+        - 0
+        obs_id: null
+        obs_category: null
+    dataset_params_val:
+      path_db: data/db_new
+      suffix_lmdb: lmdb_256
+      n_frames: 64
+      stride: 1
+      dilation: 1
+      drop_short_clips: true
+      rot_scale: 1
+      clips_per_obs_max: 1
+      multibands: false
+      channel_idx: 0
+      n_repeat: 20
+      filter_obs_params:
+        n_frames_min: 16
+        rot_min: 10
+        frame_quality: 2
+        dual_filter: DB_H23
+        split: null
+        status:
+        - 0
+        obs_id: HD_216803__2015-06-27__09-36-00
+        obs_category: null
+  inference:
+    name: inference
+    batch_size: 1
+    interpolation: linear
+    channel_sortframes: 0
+    repeat_idx: null
+    n_repeat: 100
+    crop_center: 256
+    use_amp: false
+    num_workers: 0
+    crop: 10
+    crop_bg: 40
+    subset: null
+    psf_model: gaussian_2d
+    psf_size_inj: null
+    filter_name: DB_H23
+    use_centered: false
+    channel_idx: null
+    path_root: null
+    recursive: false
+sampler:
+  name: exomild
+  skip_filter: false
+  path_ckpts: null
+  path_calib: null
+cluster:
+  name: jeanzay
+  user: uzm62av
+  account: ofy
+  array_arg: null
+  array_max: 9
+  workspace: /gpfswork/rech/ofy/${cluster.user}
+  engine: SLURM
+  directive: '#SBATCH'
+  cleanup: module purge
+  cmd: sbatch
+  launchers:
+  - default
+  - besteffort
+  node: null
+  partition: v100-16g
+  nodes: 1
+  gpus: 1
+  qos: qos_gpu-t3
+  tasks_node: ${cluster.gpus}
+  cpus_task: 10
+  walltime: '19:59:59'
+  shell:
+    bin_path: /usr/bin/bash
+    config_path: ~/.bashrc
+  id: jz
+name: exomild
+seed: 0
+log_wandb: true
+disable_tqdm: true
+mode: train
+stdout: INFO

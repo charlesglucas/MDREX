@@ -1,0 +1,22 @@
+{
+  "os":  "Linux-5.10.0-38-amd64-x86_64-with-glibc2.31",
+  "python":  "CPython 3.9.2",
+  "startedAt":  "2026-05-20T07:36:33.693188Z",
+  "args":  [
+    "name=exomild",
+    "log_wandb=true",
+    "data.train.num_workers=16"
+  ],
+  "program":  "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/main.py",
+  "codePath":  "main.py",
+  "codePathLocal":  "main.py",
+  "git":  {
+    "remote":  "git@github.com:charlesglucas/EXMILDPACO.git",
+    "commit":  "8d12b6e3e0831c4db71d07f707fcb2cd0aecd7cf"
+  },
+  "email":  "cglucas1@gmail.com",
+  "root":  "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO",
+  "host":  "vercors14-4.grenoble.grid5000.fr",
+  "executable":  "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/.venv/bin/python",
+  "writerId":  "qc9meldrycbdou0asigfz0klf6siu178"
+}

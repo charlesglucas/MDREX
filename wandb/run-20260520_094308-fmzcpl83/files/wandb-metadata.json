@@ -1,0 +1,50 @@
+{
+  "os":  "Linux-5.10.0-38-amd64-x86_64-with-glibc2.31",
+  "python":  "CPython 3.9.2",
+  "startedAt":  "2026-05-20T07:43:08.983326Z",
+  "args":  [
+    "name=exomild",
+    "log_wandb=true",
+    "data.train.num_workers=16"
+  ],
+  "program":  "-m main",
+  "git":  {
+    "remote":  "git@github.com:charlesglucas/EXMILDPACO.git",
+    "commit":  "8d12b6e3e0831c4db71d07f707fcb2cd0aecd7cf"
+  },
+  "email":  "cglucas1@gmail.com",
+  "root":  "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO",
+  "host":  "vercors9-7.grenoble.grid5000.fr",
+  "executable":  "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/.venv/bin/python",
+  "cpu_count":  8,
+  "cpu_count_logical":  16,
+  "gpu":  "NVIDIA RTX A5000",
+  "gpu_count":  2,
+  "disk":  {
+    "/":  {
+      "total":  "30333186048",
+      "used":  "20942970880"
+    }
+  },
+  "memory":  {
+    "total":  "67430440960"
+  },
+  "gpu_nvidia":  [
+    {
+      "name":  "NVIDIA RTX A5000",
+      "memoryTotal":  "25757220864",
+      "cudaCores":  8192,
+      "architecture":  "Ampere",
+      "uuid":  "GPU-bb97fa82-86e3-fbd3-9945-ca500c3f66fd"
+    },
+    {
+      "name":  "NVIDIA RTX A5000",
+      "memoryTotal":  "25757220864",
+      "cudaCores":  8192,
+      "architecture":  "Ampere",
+      "uuid":  "GPU-180d6d27-8035-ec5c-184c-c47b2fd7e012"
+    }
+  ],
+  "cudaVersion":  "13.0",
+  "writerId":  "uo22t2cm994w8f6z79v546nurc3qqtu8"
+}

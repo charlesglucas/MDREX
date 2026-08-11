@@ -1,0 +1,45 @@
+{
+  "os":  "Linux-5.10.0-38-amd64-x86_64-with-glibc2.31",
+  "python":  "CPython 3.9.2",
+  "startedAt":  "2026-05-20T07:40:49.342352Z",
+  "args":  [
+    "name=exomild",
+    "log_wandb=true",
+    "data.train.num_workers=16"
+  ],
+  "program":  "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/main.py",
+  "codePath":  "main.py",
+  "codePathLocal":  "main.py",
+  "git":  {
+    "remote":  "git@github.com:charlesglucas/EXMILDPACO.git",
+    "commit":  "8d12b6e3e0831c4db71d07f707fcb2cd0aecd7cf"
+  },
+  "email":  "cglucas1@gmail.com",
+  "root":  "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO",
+  "host":  "vercors14-4.grenoble.grid5000.fr",
+  "executable":  "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/.venv/bin/python",
+  "cpu_count":  64,
+  "cpu_count_logical":  128,
+  "gpu":  "NVIDIA RTX 6000 Ada Generation",
+  "gpu_count":  1,
+  "disk":  {
+    "/":  {
+      "total":  "30333186048",
+      "used":  "20870393856"
+    }
+  },
+  "memory":  {
+    "total":  "270108983296"
+  },
+  "gpu_nvidia":  [
+    {
+      "name":  "NVIDIA RTX 6000 Ada Generation",
+      "memoryTotal":  "51527024640",
+      "cudaCores":  18176,
+      "architecture":  "Ada",
+      "uuid":  "GPU-878daae3-9c8d-57b9-8976-d711b28b033f"
+    }
+  ],
+  "cudaVersion":  "13.0",
+  "writerId":  "b8c319p1qwlr0hxox95vd4apq7jxu6yd"
+}

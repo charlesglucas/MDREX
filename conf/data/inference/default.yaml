@@ -1,0 +1,23 @@
+name: "inference"
+batch_size: 1
+interpolation: "linear"
+channel_sortframes: 0
+repeat_idx: null
+n_repeat: 100
+crop_center: 256
+use_amp: false
+num_workers: 0
+crop: 10
+crop_bg: 40
+subset: null
+#psf_model: "interpolation"
+psf_model: "gaussian_2d"
+psf_size_inj: null
+
+filter_name: "DB_H23"
+use_centered: false
+channel_idx: null
+path_root: null
+recursive: false
+#path_obs: null
+#path_out: null
