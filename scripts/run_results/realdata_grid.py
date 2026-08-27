@@ -6,11 +6,13 @@ import argparse
 parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument("--data", type=str, required=True, help="Real data relative folder name")
 parser.add_argument("--datares", type=str, required=True, help="Real data relative folder name")
+parser.add_argument("--band", type=str, required=True, help="Real data relative folder name")
 args, remaining = parser.parse_known_args()
 # Remove parsed args so Hydra doesn't complain.
 sys.argv = [sys.argv[0]] + remaining
 
 DATA = args.data
+BAND = args.band
 DATARES = args.datares
 if DATA is None:
     raise ValueError("Missing --data argument for real data path")
@@ -40,7 +42,7 @@ def main(cfg):
 
     ## Load data
     #path_folder = ("/scratch/vasher/tbodrito/exo/data/real_data/HR_4796/2015-02-03")
-    path_folder = ROOT / "data" / "real_data" / "DISKS_IRDIS_CHARLES" / DATA / "data"
+    path_folder = ROOT / "data" / "real_data" / "DISKS_IRDIS_CHARLES" / DATA 
     if not path_folder.exists():
         raise FileNotFoundError(f"Real data path not found: {path_folder}")
     # path_folder = ("/scratch/vasher/tbodrito/exo/data/real_data/HIP_60074/2015-04-08")
@@ -87,8 +89,8 @@ def main(cfg):
     device = y.device
     
     # Load coronograph mask
-    path_coronograph = ROOT / "data/coronograph"
-    k1k2_path = os.path.join(path_coronograph,"sphere_irdis_k1_k2_coronagraph_transmission_map.fits")
+    path_coronograph = ROOT / f"data/coronograph/sphere_irdis_{BAND}_coronagraph_transmission_map.fits"
+    k1k2_path = os.path.join(path_coronograph)
     with fits.open(k1k2_path, memmap=False) as hdul:
             mask = np.array(hdul[0].data, dtype=np.float32)
     deltaH = (mask.shape[1] - H) // 2; deltaW = (mask.shape[2] - W) // 2; 

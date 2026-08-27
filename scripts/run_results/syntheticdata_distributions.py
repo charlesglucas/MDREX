@@ -127,7 +127,7 @@ def main(cfg):
         ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/exomild_H2/ckpt/ckpt_40000.pt"
         print(f"Loading checkpoint {ckpt_path}")
         # new_repeats = [1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0]
-        new_repeats = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        # new_repeats = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         keep_indices = [i for i, v in enumerate(new_repeats) if v == 1]
         print("Conserved blocks :", keep_indices)
         state = torch.load(ckpt_path, map_location=device)["net"]

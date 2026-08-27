@@ -109,8 +109,8 @@ def main(cfg):
     # ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/1_asdi/2024-11-09_20-10-01/banger_ms_bs16_lr5e-4_unetnormal_aug_111_100_100_100_seed5/ckpt/ckpt_40000.pt"
     ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/exomild_H2/ckpt/ckpt_40000.pt"
     print(f"Loading checkpoint {ckpt_path}")
-    # new_repeats = [1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0]
-    new_repeats = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    new_repeats = [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0]
+    # new_repeats = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     keep_indices = [i for i, v in enumerate(new_repeats) if v == 1]
     print("Conserved blocks :", keep_indices)
     state = torch.load(ckpt_path, map_location=device)["net"]
@@ -227,7 +227,7 @@ def main(cfg):
     if OUTPUT_PATH is not None:
         out_path = pathlib.Path(OUTPUT_PATH)
     else:
-        out_dir = ROOT / f"results/grid_sure_{shape}_alpha{flux_to_str(flux)}/"
+        out_dir = ROOT / f"grids_100100100100/grid_sure_{shape}_alpha{flux_to_str(flux)}/"
         out_dir.mkdir(exist_ok=True, parents=True)
         if MU_SMOOTH is not None and MU_SPARSE is not None:
             out_path = out_dir / f"musmooth{MU_SMOOTH}_musparse{MU_SPARSE}.npz"

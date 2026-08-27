@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 def main(cfg):
 
     # Load results
-    shape = "medium_ellipse"
+    shape = "circle"
     flux = "1em6"
     path = Path(ROOT / f"results/grids_111111111111/grid_sure_{shape}_alpha{flux}")
     pattern = re.compile(r"musmooth([0-9.]+)_musparse([0-9.]+)\.npz")

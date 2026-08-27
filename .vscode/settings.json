@@ -26,5 +26,6 @@
      // 🔧 X11 FORWARDING VSCode
     "remote.SSH.remoteForwardX11": true,
     "remote.SSH.remoteX11Display": "auto",
-    "remote.SSH.useLocalServer": false
+    "remote.SSH.useLocalServer": false,
+    "python-envs.defaultEnvManager": "ms-python.python:system"
 }

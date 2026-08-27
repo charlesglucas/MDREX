@@ -193,7 +193,7 @@ rsync -rv grenoble.g5k:/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chaluca
 rsync -av --partial --progress grenoble.g5k:/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO /Users/charleslucas/Documents/codes-astro/MDREX
 
 
-rsync -rv /Users/charleslucas/Documents/Science/astronomy/Rexpaco_results grenoble.g5k:/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/results/
+rsync -rv grenoble.g5k:/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/figures/ /Users/charleslucas/Documents/Science/astronomy/reconstruction-paper/mdrex/Figures
 
 ## noeud grid5000
 

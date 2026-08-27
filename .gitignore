@@ -1,5 +1,6 @@
 /data/
 .venv/
+.venv_broken/
 **/__pycache__/
 *.swp
 results/

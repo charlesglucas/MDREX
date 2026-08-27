@@ -270,52 +270,63 @@ class MDREX:
         return bg_params
 
     def compute_mc_sure(self, y, x_tensor_opt, xdisc_0, mu_sparse, mu_smooth, n_mc=1):
-        if self.to_patches is None or self.to_params is None:
-            self.to_patches = PatchesHandler()
-            self.to_params = ParamsGaussianHandler()
-            
-        C, T = y.shape[1], y.shape[2]
+        self.to_patches = PatchesHandler()
+        self.to_params = ParamsGaussianHandler()
 
-        # Compute transformed solution
+        C, T = y.shape[1], y.shape[2]
         Ax_tensor_opt = self.forward_model(x_tensor_opt)
 
-        # Data term
         diff = y - Ax_tensor_opt
         params = self.fit_params_noweight(diff)
-        diffp = params["patches"].squeeze(0) - params["mean"].squeeze(0) # params["mean"].squeeze(0)
+        diffp = params["patches"].squeeze(0) - params["mean"].squeeze(0)
+        Cinv = params["C_inv"]
         bsp, _, _, fs = diffp.shape
-        diff_vec = diffp.view(bsp, C, T, fs).unsqueeze(-1) # [bsp, C, T, fs, 1]
-        data_term = diff_vec.pow(2).sum() 
+        diff_vec = diffp.view(bsp, C, T, fs).unsqueeze(-1)
+        Cx = Cinv @ diff_vec
+        maha = (diff_vec.transpose(-1, -2) @ Cx).squeeze(-1).squeeze(-1)
+        data_term = maha.sum().item()
 
-        # Divergence term (MC)
-        res_mean = params["mean"].squeeze(0)
-        Chat = params["C_hat"].squeeze(0) # [bsp, G, fs, fs]
-        Linvp = torch.linalg.cholesky(Chat, upper=False)
-        params_AX = self.fit_params_noweight(Ax_tensor_opt)
-        AXp = params_AX["patches"].squeeze(0)
+        res_mean = torch.mean(diff, dim=2, keepdim=True)
+        # res_mean = params["mean"].squeeze(0)
+        # Chat = params["C_hat"].squeeze(0)
+        # params_AX = self.fit_params_noweight(Ax_tensor_opt)
+        # AXp = params_AX["patches"].squeeze(0)
         div_est = 0.0
         delta = 1e-1 * (y - y.median()).abs().median()
-        for _ in range(n_mc): 
+        for _ in range(n_mc):
             v = torch.randn_like(y)
             y_eps = y + delta * v
             (xdisc_opt_eps, fx, gx, status) = self.run_bfgs(xdisc_0, y_eps, mu_sparse, mu_smooth)
             x_tensor_eps = torch.tensor(xdisc_opt_eps, dtype=torch.float32, device=y.device)
 
             diff_eps = y_eps - self.forward_model(x_tensor_eps)
-            params_eps = self.fit_params_noweight(diff_eps)
-            res_mean_eps =  params_eps["mean"].squeeze(0)
-            params_AXeps = self.fit_params_noweight(self.forward_model(x_tensor_eps))
-            AXepsp = params_AXeps["patches"].squeeze(0)
-            div_x = AXepsp - AXp + res_mean_eps - res_mean
+            # params_eps = self.fit_params_noweight(diff_eps)
+            # res_mean_eps = params_eps["mean"].squeeze(0)
+            res_mean_eps = torch.mean(diff_eps, dim=2, keepdim=True)
+            
+
+            # params_AXeps = self.fit_params_noweight(self.forward_model(x_tensor_eps))
+            # AXepsp = params_AXeps["patches"].squeeze(0)
+            # div_x = AXepsp - AXp + res_mean_eps - res_mean
+            AXeps = self.forward_model(x_tensor_eps)
+            div_x = AXeps - Ax_tensor_opt + res_mean_eps - res_mean
             div_vec = div_x.view(bsp, C, T, fs).unsqueeze(-1)
 
-            vp = self.to_patches.forward(v,torch.tensor([1, 1], device=y.device)).view(bsp, C, T, fs).unsqueeze(-1)  
-            div_est += torch.sum(vp * (Chat @ div_vec)) / delta
+            div_est += torch.sum(v * div_vec) / delta
+            # vp = self.to_patches.forward(v, self.lbda).view(bsp, C, T, fs).unsqueeze(-1)
+            # div_est += torch.sum(vp * div_vec) / delta
         div_est /= n_mc
-        
-        # Trace term
-        trace_term = Chat.diagonal(dim1=-2, dim2=-1).sum()*C*T
 
-        print(f"Data term: {data_term.item():.4f}, Trace term: {trace_term:.4f}, Divergence estimate: {div_est.item():.4f}")
+        # trace_term = Chat.diagonal(dim1=-2, dim2=-1).sum() * C * T
+        trace_term = y.numel()
+        patch_sure = data_term - trace_term + 2.0 * div_est
 
-        return (data_term - trace_term + 2.0 * div_est).item(), data_term.item(), div_est.item()*2
+        print(
+            f"patch_size={self.to_patches.patch_size}: "
+            f"Data term={data_term:.4f}, "
+            f"Trace term={trace_term.item():.4f}, "
+            f"Divergence estimate={div_est.item():.4f}, "
+            f"SURE={patch_sure.item():.4f}"
+        )
+
+        return patch_sure.item(), data_term, div_est.item() * 2.0

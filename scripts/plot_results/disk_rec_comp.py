@@ -38,7 +38,7 @@ def main(cfg):
     with fits.open(path) as hdul:
         x_rexpaco = hdul[0].data[:,:,:,251-128:251+128, 251-128:251+128]
 
-    path = ROOT / "results/mdrex_results_111111111111_eps1em3/musmooth1e6_musparse1e6/x_opt.fits"
+    path = ROOT / "results/mdrex_results_100100100100/musmooth1e6_musparse1e6/x_opt.fits"
     with fits.open(path) as hdul:
         x_mdrex = hdul[0].data
    
@@ -181,34 +181,42 @@ def main(cfg):
     plt.show()
 
     plt.subplots(1,3, figsize=(5, 2))
-    plt.subplot(1,3,1); plt.imshow(x_gt_store[0,0,0]); plt.title(r"$Ellipse$"); plt.axis("off")
-    plt.subplot(1,3,2); plt.imshow(x_gt_store[0,0,1]);  plt.title(r"Spiral"); plt.axis("off")
-    plt.subplot(1,3,3); plt.imshow(x_gt_store[0,0,2]);  plt.title(r"Circle"); plt.axis("off")
+    plt.subplot(1,3,1); plt.imshow(x_gt_store[0,0,0], cmap='hot'); plt.title(r"$Ellipse$"); plt.axis("off")
+    plt.subplot(1,3,2); plt.imshow(x_gt_store[0,0,1], cmap='hot');  plt.title(r"Spiral"); plt.axis("off")
+    plt.subplot(1,3,3); plt.imshow(x_gt_store[0,0,2], cmap='hot');  plt.title(r"Circle"); plt.axis("off")
     plt.tight_layout()
     plt.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0.1)
-    plt.savefig("figures/shapes.pdf")
+    plt.savefig("figures/shapes.pdf", dpi=300, bbox_inches='tight', pad_inches=0)
     plt.show()
 
     fig, axs = plt.subplots(1,2, figsize=(6,2))
-    data1 = x_rexpaco[0,0,0]
-    data2 = x_mdrex[0,0,0]
-    plt.subplot(1,2,1); plt.imshow(data1);  plt.title(r"REXPACO"); plt.axis("off")
-    plt.subplot(1,2,2); plt.imshow(data2);  plt.title(r"MD-REX"); plt.axis("off")
-    vmin = min(data1.min(), data2.min()); vmax = max(data1.max(), data2.max())
-    im1 = axs[0].imshow(data1, vmin=vmin, vmax=vmax); im2 = axs[1].imshow(data2, vmin=vmin, vmax=vmax)
+    data1 = x_rexpaco[0,0,0] - x_gt_store[0,0,0]
+    data2 = x_mdrex[0,0,0] - x_gt_store[0,0,0]
+    vmin = min(data1.min(), data2.min())
+    vmax = max(data1.max(), data2.max())
+    vmax = max(abs(vmin), abs(vmax))
+    vmin = -vmax
+    im1 = axs[0].imshow(data1, cmap='bwr', vmin=vmin, vmax=vmax)
+    im2 = axs[1].imshow(data2, cmap='bwr', vmin=vmin, vmax=vmax)
+    axs[0].set_title(r"REXPACO"); axs[0].axis("off")
+    axs[1].set_title(r"MD-REX"); axs[1].axis("off")
     fig.colorbar(im1, ax=axs, shrink=0.8, pad=0.1)
-    plt.savefig("figures/comp_medium_ellipse_1em6.pdf")
+    plt.savefig("figures/comp_medium_ellipse_1em6.pdf", dpi=300, bbox_inches='tight', pad_inches=0)
     plt.show()
 
     fig, axs = plt.subplots(1,2, figsize=(6,2))
-    data1 = x_rexpaco[2,0,0]
-    data2 = x_mdrex[2,0,0]
-    plt.subplot(1,2,1); plt.imshow(data1);  plt.title(r"REXPACO"); plt.axis("off")
-    plt.subplot(1,2,2); plt.imshow(data2);  plt.title(r"MD-REX"); plt.axis("off")
-    vmin = min(data1.min(), data2.min()); vmax = max(data1.max(), data2.max())
-    im1 = axs[0].imshow(data1, vmin=vmin, vmax=vmax); im2 = axs[1].imshow(data2, vmin=vmin, vmax=vmax)
+    data1 = x_rexpaco[2,0,0] - x_gt_store[2,0,0]
+    data2 = x_mdrex[2,0,0] - x_gt_store[2,0,0]
+    vmin = min(data1.min(), data2.min())
+    vmax = max(data1.max(), data2.max())
+    vmax = max(abs(vmin), abs(vmax))
+    vmin = -vmax
+    im1 = axs[0].imshow(data1, cmap='bwr', vmin=vmin, vmax=vmax)
+    im2 = axs[1].imshow(data2, cmap='bwr', vmin=vmin, vmax=vmax)
+    axs[0].set_title(r"REXPACO"); axs[0].axis("off")
+    axs[1].set_title(r"MD-REX"); axs[1].axis("off")
     fig.colorbar(im1, ax=axs, shrink=0.8, pad=0.1)
-    plt.savefig("figures/comp_medium_ellipse_1em5.pdf")
+    plt.savefig("figures/comp_medium_ellipse_1em5.pdf", dpi=300, bbox_inches='tight', pad_inches=0)
     plt.show()
 
 

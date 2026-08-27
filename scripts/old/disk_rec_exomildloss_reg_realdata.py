@@ -24,7 +24,14 @@ def main(cfg):
 
     ## Load data
     #path_folder = ("/scratch/vasher/tbodrito/exo/data/real_data/HR_4796/2015-02-03")
-    path_folder = ROOT / "data/real_data/HR_4796/2015-02-03"
+    # path_folder = ROOT / "data/real_data/DISKS_IRDIS_CHARLES/HR_4796/2015-02-03/IRDIS/data/"
+    # path_folder = ROOT / "data/real_data/DISKS_IRDIS_CHARLES/PDS_70/2018-02-24/IRDIS/data/"
+    # path_folder = ROOT / "data/real_data/DISKS_IRDIS_CHARLES/RY_lup/2016-04-16/IRDIS/data/"
+    # path_folder = ROOT / "data/real_data/DISKS_IRDIS_CHARLES/SAO_206462/2015-05-15/IRDIS/data/"
+    # path_folder = ROOT / "data/real_data/DISKS_IRDIS_CHARLES/RX_J161533255/2019-05-18/IRDIS/data/"
+    # path_folder = ROOT / "data/real_data/DISKS_IRDIS_CHARLES/AB_AURIGAE/2020-01-18/IRDIS/data/"
+    path_folder = ROOT / "data/real_data/DISKS_IRDIS_CHARLES/HD_106906/2016-03-28/IRDIS/h2_h3/data/"
+    # path_folder = ROOT / "data/real_data/DISKS_IRDIS_CHARLES/HD_202917/2017-05-16/data/"
     # path_folder = ("/scratch/vasher/tbodrito/exo/data/real_data/HIP_60074/2015-04-08")
     inputs = load_folder(path_folder=path_folder, use_centered=False, channel_sortframes=0, channel_idx=None,)
     y = inputs["y"].astype(np.float32) # (C, T, H, W)

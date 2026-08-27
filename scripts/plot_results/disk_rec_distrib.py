@@ -81,7 +81,7 @@ def main(cfg):
     # Whole image block
     print("\\multicolumn{4}{c}{Whole image} \\\\")
     for i, r in enumerate(rows):
-        line = " & ".join([f"${mean_whole[i,j]:.4f} \\pm {std_whole[i,j]:.4f}$" 
+        line = " & ".join([f"${mean_whole[i,j]:.2f} \\pm {std_whole[i,j]:.2f}$" 
                         for j in range(3)])
         print(f"{r} & {line} \\\\")
 
@@ -90,7 +90,7 @@ def main(cfg):
     # Disk support block
     print("\\multicolumn{4}{c}{Disk support} \\\\")
     for i, r in enumerate(rows):
-        line = " & ".join([f"${mean_supp[i,j]:.4f} \\pm {std_supp[i,j]:.4f}$" 
+        line = " & ".join([f"${mean_supp[i,j]:.2f} \\pm {std_supp[i,j]:.2f}$" 
                         for j in range(3)])
         print(f"{r} & {line} \\\\")
 

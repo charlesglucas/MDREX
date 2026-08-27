@@ -117,8 +117,8 @@ def main(cfg):
     ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/exomild_H2/ckpt/ckpt_40000.pt"
     print(f"Loading checkpoint {ckpt_path}")
     # new_repeats = [1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0]
-    new_repeats = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-    # new_repeats = [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0]
+    # new_repeats = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    new_repeats = [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0]
     # new_repeats = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     keep_indices = [i for i, v in enumerate(new_repeats) if v == 1]
     print("Conserved blocks :", keep_indices)
@@ -172,7 +172,7 @@ def main(cfg):
                     (xdisc, fx, gx, status) = mdrex.run_bfgs(xdisc, data, MU_SMOOTH, MU_SPARSE)
                     x_opt[f, a, s, :, :] = np.mean(xdisc, axis=0)
        
-    outdir = Path("results") / "mdrex_results_111111111111_eps1em3" / f"musmooth1e{np.int64(np.log10(MU_SMOOTH))}_musparse1e{np.int64(np.log10(MU_SPARSE))}"
+    outdir = Path("results") / "mdrex_results_100100100100" / f"musmooth1e{np.int64(np.log10(MU_SMOOTH))}_musparse1e{np.int64(np.log10(MU_SPARSE))}"
     outdir.mkdir(parents=True, exist_ok=True)
     outfile = outdir / "x_opt.fits"
     fits.writeto(outfile, x_opt, overwrite=True)
