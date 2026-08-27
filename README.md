@@ -26,4 +26,4 @@ heterogeneous statistics of speckle. Indeed, the log-likelihood is computed over
 *  patches 64x64 + no symmetry, patches 32x32 + 180deg symmetry, patches 32x32 + 180&90deg symmetry
 
 The MD-REX functionnal is minimized using the VMLMB software available at
-<https://github.com/emmt/VMLMB>, which is a limited-memory BFGS algorithm. The package  located in `/reconstruction/mdrex.py`. Some examples of use are given in the folder `/scripts/.
+<https://github.com/emmt/VMLMB>, which is a limited-memory BFGS algorithm. The package  located in `/reconstruction/mdrex.py`. Some examples of use are given in the folder `/scripts/`.
