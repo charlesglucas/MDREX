@@ -3,8 +3,8 @@ import sys, pathlib, os
 # Configure GPU memory management
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
+ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 import torch
 import hydra
@@ -18,7 +18,7 @@ from models.exomild.exomild import ExoMILD
 from utils.rotation import BatchRotationOperator
 from models import get_model
 
-@hydra.main(config_path="../conf", config_name="config")
+@hydra.main(config_path="../../conf", config_name="config")
 def main(cfg):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -29,8 +29,8 @@ def main(cfg):
     # path_folder = ROOT / "data/real_data/DISKS_IRDIS_CHARLES/RY_lup/2016-04-16/IRDIS/data/"
     # path_folder = ROOT / "data/real_data/DISKS_IRDIS_CHARLES/SAO_206462/2015-05-15/IRDIS/data/"
     # path_folder = ROOT / "data/real_data/DISKS_IRDIS_CHARLES/RX_J161533255/2019-05-18/IRDIS/data/"
-    # path_folder = ROOT / "data/real_data/DISKS_IRDIS_CHARLES/AB_AURIGAE/2020-01-18/IRDIS/data/"
-    path_folder = ROOT / "data/real_data/DISKS_IRDIS_CHARLES/HD_106906/2016-03-28/IRDIS/h2_h3/data/"
+    path_folder = ROOT / "data/real_data/DISKS_IRDIS_CHARLES/AB_AURIGAE/2020-01-18/IRDIS/data/"
+    # path_folder = ROOT / "data/real_data/DISKS_IRDIS_CHARLES/HD_106906/2016-03-28/IRDIS/h2_h3/data/"
     # path_folder = ROOT / "data/real_data/DISKS_IRDIS_CHARLES/HD_202917/2017-05-16/data/"
     # path_folder = ("/scratch/vasher/tbodrito/exo/data/real_data/HIP_60074/2015-04-08")
     inputs = load_folder(path_folder=path_folder, use_centered=False, channel_sortframes=0, channel_idx=None,)

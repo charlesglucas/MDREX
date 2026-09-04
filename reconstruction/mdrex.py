@@ -310,9 +310,9 @@ class MDREX:
             # div_x = AXepsp - AXp + res_mean_eps - res_mean
             AXeps = self.forward_model(x_tensor_eps)
             div_x = AXeps - Ax_tensor_opt + res_mean_eps - res_mean
-            div_vec = div_x.view(bsp, C, T, fs).unsqueeze(-1)
+            # div_vec = div_x.view(bsp, C, T, fs).unsqueeze(-1)
 
-            div_est += torch.sum(v * div_vec) / delta
+            div_est += torch.sum(v * div_x) / delta
             # vp = self.to_patches.forward(v, self.lbda).view(bsp, C, T, fs).unsqueeze(-1)
             # div_est += torch.sum(vp * div_vec) / delta
         div_est /= n_mc
@@ -324,7 +324,7 @@ class MDREX:
         print(
             f"patch_size={self.to_patches.patch_size}: "
             f"Data term={data_term:.4f}, "
-            f"Trace term={trace_term.item():.4f}, "
+            f"Trace term={trace_term:.4f}, "
             f"Divergence estimate={div_est.item():.4f}, "
             f"SURE={patch_sure.item():.4f}"
         )

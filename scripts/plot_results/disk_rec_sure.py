@@ -3,7 +3,8 @@ import sys, pathlib, os
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 
-from matplotlib.colors import LogNorm
+from matplotlib.colors import LogNorm, SymLogNorm, TwoSlopeNorm
+from matplotlib.ticker import ScalarFormatter
 import torch
 import hydra
 import numpy as np
@@ -16,9 +17,10 @@ import matplotlib.pyplot as plt
 def main(cfg):
 
     # Load results
-    shape = "circle"
-    flux = "1em6"
+    shape = "medium_ellipse"
+    flux = "1em7"
     path = Path(ROOT / f"results/grids_111111111111/grid_sure_{shape}_alpha{flux}")
+    # path = Path(ROOT / f"results/grids_100100100100/grid_sure_{shape}_alpha{flux}")
     pattern = re.compile(r"musmooth([0-9.]+)_musparse([0-9.]+)\.npz")
 
     print("root =", path.resolve())
@@ -82,6 +84,18 @@ def main(cfg):
     k_sure_best, j_sure_best = idx_best
     best_x_disk_sure = x_disk_store[k_sure_best, j_sure_best]
 
+    # SURE can be negative, so center the color map at zero when possible.
+    # If all values are positive or all are negative, fall back to a standard norm.
+    finite_sure = SURE[np.isfinite(SURE)]
+    if finite_sure.size:
+        vmin, vmax = np.nanmin(finite_sure), np.nanmax(finite_sure)
+        if vmin < 0 < vmax:
+            sure_norm = TwoSlopeNorm(vcenter=0.0, vmin=vmin, vmax=vmax)
+        else:
+            sure_norm = None
+    else:
+        sure_norm = None
+
     # Compute N-RMSE of SURE solution
     diffgt = best_x_disk_sure - x_gt
     NRMSE = np.sqrt(np.sum(diffgt.flatten()**2))/np.sqrt(np.sum(x_gt.flatten()**2))
@@ -93,12 +107,12 @@ def main(cfg):
     plt.figure(1)
     plt.subplot(2,2,1); plt.imshow(np.squeeze(best_x_disk_sure.mean(axis=0, keepdims=True))); plt.title(r"$\mathbf{x}_{\rm SURE}$"); plt.colorbar()
     plt.subplot(2,2,2); plt.imshow(np.squeeze(best_x_disk_mse.mean(axis=0, keepdims=True))); plt.title(r"$\mathbf{x}_{\rm MSE}$"); plt.colorbar()
-    plt.subplot(2,2,3); plt.imshow(SURE, cmap="viridis");  plt.title(r"$\mathrm{SURE}$"); plt.colorbar()
+    plt.subplot(2,2,3); plt.imshow(SURE, cmap="RdBu_r", norm=sure_norm);  plt.title(r"$\mathrm{SURE}$"); plt.colorbar()
     exponents = np.arange(s1) + n_smooth; tick_values = np.arange(s1); plt.xticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
     exponents = np.arange(s2) + n_sparse; tick_values = np.arange(s2); plt.yticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
     plt.ylabel(r"$\mu_{\rm smooth}$"); plt.xlabel(r"$\mu_{\rm sparse}$")
     plt.plot(j_sure_best, k_sure_best, "rx", markersize=12);
-    plt.subplot(2,2,4); plt.imshow(MSE, cmap="viridis", norm=LogNorm());  plt.title(r"$\mathrm{MSE}$"); plt.colorbar()
+    plt.subplot(2,2,4); plt.imshow(MSE, cmap="RdBu_r", norm=LogNorm());  plt.title(r"$\mathrm{MSE}$"); plt.colorbar()
     exponents = np.arange(s1) + n_smooth; tick_values = np.arange(s1); plt.xticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
     exponents = np.arange(s2) + n_sparse; tick_values = np.arange(s2); plt.yticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
     plt.ylabel(r"$\mu_{\rm smooth}$"); plt.xlabel(r"$\mu_{\rm sparse}$")
@@ -118,20 +132,62 @@ def main(cfg):
     plt.tight_layout()
     plt.show()
 
-    # fig, ax = plt.figure(3)
-    plt.subplots(1,2, figsize=(7, 3))
-    plt.subplot(1,2,1); plt.imshow(SURE, cmap="viridis");  plt.title(r"$\mathrm{SURE}$"); plt.colorbar(shrink=1)
-    exponents = np.arange(s1) + n_smooth; tick_values = np.arange(s1); plt.xticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
-    exponents = np.arange(s2) + n_sparse; tick_values = np.arange(s2); plt.yticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
-    plt.ylabel(r"$\mu_{\rm smooth}$"); plt.xlabel(r"$\mu_{\rm sparse}$")
-    plt.plot(j_sure_best, k_sure_best, "rx", markersize=12);
-    plt.subplot(1,2,2); plt.imshow(MSE, cmap="viridis", norm=LogNorm());  plt.title(r"$\mathrm{MSE}$"); plt.colorbar(shrink=1)
-    exponents = np.arange(s1) + n_smooth; tick_values = np.arange(s1); plt.xticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
-    exponents = np.arange(s2) + n_sparse; tick_values = np.arange(s2); plt.yticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
-    plt.ylabel(r"$\mu_{\rm smooth}$"); plt.xlabel(r"$\mu_{\rm sparse}$")
-    plt.plot(j_mse_best, k_mse_best, "rx", markersize=12);
-    plt.tight_layout()
-    plt.savefig(f"figures/grids_{shape}_{flux}.pdf")
+    # plt.subplots(1,2, figsize=(7, 3))
+    # plt.subplot(1,2,1); plt.imshow(SURE, cmap="RdBu_r", norm=sure_norm);  plt.title(r"$\mathrm{SURE}$"); plt.colorbar(shrink=1)
+    # exponents = np.arange(s1) + n_smooth; tick_values = np.arange(s1); plt.xticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
+    # exponents = np.arange(s2) + n_sparse; tick_values = np.arange(s2); plt.yticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
+    # plt.ylabel(r"$\mu_{\rm smooth}$"); plt.xlabel(r"$\mu_{\rm sparse}$")
+    # plt.plot(j_sure_best, k_sure_best, "rx", markersize=12);
+    # plt.subplot(1,2,2); plt.imshow(MSE, cmap="RdBu_r", norm=LogNorm());  plt.title(r"$\mathrm{MSE}$"); plt.colorbar(shrink=1)
+    # exponents = np.arange(s1) + n_smooth; tick_values = np.arange(s1); plt.xticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
+    # exponents = np.arange(s2) + n_sparse; tick_values = np.arange(s2); plt.yticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
+    # plt.ylabel(r"$\mu_{\rm smooth}$"); plt.xlabel(r"$\mu_{\rm sparse}$")
+    # plt.plot(j_mse_best, k_mse_best, "rx", markersize=12);
+    # plt.tight_layout()
+    # plt.savefig(f"figures/grids_{shape}_{flux}.pdf")
+    # plt.show()
+
+    fig = plt.figure(figsize=(5, 8))
+    ax1 = fig.add_subplot(2, 1, 1)
+    im1 = ax1.imshow(MSE, cmap="RdBu_r", norm=LogNorm())
+    ax1.set_title(r"$\mathrm{MSE}$", fontsize=18)
+    cbar1 = fig.colorbar(im1, ax=ax1, shrink=1)
+    cbar1.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+    cbar1.ax.yaxis.set_offset_position('right')
+    cbar1.ax.yaxis.get_offset_text().set_visible(True)
+    cbar1.ax.yaxis.get_offset_text().set_horizontalalignment('left')
+    cbar1.ax.yaxis.get_offset_text().set_verticalalignment('bottom')
+    cbar1.ax.yaxis.get_offset_text().set_fontsize(12)
+    cbar1.ax.tick_params(labelsize=12)
+    exponents = np.arange(s1) + n_smooth; tick_values = np.arange(s1); ax1.set_xticks(tick_values); ax1.set_xticklabels([f"$10^{{{e}}}$" for e in exponents], fontsize=12)
+    exponents = np.arange(s2) + n_sparse; tick_values = np.arange(s2); ax1.set_yticks(tick_values); ax1.set_yticklabels([f"$10^{{{e}}}$" for e in exponents], fontsize=12)
+    ax1.set_ylabel(r"$\mu_{\rm smooth}$", fontsize=14); ax1.set_xlabel(r"$\mu_{\rm sparse}$", fontsize=14)
+    ax1.tick_params(axis='both', which='major', labelsize=12)
+    ax1.plot(j_mse_best, k_mse_best, "rx", markersize=12, markeredgewidth=2)
+    ax1.plot(j_sure_best, k_sure_best, "m+", markersize=12, markeredgewidth=2)
+    ax1.set_aspect('equal', adjustable='box')
+
+    ax2 = fig.add_subplot(2, 1, 2)
+    im2 = ax2.imshow(SURE, cmap="RdBu_r", norm=sure_norm)
+    ax2.set_title(r"$\mathrm{MC-SURE}$", fontsize=18)
+    cbar2 = fig.colorbar(im2, ax=ax2, shrink=1)
+    cbar2.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+    cbar2.ax.yaxis.set_offset_position('right')
+    cbar2.ax.yaxis.get_offset_text().set_visible(True)
+    cbar2.ax.yaxis.get_offset_text().set_horizontalalignment('left')
+    cbar2.ax.yaxis.get_offset_text().set_verticalalignment('bottom')
+    cbar2.ax.yaxis.get_offset_text().set_fontsize(12)
+    cbar2.ax.tick_params(labelsize=12)
+    exponents = np.arange(s1) + n_smooth; tick_values = np.arange(s1); ax2.set_xticks(tick_values); ax2.set_xticklabels([f"$10^{{{e}}}$" for e in exponents], fontsize=12)
+    exponents = np.arange(s2) + n_sparse; tick_values = np.arange(s2); ax2.set_yticks(tick_values); ax2.set_yticklabels([f"$10^{{{e}}}$" for e in exponents], fontsize=12)
+    ax2.set_ylabel(r"$\mu_{\rm smooth}$", fontsize=14); ax2.set_xlabel(r"$\mu_{\rm sparse}$", fontsize=14)
+    ax2.tick_params(axis='both', which='major', labelsize=12)
+    ax2.plot(j_mse_best, k_mse_best, "rx", markersize=12, markeredgewidth=2)
+    ax2.plot(j_sure_best, k_sure_best, "m+", markersize=12, markeredgewidth=2)
+    ax2.set_aspect('equal', adjustable='box')
+
+    fig.tight_layout()
+    fig.savefig(f"figures/grids_{shape}_{flux}.pdf")
     plt.show()
 
 

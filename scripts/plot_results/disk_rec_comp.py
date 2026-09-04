@@ -4,6 +4,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 from matplotlib.colors import LogNorm
+from matplotlib.ticker import ScalarFormatter
 import torch
 import hydra
 import numpy as np
@@ -174,10 +175,36 @@ def main(cfg):
     f = 0
     a = 0
     s = 1
-    plt.figure(1)
-    plt.subplot(1,3,1); plt.imshow(x_gt_store[f,a,s]); plt.title(r"$Ground Truth$"); plt.colorbar()
-    plt.subplot(1,3,2); plt.imshow(x_rexpaco[f,a,s]);  plt.title(r"REXPACO"); plt.colorbar()
-    plt.subplot(1,3,3); plt.imshow(x_mdrex[f,a,s]);  plt.title(r"MD-REX"); plt.colorbar()
+    fig, axes = plt.subplots(1, 3, figsize=(8, 2.7), constrained_layout=True)
+    im0 = axes[0].imshow(x_gt_store[f, a, s])
+    axes[0].set_title(r"$Ground Truth$")
+    cbar0 = fig.colorbar(im0, ax=axes[0], fraction=0.046, pad=0.04)
+    cbar0.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+    cbar0.ax.yaxis.set_offset_position('right')
+    cbar0.ax.yaxis.get_offset_text().set_visible(True)
+    cbar0.ax.yaxis.get_offset_text().set_horizontalalignment('left')
+    cbar0.ax.yaxis.get_offset_text().set_verticalalignment('bottom')
+    cbar0.ax.yaxis.get_offset_text().set_fontsize(12)
+
+    im1 = axes[1].imshow(x_rexpaco[f, a, s])
+    axes[1].set_title(r"REXPACO")
+    cbar1 = fig.colorbar(im1, ax=axes[1], fraction=0.046, pad=0.04)
+    cbar1.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+    cbar1.ax.yaxis.set_offset_position('right')
+    cbar1.ax.yaxis.get_offset_text().set_visible(True)
+    cbar1.ax.yaxis.get_offset_text().set_horizontalalignment('left')
+    cbar1.ax.yaxis.get_offset_text().set_verticalalignment('bottom')
+    cbar1.ax.yaxis.get_offset_text().set_fontsize(12)
+
+    im2 = axes[2].imshow(x_mdrex[f, a, s])
+    axes[2].set_title(r"MD-REX")
+    cbar2 = fig.colorbar(im2, ax=axes[2], fraction=0.046, pad=0.04)
+    cbar2.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+    cbar2.ax.yaxis.set_offset_position('right')
+    cbar2.ax.yaxis.get_offset_text().set_visible(True)
+    cbar2.ax.yaxis.get_offset_text().set_horizontalalignment('left')
+    cbar2.ax.yaxis.get_offset_text().set_verticalalignment('bottom')
+    cbar2.ax.yaxis.get_offset_text().set_fontsize(12)
     plt.show()
 
     plt.subplots(1,3, figsize=(5, 2))
@@ -189,34 +216,78 @@ def main(cfg):
     plt.savefig("figures/shapes.pdf", dpi=300, bbox_inches='tight', pad_inches=0)
     plt.show()
 
-    fig, axs = plt.subplots(1,2, figsize=(6,2))
+    fig, axs = plt.subplots(1,2, figsize=(6,2), gridspec_kw={'width_ratios': [1, 1]})
+    fig.subplots_adjust(wspace=0.03, right=0.84, top=0.84)
     data1 = x_rexpaco[0,0,0] - x_gt_store[0,0,0]
     data2 = x_mdrex[0,0,0] - x_gt_store[0,0,0]
-    vmin = min(data1.min(), data2.min())
-    vmax = max(data1.max(), data2.max())
-    vmax = max(abs(vmin), abs(vmax))
+    vmin = np.min([data1.min(), data2.min()])
+    vmax = np.max([data1.max(), data2.max()])
+    vmax = np.max([np.abs(vmin), np.abs(vmax)])
     vmin = -vmax
     im1 = axs[0].imshow(data1, cmap='bwr', vmin=vmin, vmax=vmax)
     im2 = axs[1].imshow(data2, cmap='bwr', vmin=vmin, vmax=vmax)
-    axs[0].set_title(r"REXPACO"); axs[0].axis("off")
-    axs[1].set_title(r"MD-REX"); axs[1].axis("off")
-    fig.colorbar(im1, ax=axs, shrink=0.8, pad=0.1)
-    plt.savefig("figures/comp_medium_ellipse_1em6.pdf", dpi=300, bbox_inches='tight', pad_inches=0)
+    for ax in axs:
+        ax.set_title(ax.get_title() or "")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_frame_on(True)
+        for spine in ax.spines.values():
+            spine.set_visible(True)
+            spine.set_edgecolor('black')
+            spine.set_linewidth(1.5)
+    axs[0].set_title(r"$\mathrm{REXPACO}$")
+    axs[1].set_title(r"$\mathrm{MD-REX}$")
+    cbar = fig.colorbar(im2, ax=axs, location='right', pad=0.05, shrink=1)
+    cbar.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+    cbar.ax.yaxis.set_offset_position('right')
+    cbar.ax.yaxis.get_offset_text().set_visible(True)
+    cbar.ax.yaxis.get_offset_text().set_horizontalalignment('left')
+    cbar.ax.yaxis.get_offset_text().set_verticalalignment('bottom')
+    cbar.ax.yaxis.get_offset_text().set_fontsize(12)
+    plt.savefig(
+        "figures/comp_medium_ellipse_1em6.pdf",
+        dpi=300,
+        bbox_inches='tight',
+        bbox_extra_artists=[cbar.ax.yaxis.get_offset_text()],
+        pad_inches=0.05,
+    )
     plt.show()
 
-    fig, axs = plt.subplots(1,2, figsize=(6,2))
+    fig, axs = plt.subplots(1,2, figsize=(6,2), gridspec_kw={'width_ratios': [1, 1]})
+    fig.subplots_adjust(wspace=0.03, right=0.84, top=0.84)
     data1 = x_rexpaco[2,0,0] - x_gt_store[2,0,0]
     data2 = x_mdrex[2,0,0] - x_gt_store[2,0,0]
-    vmin = min(data1.min(), data2.min())
-    vmax = max(data1.max(), data2.max())
-    vmax = max(abs(vmin), abs(vmax))
+    vmin = np.min([data1.min(), data2.min()])
+    vmax = np.max([data1.max(), data2.max()])
+    vmax = np.max([np.abs(vmin), np.abs(vmax)])
     vmin = -vmax
     im1 = axs[0].imshow(data1, cmap='bwr', vmin=vmin, vmax=vmax)
     im2 = axs[1].imshow(data2, cmap='bwr', vmin=vmin, vmax=vmax)
-    axs[0].set_title(r"REXPACO"); axs[0].axis("off")
-    axs[1].set_title(r"MD-REX"); axs[1].axis("off")
-    fig.colorbar(im1, ax=axs, shrink=0.8, pad=0.1)
-    plt.savefig("figures/comp_medium_ellipse_1em5.pdf", dpi=300, bbox_inches='tight', pad_inches=0)
+    for ax in axs:
+        ax.set_title(ax.get_title() or "")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_frame_on(True)
+        for spine in ax.spines.values():
+            spine.set_visible(True)
+            spine.set_edgecolor('black')
+            spine.set_linewidth(1.5)
+    axs[0].set_title(r"$\mathrm{REXPACO}$")
+    axs[1].set_title(r"$\mathrm{MD-REX}$")
+    cbar = fig.colorbar(im2, ax=axs, location='right', pad=0.05, shrink=1)
+    cbar.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+    cbar.ax.yaxis.set_offset_position('right')
+    cbar.ax.yaxis.get_offset_text().set_visible(True)
+    cbar.ax.yaxis.get_offset_text().set_horizontalalignment('left')
+    cbar.ax.yaxis.get_offset_text().set_verticalalignment('bottom')
+    cbar.ax.yaxis.get_offset_text().set_fontsize(12)
+    plt.savefig(
+        "figures/comp_medium_ellipse_1em5.pdf",
+        dpi=300,
+        bbox_inches='tight',
+        bbox_extra_artists=[cbar.ax.yaxis.get_offset_text()],
+        pad_inches=0.05,
+    )
     plt.show()
 
 

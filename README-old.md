@@ -197,7 +197,7 @@ rsync -rv grenoble.g5k:/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chaluca
 
 ## noeud grid5000
 
-oarsub -l nodes=1,walltime=04:00 "~/ssh_nodes/start_ssh.sh"
+oarsub -l nodes=1,walltime=10:00 "~/ssh_nodes/start_ssh.sh"
 
 ssh localhost -p 2026 -i ~/ssh_nodes/client_key
 

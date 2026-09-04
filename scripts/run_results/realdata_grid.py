@@ -5,6 +5,7 @@ import argparse
 # This allows launching multiple processes (one per GPU) with different parameters.
 parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument("--data", type=str, required=True, help="Real data relative folder name")
+parser.add_argument("--frame", type=str, required=True, help="Real data relative folder name")
 parser.add_argument("--datares", type=str, required=True, help="Real data relative folder name")
 parser.add_argument("--band", type=str, required=True, help="Real data relative folder name")
 args, remaining = parser.parse_known_args()
@@ -12,6 +13,7 @@ args, remaining = parser.parse_known_args()
 sys.argv = [sys.argv[0]] + remaining
 
 DATA = args.data
+FRAME = args.frame
 BAND = args.band
 DATARES = args.datares
 if DATA is None:
@@ -47,20 +49,20 @@ def main(cfg):
         raise FileNotFoundError(f"Real data path not found: {path_folder}")
     # path_folder = ("/scratch/vasher/tbodrito/exo/data/real_data/HIP_60074/2015-04-08")
     
-    # path_frame = ROOT / "data" / "real_data" / "DISKS_IRDIS_CHARLES" / DATA / "frame_selection_vector"
-    # hdul = fits.open(path_frame / "ird_sortframes_vector_dc-IRD_FRAME_SELECTION_VECTOR-frame_selection_vector.fits")
-    # frames = hdul[0].data
+    #
+    path_frame = ROOT / "data" / "real_data" / "DISKS_IRDIS_CHARLES" / FRAME
+    hdul = fits.open(path_frame / "ird_sortframes_vector_dc-IRD_FRAME_SELECTION_VECTOR-frame_selection_vector.fits")
+    frames = hdul[0].data
 
-    # # Indices of frames to keep
-    # frames = np.asarray(frames).reshape(-1)
-    # idx = np.where(frames == 1)[0]
-    
+    # Indices of frames to keep
+    frames = np.asarray(frames).reshape(-1)
+    idx = np.where(frames == 1)[0]
     
     inputs = load_folder(path_folder=path_folder, use_centered=False, channel_sortframes=0, channel_idx=None,)
-    y = inputs["y"].astype(np.float32) # (C, T, H, W)
+    y = inputs["y"].astype(np.float32)[:,idx,:,:] # (C, T, H, W)
     C, T, H, W = y.shape
     lbda = inputs["lbdas"].astype(np.float32)
-    rot = inputs["rot"].astype(np.float32)
+    rot = inputs["rot"].astype(np.float32)[idx]
     psf = inputs["psf"].astype(np.float32)
     
     # Convert to torch tensors
@@ -148,7 +150,8 @@ def main(cfg):
 
     s1 = 6; s2 = 6 # number of values for mu_smooth and mu_sparse
     n_smooth = 3; n_sparse = 3 # starting exponents for mu_smooth and mu_sparse
-    x_disk_store = np.empty((s1,s2), dtype=object)    
+    x_disk_store = np.empty((s1,s2), dtype=object)
+    Ax_disk_store = np.empty((s1,s2), dtype=object)
     for k in range(s1):
         for j in range(s2):
             xdisc_0 = np.zeros((C, H, W))
@@ -156,9 +159,11 @@ def main(cfg):
             mu_sparse = 10**(j+n_sparse)
             (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_smooth, mu_sparse)
             x_disk_store[k,j] = xdisc_opt
+            xtensor_opt = torch.tensor(xdisc_opt, dtype=torch.float32, device=y.device, requires_grad=True)                      
+            Ax_disk_store[k,j] = mdrex.forward_model(xtensor_opt).detach().cpu().numpy()
             
     y_numpy = y.detach().cpu().numpy()
-    np.savez(ROOT / f"results/realdata/{DATARES}.npz", y=y_numpy, x=x_disk_store, n_smooth=n_smooth, n_sparse=n_sparse)
+    np.savez(ROOT / f"results/realdata/{DATARES}.npz", y=y_numpy, x=x_disk_store, Ax=Ax_disk_store, n_smooth=n_smooth, n_sparse=n_sparse)
 
 
     # plt.figure(1)
