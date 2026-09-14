@@ -194,6 +194,7 @@ class MDREX:
         self.exomild = ExoMILD(**cfg_model).to(y.device) 
         if model_state is not None: 
             self.exomild.load_state_dict(model_state)
+        self.exomild.eval()  # ← désactive Dropout et fixe BatchNorm
         self.C, self.T, H = y.shape[1], y.shape[2], y.shape[3]
         self.batch_rotation = BatchRotationOperator(device=y.device, in_size=H, out_size=H, mode="bicubic", zero_init=True)
         self.psf = psf
@@ -215,7 +216,8 @@ class MDREX:
             with torch.set_grad_enabled(True):
                 im = self.forward_model(x_tensor)
                 diff = y - im
-                params = self.exomild.fit_params(diff, self.lbda)
+                with torch.no_grad():
+                    params = self.exomild.fit_params(diff, self.lbda)
                 log_likelihood = self.exomild.get_log_likelihood(diff, self.lbda, params)
                 phi = torch.stack([torch.sum(-ll) for ll in log_likelihood]).mean()
                 reg_sparse = mu_sparse * self.l2_l1_sparse_2d(x_tensor)

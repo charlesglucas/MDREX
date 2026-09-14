@@ -5,7 +5,7 @@ import argparse
 # This allows launching multiple processes (one per GPU) with different parameters.
 parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument("--data", type=str, required=True, help="Real data relative folder name")
-parser.add_argument("--frame", type=str, required=True, help="Real data relative folder name")
+# parser.add_argument("--frame", type=str, required=True, help="Real data relative folder name")
 parser.add_argument("--datares", type=str, required=True, help="Real data relative folder name")
 parser.add_argument("--band", type=str, required=True, help="Real data relative folder name")
 args, remaining = parser.parse_known_args()
@@ -13,7 +13,7 @@ args, remaining = parser.parse_known_args()
 sys.argv = [sys.argv[0]] + remaining
 
 DATA = args.data
-FRAME = args.frame
+# FRAME = args.frame
 BAND = args.band
 DATARES = args.datares
 if DATA is None:
@@ -50,19 +50,19 @@ def main(cfg):
     # path_folder = ("/scratch/vasher/tbodrito/exo/data/real_data/HIP_60074/2015-04-08")
     
     #
-    path_frame = ROOT / "data" / "real_data" / "DISKS_IRDIS_CHARLES" / FRAME
-    hdul = fits.open(path_frame / "ird_sortframes_vector_dc-IRD_FRAME_SELECTION_VECTOR-frame_selection_vector.fits")
-    frames = hdul[0].data
+    # path_frame = ROOT / "data" / "real_data" / "DISKS_IRDIS_CHARLES" / FRAME
+    # hdul = fits.open(path_frame / "ird_sortframes_vector_dc-IRD_FRAME_SELECTION_VECTOR-frame_selection_vector.fits")
+    # frames = hdul[0].data
 
     # Indices of frames to keep
-    frames = np.asarray(frames).reshape(-1)
-    idx = np.where(frames == 1)[0]
+    # frames = np.asarray(frames).reshape(-1)
+    # idx = np.where(frames == 1)[0]
     
     inputs = load_folder(path_folder=path_folder, use_centered=False, channel_sortframes=0, channel_idx=None,)
-    y = inputs["y"].astype(np.float32)[:,idx,:,:] # (C, T, H, W)
+    y = inputs["y"].astype(np.float32) #[:,idx,:,:] # (C, T, H, W)
     C, T, H, W = y.shape
     lbda = inputs["lbdas"].astype(np.float32)
-    rot = inputs["rot"].astype(np.float32)[idx]
+    rot = inputs["rot"].astype(np.float32) #[idx]
     psf = inputs["psf"].astype(np.float32)
     
     # Convert to torch tensors
@@ -108,7 +108,7 @@ def main(cfg):
     # cfg_model.repeats = [1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0]
     cfg_model.repeats = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     cfg_model.use_dataparallel = False
-    cfg_model.batch_size = None
+    cfg_model.batch_size = None # 256
     cfg_model.n_channels = 2
     # ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/1_asdi/2024-11-09_20-10-01/banger_ms_bs16_lr5e-4_unetnormal_aug_111_100_100_100_seed5/ckpt/ckpt_40000.pt"
     ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/exomild_H2/ckpt/ckpt_40000.pt"

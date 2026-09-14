@@ -161,7 +161,20 @@ def load_folder(
     y = fits.getdata(path_y)
     rot = fits.getdata(path_rot)
     header = fits.getheader(path_y)
-    infrared_filter = header["HIERARCH ESO INS COMB IFLT"]
+    infrared_filter = header.get("HIERARCH ESO INS COMB IFLT")
+    if infrared_filter is None:
+        lambda_info = [
+            f for f in all_files if "lambda_info" in f.lower()
+        ]
+        if len(lambda_info) == 1:
+            lambda_header = fits.getheader(
+                os.path.join(path_folder, lambda_info[0])
+            )
+            infrared_filter = lambda_header.get("HIERARCH ESO INS COMB IFLT")
+    if infrared_filter is None:
+        raise KeyError(
+            "No infrared filter found in the science cube or lambda-info FITS header"
+        )
     if infrared_filter == "DB_H23":
         lbdas = np.array([1.593, 1.667])
     elif infrared_filter == "DB_K12":
