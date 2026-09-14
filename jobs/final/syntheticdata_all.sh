@@ -7,4 +7,4 @@ oarsub -l "gpu=1,walltime=15:00:00"\
   "CUDA_VISIBLE_DEVICES=0 \
     /srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/.venv/bin/python \
     /srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/scripts/run_results/syntheticdata_all.py \
-    --mu-smooth 1e5 --mu-sparse 1e7"
+    --mu-smooth 1e6 --mu-sparse 1e6"

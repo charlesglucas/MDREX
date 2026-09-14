@@ -3,7 +3,7 @@
 
 SMS=(1e2 1e3 1e4 1e5 1e6 1e7 1e8 1e9 1e10)
 SPS=(1e2 1e3 1e4 1e5 1e6 1e7 1e8 1e9 1e10)
-FLUXS=(5e-7)
+FLUXS=(1e-5)
 for flux in "${FLUXS[@]}"; do
   for sm in "${SMS[@]}"; do
     for sp in "${SPS[@]}"; do

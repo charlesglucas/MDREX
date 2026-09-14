@@ -1,4 +1,4 @@
-# Deep Learning for High Contrast Imaging
+# Multi-Distribution variational Reconstruction of EXtended cicumstellar environments in High Contrast Imaging
 
 ## Setup
 

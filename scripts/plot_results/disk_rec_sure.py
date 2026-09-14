@@ -18,7 +18,7 @@ def main(cfg):
 
     # Load results
     shape = "medium_ellipse"
-    flux = "1em7"
+    flux = "5em7"
     path = Path(ROOT / f"results/grids_111111111111/grid_sure_{shape}_alpha{flux}")
     # path = Path(ROOT / f"results/grids_100100100100/grid_sure_{shape}_alpha{flux}")
     pattern = re.compile(r"musmooth([0-9.]+)_musparse([0-9.]+)\.npz")

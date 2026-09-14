@@ -20,13 +20,14 @@ from astropy.io import fits
 @hydra.main(config_path="../../conf", config_name="config")
 def main(cfg):
     
-    data_file = 'SAO_206462'
+    data_file = 'RX_J161533255'
     display_titles = {
         "HR_4796": "HR 4796A",
         "RY_lup": "RY Lupi",
         "PDS_70": "PDS 70",
         "HD_169142": "HD 169142",
         "SAO_206462": "SAO 206462",
+        "RX_J161533255": "RX J1615.3-3255",
     }
     title = display_titles.get(data_file, data_file.replace('_', ' '))
     data = np.load(ROOT / f"results/realdata/{data_file}.npz", allow_pickle=True)
@@ -63,7 +64,7 @@ def main(cfg):
             h=k*3+j+1
             sm = nsmooth+k; 
             sp = nsparse+j
-            plt.subplot(3,3,h); plt.imshow(np.squeeze(np.mean(x_disk_store[k+3,j+3], axis=0))); plt.title(rf"$(10^{{{sm}}},\, 10^{{{sp}}})$"); plt.colorbar()
+            plt.subplot(3,3,h); plt.imshow(np.squeeze(np.mean(x_disk_store[k+3,j+1], axis=0))); plt.title(rf"$(10^{{{sm}}},\, 10^{{{sp}}})$"); plt.colorbar()
             plt.suptitle(r"$\mathbf{x}$");
             plt.tight_layout()
             plt.show()
@@ -86,7 +87,7 @@ def main(cfg):
     plt.axis('off')
     plt.savefig("figures/reconstruction.jpg", dpi=300, bbox_inches='tight', pad_inches=0)
 
-    k = 3; j = 4
+    k = 3; j = 3
     fig, axs = plt.subplots(1, 2, figsize=(6, 2))
     data1 = x_disk_store[k, j][0]
     data2 = x_disk_store[k, j][1]
@@ -161,11 +162,16 @@ def main(cfg):
         blue_cbar.ax.tick_params(labelsize=13)
         blue_cbar.set_label(blue_cbar.ax.get_xlabel(), fontsize=14)
         if use_scaled_ticks and exponent != 0:
-            fig.canvas.draw()
+            blue_cbar.ax.xaxis.set_major_formatter(
+                ticker.FuncFormatter(
+                    lambda value, position, scale=scale: f"{value / scale:g}"
+                )
+            )
             blue_cbar.ax.xaxis.get_offset_text().set_visible(False)
-            blue_cbar.ax.text(1.15, -1.4, rf"$\times 10^{{{exponent}}}$",
+            fig.canvas.draw()
+            blue_cbar.ax.text(1.02, -1.15, rf"$\times 10^{{{exponent}}}$",
                               transform=blue_cbar.ax.transAxes,
-                              ha="right", va="top", clip_on=False)
+                              ha="left", va="top", clip_on=False)
 
         orange_cbar = fig.colorbar(
             orange_bar, cax=orange_cax, orientation="vertical",
@@ -179,12 +185,12 @@ def main(cfg):
         orange_cbar.set_label(orange_cbar.ax.get_ylabel(), fontsize=14)
         fig.canvas.draw()
         orange_cbar.ax.yaxis.get_offset_text().set_visible(False)
-        fig.savefig(f"figures/{data_file}_{suffix}_RGB.pdf", dpi=300,
+        fig.savefig(f"figures/{data_file}_{suffix}_musmooth{sm}_musparse{sp}_RGB.pdf", dpi=300,
                     bbox_inches="tight", pad_inches=0.1)
         plt.show()
         return rgb, data1.copy(), data2.copy(), norm, blue_map, orange_map
 
-    k = 4; j = 4
+    k = 4; j = 3
     sm = nsmooth + k
     sp = nsparse + j
     x_result = render_rgb(
@@ -228,14 +234,14 @@ def main(cfg):
         combined_blue_bar.set_array(channel1)
         combined_orange_bar.set_array(channel2)
         combined_tick_step = 10 ** np.floor(np.log10(max(channel1.max(), channel2.max())))
+        combined_exponent = int(np.floor(np.log10(max(channel1.max(), channel2.max()))))
+        combined_scale = 10.0 ** combined_exponent
         combined_blue_cbar = combined_fig.colorbar(
             combined_blue_bar, cax=combined_blue_cax, orientation="horizontal",
             label=rf"$\lambda = {wavelengths[0]:.3f}\,\mu\mathrm{{m}}$",
         )
         combined_blue_cbar.locator = ticker.MultipleLocator(combined_tick_step)
-        if row == 1:
-            combined_exponent = int(np.floor(np.log10(max(channel1.max(), channel2.max()))))
-            combined_scale = 10.0 ** combined_exponent
+        if combined_exponent != 0:
             combined_blue_cbar.formatter = ticker.FuncFormatter(
                 lambda value, position: f"{value / combined_scale:g}"
             )
@@ -245,13 +251,18 @@ def main(cfg):
         combined_blue_cbar.update_ticks()
         combined_blue_cbar.ax.tick_params(labelsize=13)
         combined_blue_cbar.set_label(combined_blue_cbar.ax.get_xlabel(), fontsize=14)
-        if row == 1 and combined_exponent != 0:
-            combined_fig.canvas.draw()
+        if combined_exponent != 0:
+            combined_blue_cbar.ax.xaxis.set_major_formatter(
+                ticker.FuncFormatter(
+                    lambda value, position, scale=combined_scale: f"{value / scale:g}"
+                )
+            )
             combined_blue_cbar.ax.xaxis.get_offset_text().set_visible(False)
+            combined_fig.canvas.draw()
             combined_blue_cbar.ax.text(
-                1.15, -1.4, rf"$\times 10^{{{combined_exponent}}}$",
+                1.02, -1.15, rf"$\times 10^{{{combined_exponent}}}$",
                 transform=combined_blue_cbar.ax.transAxes,
-                ha="right", va="top", clip_on=False,
+                ha="left", va="top", clip_on=False,
             )
         combined_orange_cbar = combined_fig.colorbar(
             combined_orange_bar, cax=combined_orange_cax, orientation="vertical",

@@ -145,9 +145,23 @@ def main(cfg):
     mdrex = MDREX(y=y, rot=rot, psf=psf_crop, mask=mask, lbda=lbda, model_state=model_state, **cfg_model)
 
     def mahalanobis_mse(x_gt, x_tensor_opt):
-        diffp = mdrex.to_patches.forward(mdrex.forward_model(x_gt) - mdrex.forward_model(x_tensor_opt), lbda)
-        mse_total = diffp.pow(2).sum() 
-        return mse_total.item()
+        residual_gt = y - mdrex.forward_model(x_gt)
+        residual_opt = y - mdrex.forward_model(x_tensor_opt)
+        diff = residual_gt - residual_opt
+        diffp = mdrex.to_patches.forward(diff, lbda)
+        params = mdrex.fit_params_noweight(residual_opt)
+        Cinv = params["C_inv"]
+
+        bsp, _, patch_h, patch_w = diffp.shape
+        diff_vec = diffp.view(bsp, C, T, patch_h * patch_w).unsqueeze(-1)
+        Cx = Cinv @ diff_vec
+        mahalanobis = (diff_vec.transpose(-1, -2) @ Cx).squeeze(-1).squeeze(-1)
+        return mahalanobis.sum().item()
+
+    # def mahalanobis_mse(x_gt, x_tensor_opt):
+    #     diffp = mdrex.to_patches.forward(mdrex.forward_model(x_gt) - mdrex.forward_model(x_tensor_opt), lbda)
+    #     mse_total = diffp.pow(2).sum() 
+    #     return mse_total.item()
     
     # Load disk
     flux = FLUX
