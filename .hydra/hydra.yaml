@@ -117,7 +117,7 @@ hydra:
     - hydra.mode=RUN
     task: []
   job:
-    name: disk_rec_realdata
+    name: disk_rec_sure
     chdir: null
     override_dirname: ''
     id: ???
