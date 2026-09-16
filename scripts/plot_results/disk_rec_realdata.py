@@ -1,6 +1,5 @@
 import sys, pathlib, os
 
-
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 
@@ -15,12 +14,31 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from astropy.io import fits
+from utils.rotation import BatchRotationOperator
 
+
+def north_align_disk(disk, rotation_deg):
+    channels, height, width = disk.shape
+    if height != width:
+        raise ValueError(f"Expected square disk images, got {disk.shape}")
+    operator = BatchRotationOperator(
+        device=torch.device("cpu"),
+        in_size=height,
+        out_size=height,
+        mode="bicubic",
+        # x is a static reconstruction, so apply the absolute reference
+        # parallactic angle here; zero_init belongs to the frame sequence.
+        zero_init=False,
+    )
+    disk_tensor = torch.from_numpy(disk.astype(np.float32))[None]
+    angle = torch.full((1, channels), float(rotation_deg))
+    aligned = operator.forward(x=disk_tensor, rot=angle)[0].numpy()
+    return aligned
 
 @hydra.main(config_path="../../conf", config_name="config")
 def main(cfg):
     
-    data_file = 'RX_J161533255'
+    data_file = 'HR_4796'
     display_titles = {
         "HR_4796": "HR 4796A",
         "RY_lup": "RY Lupi",
@@ -37,6 +55,42 @@ def main(cfg):
     nsmooth = data["n_smooth"]
     nsparse = data["n_sparse"]
 
+    path_data = ROOT / "data/real_data/DISKS_IRDIS_CHARLES" / data_file / "2015-02-03/IRDIS/data"
+    # path_frames = ROOT / "data/real_data/DISKS_IRDIS_CHARLES" / data_file / "2015-02-03/IRDIS/frame_selection_vector"
+    # frame_selection = np.asarray(
+    #     fits.getdata(
+    #         path_frames
+    #         / "ird_sortframes_vector_dc-IRD_FRAME_SELECTION_VECTOR-frame_selection_vector.fits"
+    #     )
+    # ).reshape(-1)
+    # selected_indices = np.where(frame_selection == 1)[0]
+    parallactic_angles = np.asarray(
+        fits.getdata(
+            path_data
+            / "ird_convert_recenter_dc5-IRD_SCIENCE_PARA_ROTATION_CUBE-rotnth.fits"
+        ),
+        dtype=np.float32,
+    ).reshape(-1)
+    rotation_deg = -float(np.median(parallactic_angles[0]))
+    x_disk_store = np.stack(
+        [
+            [north_align_disk(disk, rotation_deg) for disk in row]
+            for row in x_disk_store
+        ]
+    )
+    Ax_disk_store = np.stack(
+        [
+            [
+                np.stack(
+                    [north_align_disk(ax[0, :, t], rotation_deg) for t in range(ax.shape[2])],
+                    axis=1
+                )[np.newaxis]
+                for ax in row
+            ]
+            for row in Ax_disk_store
+        ]
+    )
+
     lambda_files = list(
         (ROOT / "data/real_data/DISKS_IRDIS_CHARLES" / data_file).glob(
             "**/*-lam.fits"
@@ -48,12 +102,12 @@ def main(cfg):
         )
     wavelengths = np.asarray(fits.getdata(lambda_files[0])).reshape(-1)
 
-    k,j = 1,2
+    k,j = 4,3
     plt.figure(1)
     plt.subplot(2,2,1); plt.imshow(np.squeeze(y[0,0,0,:,:]),vmin=0,vmax=50); plt.title(r"$\mathbf{y}_0^{(1)}$"); plt.colorbar()
     plt.subplot(2,2,2); plt.imshow(np.squeeze(y[0,1,0,:,:]),vmin=0,vmax=50); plt.title(r"$\mathbf{y}_0^{(2)}$"); plt.colorbar()
-    plt.subplot(2,2,3); plt.imshow(np.squeeze(x_disk_store[k,j][0,:,:])); plt.title(r"$x$"); plt.colorbar()
-    plt.subplot(2,2,4); plt.imshow(np.squeeze(x_disk_store[k,j][1,:,:])); plt.title(r"$x$"); plt.colorbar()
+    plt.subplot(2,2,3); plt.imshow(np.squeeze(x_disk_store[k,j][0,:,:]), origin="lower"); plt.title(r"$x$"); plt.colorbar()
+    plt.subplot(2,2,4); plt.imshow(np.squeeze(x_disk_store[k,j][1,:,:]), origin="lower"); plt.title(r"$x$"); plt.colorbar()
     plt.tight_layout()
     plt.show()
     # plt.savefig("gridsearch.jpg", dpi=300)
@@ -64,7 +118,7 @@ def main(cfg):
             h=k*3+j+1
             sm = nsmooth+k; 
             sp = nsparse+j
-            plt.subplot(3,3,h); plt.imshow(np.squeeze(np.mean(x_disk_store[k+3,j+1], axis=0))); plt.title(rf"$(10^{{{sm}}},\, 10^{{{sp}}})$"); plt.colorbar()
+            plt.subplot(3,3,h); plt.imshow(np.squeeze(np.mean(x_disk_store[k+3,j], axis=0))); plt.title(rf"$(10^{{{sm}}},\, 10^{{{sp}}})$"); plt.colorbar()
             plt.suptitle(r"$\mathbf{x}$");
             plt.tight_layout()
             plt.show()
@@ -109,8 +163,10 @@ def main(cfg):
         common_vmax = max(data1.max(), data2.max())
         tick_step = 10 ** np.floor(np.log10(common_vmax))
         norm = PowerNorm(gamma=0.5, vmin=common_vmin, vmax=common_vmax)
-        d1 = norm(data1)
-        d2 = norm(data2)
+        # d1 = norm(data1)
+        # d2 = norm(data2)
+        d1 = (data1 - common_vmin) / (common_vmax - common_vmin) 
+        d2 = (data2 - common_vmin) / (common_vmax - common_vmin)
         color_map = np.array([[0.0, 0.5, 1.0],
                               [1.0, 0.5, 0.0]], dtype=np.float32)
         rgb = np.zeros(data1.shape + (3,), dtype=np.float32)
@@ -190,7 +246,7 @@ def main(cfg):
         plt.show()
         return rgb, data1.copy(), data2.copy(), norm, blue_map, orange_map
 
-    k = 4; j = 3
+    k = 4; j = 4
     sm = nsmooth + k
     sp = nsparse + j
     x_result = render_rgb(

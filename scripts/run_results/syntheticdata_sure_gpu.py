@@ -147,7 +147,9 @@ def main(cfg):
     def mahalanobis_mse(x_gt, x_tensor_opt):
         residual_gt = y - mdrex.forward_model(x_gt)
         residual_opt = y - mdrex.forward_model(x_tensor_opt)
-        diff = residual_gt - residual_opt
+        theta_gt = mdrex.forward_model(x_gt) + torch.mean(residual_gt, dim=2, keepdim=True)
+        theta_opt = mdrex.forward_model(x_tensor_opt) + torch.mean(residual_opt, dim=2, keepdim=True)
+        diff = theta_gt - theta_opt
         diffp = mdrex.to_patches.forward(diff, lbda)
         params = mdrex.fit_params_noweight(residual_opt)
         Cinv = params["C_inv"]
