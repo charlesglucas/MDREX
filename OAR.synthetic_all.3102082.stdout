@@ -1,0 +1,1065 @@
+path_folder=PosixPath('/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/data/nuisances/HIP_72192/2015-06-11/IRDIS/data')
+Not using recentered data
+Not using centered data
+waffle_amplitude=0.05
+(2, 96, 1024, 1024)
+sorting vector not found
+y.shape=(2, 96, 1024, 1024)
+Using all channels
+path_sources='/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/data/nuisances/HIP_72192/2015-06-11/IRDIS/data/sources_256_northaligned.csv'
+No source file found
+Loading checkpoint /srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/checkpoints_calib_exomild/checkpoints/exomild_H2/ckpt/ckpt_40000.pt
+Conserved blocks : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+Conserved weights : 176 out of 176
+[ExoMILD] self.use_modelco_loss=False
+i=0 params={'type': 'spatial', 'name': 'p8_s1', 'repeat': 1, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'denoise_mean': False, 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 64, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p8_s1', 'repeat': 1, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'denoise_mean': False, 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 64, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p8_s1'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=3969
+[SpatialTerm] self.symmetry=1
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (8)] spatial stride: 4
+[SpatialPatchesHandler (8)] spatial patch_size: 8
+i=1 params={'type': 'spatial', 'name': 'p8_s2', 'repeat': 1, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 128, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p8_s2', 'repeat': 1, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 128, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p8_s2'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=3969
+[SpatialTerm] self.symmetry=2
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (8)] spatial stride: 4
+[SpatialPatchesHandler (8)] spatial patch_size: 8
+i=2 params={'type': 'spatial', 'name': 'p8_s4', 'repeat': 1, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 256, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p8_s4', 'repeat': 1, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 256, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p8_s4'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=3969
+[SpatialTerm] self.symmetry=4
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (8)] spatial stride: 4
+[SpatialPatchesHandler (8)] spatial patch_size: 8
+i=3 params={'type': 'spatial', 'name': 'p16_s1', 'repeat': 1, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 256, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p16_s1', 'repeat': 1, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 256, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p16_s1'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=961
+[SpatialTerm] self.symmetry=1
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (16)] spatial stride: 8
+[SpatialPatchesHandler (16)] spatial patch_size: 16
+i=4 params={'type': 'spatial', 'name': 'p16_s2', 'repeat': 1, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 512, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p16_s2', 'repeat': 1, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 512, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p16_s2'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=961
+[SpatialTerm] self.symmetry=2
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (16)] spatial stride: 8
+[SpatialPatchesHandler (16)] spatial patch_size: 16
+i=5 params={'type': 'spatial', 'name': 'p16_s4', 'repeat': 1, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 1024, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p16_s4', 'repeat': 1, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 1024, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p16_s4'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=961
+[SpatialTerm] self.symmetry=4
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (16)] spatial stride: 8
+[SpatialPatchesHandler (16)] spatial patch_size: 16
+i=6 params={'type': 'spatial', 'name': 'p32_s1', 'repeat': 1, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 1024, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p32_s1', 'repeat': 1, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 1024, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p32_s1'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=225
+[SpatialTerm] self.symmetry=1
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (32)] spatial stride: 16
+[SpatialPatchesHandler (32)] spatial patch_size: 32
+i=7 params={'type': 'spatial', 'name': 'p32_s2', 'repeat': 1, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 2048, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p32_s2', 'repeat': 1, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 2048, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p32_s2'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=225
+[SpatialTerm] self.symmetry=2
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=None
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (32)] spatial stride: 16
+[SpatialPatchesHandler (32)] spatial patch_size: 32
+i=8 params={'type': 'spatial', 'name': 'p32_s4', 'repeat': 1, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 4096, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p32_s4', 'repeat': 1, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 4096, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p32_s4'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=225
+[SpatialTerm] self.symmetry=4
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (32)] spatial stride: 16
+[SpatialPatchesHandler (32)] spatial patch_size: 32
+i=9 params={'type': 'spatial', 'name': 'p64_s1', 'repeat': 1, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 4096, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p64_s1', 'repeat': 1, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 4096, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p64_s1'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=49
+[SpatialTerm] self.symmetry=1
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (64)] spatial stride: 32
+[SpatialPatchesHandler (64)] spatial patch_size: 64
+i=10 params={'type': 'spatial', 'name': 'p64_s2', 'repeat': 1, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 8192, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p64_s2', 'repeat': 1, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 8192, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p64_s2'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=49
+[SpatialTerm] self.symmetry=2
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (64)] spatial stride: 32
+[SpatialPatchesHandler (64)] spatial patch_size: 64
+i=11 params={'type': 'spatial', 'name': 'p64_s2', 'repeat': 1, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 16384, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p64_s2', 'repeat': 1, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 16384, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p64_s2'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=49
+[SpatialTerm] self.symmetry=4
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (64)] spatial stride: 32
+[SpatialPatchesHandler (64)] spatial patch_size: 64
+[ExoMILD] self.G_tot=12
+all_terms=[SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+)]
+[ExoMILD] self.learnable_weights=True
+[ExoMILD] self.pixel_wise_weights=True
+[ExoMILD] self.use_local_max=False
+[ExoMILD] self.n_sources_max=16
+[ExoMILD] self.iterative=False
+[ExoMILD] self.oracle=False
+[Filter] self.is_residual=False
+[Filter] self.gate_type='unet_normal'
+[U-Net] self.skip_norm=False
+[UNet] False
+[ExoMILD] linalg_library='cusolver'
+[ExoMILD] self.grad_iterative=True
+[ExoMILD] self.grad_astrometry=False
+N params model: 3.783 M
+ExoMILD(
+  (all_terms): ModuleList(
+    (0-11): 12 x SpatialTerm(
+      (engine): EngineSpatial(
+        (features_pipeline): FeaturesPipeline(
+          (transforms): ModuleList(
+            (0): LinearFeatures()
+          )
+        )
+        (psf_sampler_shift): BatchPSFSampler()
+        (psf_sampler_center): BatchPSFSampler()
+      )
+      (patch_formatter): PatchFormatter()
+      (wavelength_aligner): WavelengthAligner()
+    )
+  )
+  (filter): Filter(
+    (psf_sampler_center): BatchPSFSampler()
+    (unet): UNet(
+      (image_proj): Conv2d(2, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (time_emb): TimeEmbedding(
+        (lin1): Linear(in_features=16, out_features=64, bias=True)
+        (act): Swish()
+        (lin2): Linear(in_features=64, out_features=64, bias=True)
+      )
+      (down): ModuleList(
+        (0): DownBlock(
+          (res): ResidualBlock(
+            (norm1): GroupNorm(16, 16, eps=1e-05, affine=True)
+            (norm2): GroupNorm(16, 16, eps=1e-05, affine=True)
+            (act1): Swish()
+            (conv1): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (act2): Swish()
+            (conv2): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (shortcut): Identity()
+            (time_emb): Linear(in_features=64, out_features=16, bias=True)
+            (time_act): Swish()
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (attn): Identity()
+        )
+        (1): Downsample(
+          (conv): Conv2d(16, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+        )
+        (2): DownBlock(
+          (res): ResidualBlock(
+            (norm1): GroupNorm(16, 16, eps=1e-05, affine=True)
+            (norm2): GroupNorm(16, 32, eps=1e-05, affine=True)
+            (act1): Swish()
+            (conv1): Conv2d(16, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (act2): Swish()
+            (conv2): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (shortcut): Conv2d(16, 32, kernel_size=(1, 1), stride=(1, 1))
+            (time_emb): Linear(in_features=64, out_features=32, bias=True)
+            (time_act): Swish()
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (attn): Identity()
+        )
+        (3): Downsample(
+          (conv): Conv2d(32, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+        )
+        (4): DownBlock(
+          (res): ResidualBlock(
+            (norm1): GroupNorm(16, 32, eps=1e-05, affine=True)
+            (norm2): GroupNorm(16, 64, eps=1e-05, affine=True)
+            (act1): Swish()
+            (conv1): Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (act2): Swish()
+            (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (shortcut): Conv2d(32, 64, kernel_size=(1, 1), stride=(1, 1))
+            (time_emb): Linear(in_features=64, out_features=64, bias=True)
+            (time_act): Swish()
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (attn): AttentionBlock(
+            (norm): GroupNorm(16, 64, eps=1e-05, affine=True)
+            (projection): Linear(in_features=64, out_features=192, bias=True)
+            (output): Linear(in_features=64, out_features=64, bias=True)
+          )
+        )
+      )
+      (middle): MiddleBlock(
+        (res1): ResidualBlock(
+          (norm1): GroupNorm(16, 64, eps=1e-05, affine=True)
+          (norm2): GroupNorm(16, 64, eps=1e-05, affine=True)
+          (act1): Swish()
+          (conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (act2): Swish()
+          (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (shortcut): Identity()
+          (time_emb): Linear(in_features=64, out_features=64, bias=True)
+          (time_act): Swish()
+          (dropout): Dropout(p=0.1, inplace=False)
+        )
+        (attn): AttentionBlock(
+          (norm): GroupNorm(16, 64, eps=1e-05, affine=True)
+          (projection): Linear(in_features=64, out_features=192, bias=True)
+          (output): Linear(in_features=64, out_features=64, bias=True)
+        )
+        (res2): ResidualBlock(
+          (norm1): GroupNorm(16, 64, eps=1e-05, affine=True)
+          (norm2): GroupNorm(16, 64, eps=1e-05, affine=True)
+          (act1): Swish()
+          (conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (act2): Swish()
+          (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (shortcut): Identity()
+          (time_emb): Linear(in_features=64, out_features=64, bias=True)
+          (time_act): Swish()
+          (dropout): Dropout(p=0.1, inplace=False)
+        )
+      )
+      (up): ModuleList(
+        (0): UpBlock(
+          (res): ResidualBlock(
+            (norm1): GroupNorm(16, 128, eps=1e-05, affine=True)
+            (norm2): GroupNorm(16, 64, eps=1e-05, affine=True)
+            (act1): Swish()
+            (conv1): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (act2): Swish()
+            (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (shortcut): Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1))
+            (time_emb): Linear(in_features=64, out_features=64, bias=True)
+            (time_act): Swish()
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (attn): AttentionBlock(
+            (norm): GroupNorm(16, 64, eps=1e-05, affine=True)
+            (projection): Linear(in_features=64, out_features=192, bias=True)
+            (output): Linear(in_features=64, out_features=64, bias=True)
+          )
+        )
+        (1): UpBlock(
+          (res): ResidualBlock(
+            (norm1): GroupNorm(16, 96, eps=1e-05, affine=True)
+            (norm2): GroupNorm(16, 32, eps=1e-05, affine=True)
+            (act1): Swish()
+            (conv1): Conv2d(96, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (act2): Swish()
+            (conv2): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (shortcut): Conv2d(96, 32, kernel_size=(1, 1), stride=(1, 1))
+            (time_emb): Linear(in_features=64, out_features=32, bias=True)
+            (time_act): Swish()
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (attn): AttentionBlock(
+            (norm): GroupNorm(16, 32, eps=1e-05, affine=True)
+            (projection): Linear(in_features=32, out_features=96, bias=True)
+            (output): Linear(in_features=32, out_features=32, bias=True)
+          )
+        )
+        (2): Upsample(
+          (conv): ConvTranspose2d(32, 32, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1))
+        )
+        (3): UpBlock(
+          (res): ResidualBlock(
+            (norm1): GroupNorm(16, 64, eps=1e-05, affine=True)
+            (norm2): GroupNorm(16, 32, eps=1e-05, affine=True)
+            (act1): Swish()
+            (conv1): Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (act2): Swish()
+            (conv2): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (shortcut): Conv2d(64, 32, kernel_size=(1, 1), stride=(1, 1))
+            (time_emb): Linear(in_features=64, out_features=32, bias=True)
+            (time_act): Swish()
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (attn): Identity()
+        )
+        (4): UpBlock(
+          (res): ResidualBlock(
+            (norm1): GroupNorm(16, 48, eps=1e-05, affine=True)
+            (norm2): GroupNorm(16, 16, eps=1e-05, affine=True)
+            (act1): Swish()
+            (conv1): Conv2d(48, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (act2): Swish()
+            (conv2): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (shortcut): Conv2d(48, 16, kernel_size=(1, 1), stride=(1, 1))
+            (time_emb): Linear(in_features=64, out_features=16, bias=True)
+            (time_act): Swish()
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (attn): Identity()
+        )
+        (5): Upsample(
+          (conv): ConvTranspose2d(16, 16, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1))
+        )
+        (6-7): 2 x UpBlock(
+          (res): ResidualBlock(
+            (norm1): GroupNorm(16, 32, eps=1e-05, affine=True)
+            (norm2): GroupNorm(16, 16, eps=1e-05, affine=True)
+            (act1): Swish()
+            (conv1): Conv2d(32, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (act2): Swish()
+            (conv2): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (shortcut): Conv2d(32, 16, kernel_size=(1, 1), stride=(1, 1))
+            (time_emb): Linear(in_features=64, out_features=16, bias=True)
+            (time_act): Swish()
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (attn): Identity()
+        )
+      )
+      (norm): GroupNorm(8, 16, eps=1e-05, affine=True)
+      (act): Swish()
+      (final): Conv2d(16, 2, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    )
+  )
+  (psf_sampler_center): BatchPSFSampler()
+  (injector): Injector(
+    (psf_sampler_shift): BatchPSFSampler()
+  )
+  (local_masker): LocalMasker()
+)
+[ExoMILD] self.use_modelco_loss=False
+i=0 params={'type': 'spatial', 'name': 'p8_s1', 'repeat': 1, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'denoise_mean': False, 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 64, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p8_s1', 'repeat': 1, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'denoise_mean': False, 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 64, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p8_s1'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=3969
+[SpatialTerm] self.symmetry=1
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (8)] spatial stride: 4
+[SpatialPatchesHandler (8)] spatial patch_size: 8
+i=1 params={'type': 'spatial', 'name': 'p8_s2', 'repeat': 1, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 128, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p8_s2', 'repeat': 1, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 128, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p8_s2'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=3969
+[SpatialTerm] self.symmetry=2
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (8)] spatial stride: 4
+[SpatialPatchesHandler (8)] spatial patch_size: 8
+i=2 params={'type': 'spatial', 'name': 'p8_s4', 'repeat': 1, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 256, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p8_s4', 'repeat': 1, 'patch_size': 8, 'stride': 4, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 256, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p8_s4'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=3969
+[SpatialTerm] self.symmetry=4
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (8)] spatial stride: 4
+[SpatialPatchesHandler (8)] spatial patch_size: 8
+i=3 params={'type': 'spatial', 'name': 'p16_s1', 'repeat': 1, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 256, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p16_s1', 'repeat': 1, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 256, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p16_s1'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=961
+[SpatialTerm] self.symmetry=1
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (16)] spatial stride: 8
+[SpatialPatchesHandler (16)] spatial patch_size: 16
+i=4 params={'type': 'spatial', 'name': 'p16_s2', 'repeat': 1, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 512, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p16_s2', 'repeat': 1, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 512, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p16_s2'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=961
+[SpatialTerm] self.symmetry=2
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (16)] spatial stride: 8
+[SpatialPatchesHandler (16)] spatial patch_size: 16
+i=5 params={'type': 'spatial', 'name': 'p16_s4', 'repeat': 1, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 1024, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p16_s4', 'repeat': 1, 'patch_size': 16, 'stride': 8, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 1024, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p16_s4'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=961
+[SpatialTerm] self.symmetry=4
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (16)] spatial stride: 8
+[SpatialPatchesHandler (16)] spatial patch_size: 16
+i=6 params={'type': 'spatial', 'name': 'p32_s1', 'repeat': 1, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 1024, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p32_s1', 'repeat': 1, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 1024, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p32_s1'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=225
+[SpatialTerm] self.symmetry=1
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (32)] spatial stride: 16
+[SpatialPatchesHandler (32)] spatial patch_size: 32
+i=7 params={'type': 'spatial', 'name': 'p32_s2', 'repeat': 1, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 2048, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p32_s2', 'repeat': 1, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': None, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 2048, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p32_s2'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=225
+[SpatialTerm] self.symmetry=2
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=None
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (32)] spatial stride: 16
+[SpatialPatchesHandler (32)] spatial patch_size: 32
+i=8 params={'type': 'spatial', 'name': 'p32_s4', 'repeat': 1, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 4096, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p32_s4', 'repeat': 1, 'patch_size': 32, 'stride': 16, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 4096, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p32_s4'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=225
+[SpatialTerm] self.symmetry=4
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (32)] spatial stride: 16
+[SpatialPatchesHandler (32)] spatial patch_size: 32
+i=9 params={'type': 'spatial', 'name': 'p64_s1', 'repeat': 1, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 4096, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p64_s1', 'repeat': 1, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 1, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 4096, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p64_s1'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=49
+[SpatialTerm] self.symmetry=1
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (64)] spatial stride: 32
+[SpatialPatchesHandler (64)] spatial patch_size: 64
+i=10 params={'type': 'spatial', 'name': 'p64_s2', 'repeat': 1, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 8192, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p64_s2', 'repeat': 1, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 2, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 8192, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p64_s2'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=49
+[SpatialTerm] self.symmetry=2
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (64)] spatial stride: 32
+[SpatialPatchesHandler (64)] spatial patch_size: 64
+i=11 params={'type': 'spatial', 'name': 'p64_s2', 'repeat': 1, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 16384, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+params={'name': 'p64_s2', 'repeat': 1, 'patch_size': 64, 'stride': 32, 'dilation': 1, 'temporal_length': None, 'temporal_dilation': 1, 'temporal_stride': 1, 'dim_samples': 't l', 'dim_prefeatures': 'h w', 'groups': 1, 'mode_ab': 'left', 'grad_params': True, 'use_dataparallel': False, 'batch_size': 256, 'low_memory_mode': False, 'symmetry': 4, 'params_pipeline': [{'type': 'linear', 'patch_wise': '${model.patch_wise}', 'size_in': 16384, 'size_out': 64, 'learnable': '${model.learnable_proj}', 'is_identity': False}]}
+[SpatialTerm] self.name='p64_s2'
+[SpatialTerm] self.use_dataparallel=False
+[SpatialTerm] self.dilation=1
+[SpatialTerm] self.denoise_mean=False
+[SpatialTerm] self.stat_model='gaussian'
+[SpatialTerm] self.bsp=49
+[SpatialTerm] self.symmetry=4
+[LinearFeatures] self.learnable=True
+[FeaturesPipeline] self.transforms=ModuleList(
+  (0): LinearFeatures()
+)
+[Engine] self.batch_size=256
+[Engine] self.low_memory_mode=False
+[Engine] self.grad_params=True
+[Engine] self.low_memory_mode=False
+[SpatialTerm] self.device_ids=[0]
+[SpatialTerm] Not using DataParallel
+[SpatialPatchesHandler (64)] spatial stride: 32
+[SpatialPatchesHandler (64)] spatial patch_size: 64
+[ExoMILD] self.G_tot=12
+all_terms=[SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+), SpatialTerm(
+  (engine): EngineSpatial(
+    (features_pipeline): FeaturesPipeline(
+      (transforms): ModuleList(
+        (0): LinearFeatures()
+      )
+    )
+    (psf_sampler_shift): BatchPSFSampler()
+    (psf_sampler_center): BatchPSFSampler()
+  )
+  (patch_formatter): PatchFormatter()
+  (wavelength_aligner): WavelengthAligner()
+)]
+[ExoMILD] self.learnable_weights=True
+[ExoMILD] self.pixel_wise_weights=True
+[ExoMILD] self.use_local_max=False
+[ExoMILD] self.n_sources_max=16
+[ExoMILD] self.iterative=False
+[ExoMILD] self.oracle=False
+[Filter] self.is_residual=False
+[Filter] self.gate_type='unet_normal'
+[U-Net] self.skip_norm=False
+[UNet] False
+[ExoMILD] linalg_library='cusolver'
+[ExoMILD] self.grad_iterative=True
+[ExoMILD] self.grad_astrometry=False
+[SpatialPatchesHandler (8)] padding=(0, 0)
+[SpatialPatchesHandler (8)] padding=(0, 0)
+[SpatialPatchesHandler (8)] padding=(0, 0)
+[SpatialPatchesHandler (16)] padding=(0, 0)
+[SpatialPatchesHandler (16)] padding=(0, 0)
+[SpatialPatchesHandler (16)] padding=(0, 0)
+[SpatialPatchesHandler (32)] padding=(0, 0)
+[SpatialPatchesHandler (32)] padding=(0, 0)
+[SpatialPatchesHandler (32)] padding=(0, 0)
+[SpatialPatchesHandler (64)] padding=(0, 0)
+[SpatialPatchesHandler (64)] padding=(0, 0)
+[SpatialPatchesHandler (64)] padding=(0, 0)

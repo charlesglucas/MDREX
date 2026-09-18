@@ -1,0 +1,36 @@
+/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/scripts/run_results/syntheticdata_all.py:41: UserWarning: 
+The version_base parameter is not specified.
+Please specify a compatability version level, or None.
+Will assume defaults for version 1.1
+  @hydra.main(config_path="../../conf", config_name="config")
+/home/clucas/.local/lib/python3.9/site-packages/hydra/_internal/hydra.py:119: UserWarning: Future Hydra versions will no longer change working directory at job runtime by default.
+See https://hydra.cc/docs/1.2/upgrades/1.1_to_1.2/changes_to_job_working_dir/ for more information.
+  ret = run_job(
+[W916 17:29:55.945814408 Context.cpp:320] Warning: torch.backends.cuda.preferred_linalg_library is an experimental feature. If you see any error or unexpected behavior when this flag is set please file an issue on GitHub. (function operator())
+Error executing job with overrides: []
+Traceback (most recent call last):
+  File "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/scripts/run_results/syntheticdata_all.py", line 172, in main
+    (xdisc, fx, gx, status) = mdrex.run_bfgs(xdisc, data, MU_SMOOTH, MU_SPARSE)
+  File "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/reconstruction/mdrex.py", line 232, in run_bfgs
+    xdisc_opt, fx, gx, status = optm.vmlmb(fg, x_disc_0, verb=1, lower=0, maxiter=100000, observer=None)
+  File "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/utils/optm.py", line 1259, in vmlmb
+    f, g = fg(x)
+  File "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/reconstruction/mdrex.py", line 221, in fg
+    log_likelihood = self.exomild.get_log_likelihood(diff, self.lbda, params)
+  File "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/models/exomild/exomild.py", line 682, in get_log_likelihood
+    ll = term.get_log_likelihood(x, lbda, params)
+  File "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/models/exomild/spatial_term.py", line 867, in get_log_likelihood
+    ll = self.engine(
+  File "/home/clucas/.local/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/clucas/.local/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/models/exomild/engine.py", line 1967, in forward
+    return self.get_log_likelihood(
+  File "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/models/exomild/engine.py", line 1928, in wrap
+    out_split.append(func(self, *args, **k_split))
+  File "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/models/exomild/engine.py", line 3356, in get_log_likelihood
+    Lt_fx_c = L.transpose(-1, -2) @ fx_c  # (bs, bsp, T, G, fs, 1)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 768.00 MiB. GPU 0 has a total capacity of 47.37 GiB of which 300.75 MiB is free. Including non-PyTorch memory, this process has 47.07 GiB memory in use. Of the allocated memory 46.40 GiB is allocated by PyTorch, and 147.10 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.
