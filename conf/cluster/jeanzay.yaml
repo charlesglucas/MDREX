@@ -1,0 +1,27 @@
+name: "jeanzay"
+user: "uzm62av"
+account: "ofy"
+array_arg: null
+array_max: 9
+#workspace: "/gpfswork/rech/vjd/${cluster.user}"
+workspace: "/gpfswork/rech/ofy/${cluster.user}"
+engine: "SLURM"
+directive: "#SBATCH"
+cleanup: "module purge"
+cmd: "sbatch"
+launchers: ["default", "besteffort"]
+node: null
+partition: "v100-16g"
+nodes: 1
+gpus: 1
+qos: "qos_gpu-t3"
+tasks_node: ${cluster.gpus}
+cpus_task: 10
+walltime: "19:59:59"
+#shell:
+  #bin_path: null
+  #config_path: null
+shell:
+  bin_path: "/usr/bin/bash"
+  config_path: "~/.bashrc"
+id: "jz"

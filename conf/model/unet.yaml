@@ -1,0 +1,7 @@
+name: "unet"
+image_channels_out: 64
+n_channels: 64
+n_groups: 16
+n_blocks: 1
+ch_mults: [1, 2, 2]
+skip_norm: False
