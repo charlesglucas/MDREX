@@ -1,0 +1,318 @@
+obs_id,status_obs,comment
+HD_131835__2015-05-14__04-10-05,3,faint disk --> draw rectangular box full diagonal x 120 pix
+HD_141943__2016-05-31__03-34-49,3,faint edge-on disk --> draw rectangular box 400x60 pix
+HD_141943__2017-04-30__05-57-20,3,faint edge-on disk --> draw rectangular box 400x60 pix
+HD_15115__2015-10-26__04-40-45,3,"edge-on disk, draw rectangular box 600 x 40 pix"
+HD_156097__2016-06-28__03-39-05,1,"missing reductions, but PACO, cADI finished + too many sources --> out"
+HD_168210__2016-06-14__05-47-41,2,too many sources --> out
+HD_168210__2017-06-03__05-47-51,2,too many sources --> out
+HD_197481__2015-05-16__09-14-50,3,"edge-on disk, draw rectangular box full diagonal x 40 pix"
+HD_197481__2015-05-30__09-11-51,3,"edge-on disk, draw rectangular box full diagonal x 40 pix"
+HD_197481__2015-06-27__06-38-09,3,"edge-on disk, draw rectangular box full diagonal x 40 pix"
+HD_197481__2015-06-27__07-46-40,3,"edge-on disk, draw rectangular box full diagonal x 40 pix"
+HD_197481__2015-09-25__01-28-20,2,not an ADI sequence --> out
+HD_197481__2015-10-01__00-20-11,3,"edge-on disk, draw rectangular box full diagonal x 40 pix"
+HD_197481__2016-05-21__09-43-27,3,"edge-on disk, draw rectangular box full diagonal x 40 pix"
+HD_216956__2015-06-30__08-01-31,2,not an ADI sequence --> out
+HD_216956__2015-06-30__08-04-16,2,not an ADI sequence --> out
+HD_216956__2015-06-30__08-15-59,2,"Fomalhaut disk, very large extend --> out"
+HD_216956__2015-09-24__02-37-03,2,"Fomalhaut disk, very large extend --> out"
+HD_317617__2015-05-31__05-25-05,2,too many sources --> out
+HD_326277__2016-03-30__09-20-08,2,too many sources --> out
+HD_39060__2014-12-08__05-27-37,3,":= Beta Pic, bright edge-on disk, draw rectangular box full diagonal x 60 pix "
+HD_39060__2015-02-05__02-12-39,3,":= Beta Pic, bright edge-on disk, draw rectangular box full diagonal x 60 pix "
+HD_39060__2015-10-01__08-44-47,3,":= Beta Pic, bright edge-on disk, draw rectangular box full diagonal x 60 pix "
+HD_39060__2015-11-30__06-08-56,3,":= Beta Pic, bright edge-on disk, draw rectangular box full diagonal x 60 pix "
+HD_39060__2015-12-26__04-20-09,3,":= Beta Pic, bright edge-on disk, draw rectangular box full diagonal x 60 pix "
+HD_39060__2016-03-27__00-36-28,3,":= Beta Pic, bright edge-on disk, draw rectangular box full diagonal x 60 pix "
+HD_39060__2016-04-16__00-04-10,3,":= Beta Pic, bright edge-on disk, draw rectangular box full diagonal x 60 pix "
+HD_39060__2016-09-16__09-22-07,3,":= Beta Pic, bright edge-on disk, draw rectangular box full diagonal x 60 pix "
+HD_39060__2016-10-14__08-40-21,3,":= Beta Pic, bright edge-on disk, draw rectangular box full diagonal x 60 pix"
+HD_39060__2016-11-18__06-43-17,3,":= Beta Pic, bright edge-on disk, draw rectangular box full diagonal x 60 pix "
+HD_39060__2018-09-12__07-23-09,3,":= Beta Pic, bright edge-on disk, draw rectangular box full diagonal x 60 pix "
+HD_39060__2018-09-17__09-17-08,3,":= Beta Pic, bright edge-on disk, draw rectangular box full diagonal x 60 pix "
+HD_39060__2018-10-18__08-15-58,3,":= Beta Pic, bright edge-on disk, draw rectangular box full diagonal x 60 pix "
+HD_88955__2015-03-30__01-49-28,1,"missing reductions, but PACO, cADI finished"
+HIP_81084__2015-08-04__00-48-47,1,"missing reductions, but PACO, cADI finished"
+TYC_5882-1169-1__2017-11-06__05-14-45,3,"edge-on disk, draw rectangular box full diagonal x 30 pix"
+HD_39060__2018-09-14__07-08-53,2,":= Beta Pic, but the 2018-09-14 obs is a fail (known pb) --> out"
+2MASS_J00172353-6645124__2015-10-01__05-06-04,0,interactive
+2MASS_J00172353-6645124__2016-09-17__05-06-54,0,interactive
+2MASS_J00172353-6645124__2017-11-06__02-01-55,0,interactive
+2MASS_J06255610-6003273__2015-02-07__01-33-14,0,interactive
+2MASS_J07065772-5353463__2017-02-11__02-46-03,0,interactive
+2MASS_J22021626-4210329__2016-06-11__09-29-34,0,interactive
+HD_100453__2016-01-16__07-17-51,0,interactive
+HD_100453__2016-01-21__05-34-59,0,interactive
+HD_101615__2016-06-02__00-32-53,0,interactive
+HD_102647__2015-05-31__02-07-12,0,interactive
+HD_102647__2015-05-31__23-39-09,0,interactive
+HD_103599__2015-06-02__23-29-37,0,interactive
+HD_104125__2015-06-03__23-27-24,0,interactive
+HD_104125__2016-03-30__04-41-34,0,interactive
+HD_105__2015-09-26__03-36-17,0,interactive
+HD_106048__2016-06-13__23-30-15,0,interactive
+HD_106048__2017-05-07__01-28-26,0,interactive
+HD_106048__2018-03-30__03-48-28,0,interactive
+HD_107301__2015-06-05__23-37-34,0,interactive
+HD_107301__2016-01-19__06-40-27,0,interactive
+HD_107821__2015-02-04__08-27-21,0,interactive
+HD_108767B__2016-06-11__23-43-59,0,interactive
+HD_108767__2018-01-25__08-46-24,0,interactive
+HD_109536__2016-04-21__03-19-59,0,interactive
+HD_109536__2018-06-18__23-28-19,0,interactive
+HD_110411__2016-06-11__00-13-20,0,interactive
+HD_113457__2016-04-17__04-19-01,0,interactive
+HD_115383__2015-05-06__03-19-20,0,interactive
+HD_115383__2015-06-03__01-11-22,0,interactive
+HD_115383__2015-06-05__01-31-11,0,interactive
+HD_115383__2015-06-07__01-38-47,0,interactive
+HD_115383__2016-03-29__05-49-19,0,interactive
+HD_115383__2017-02-10__08-50-22,0,interactive
+HD_115383__2018-04-13__04-58-18,0,interactive
+HD_115470__2016-04-01__05-36-30,0,interactive
+HD_115600__2017-05-08__02-57-36,3,interactive
+HD_109573__2015-02-03__08-45-39,3,interactive
+HD_116434__2016-05-31__01-33-30,0,interactive
+HD_116434__2016-06-26__23-59-43,0,interactive
+HD_116434__2017-02-07__08-36-46,0,interactive
+HD_116434__2017-02-09__08-53-33,0,interactive
+HD_116434__2018-05-13__03-08-58,0,interactive
+HD_118100__2016-06-27__23-49-18,0,interactive
+HD_118588__2015-05-15__02-41-39,0,interactive
+HD_118697__2016-06-02__02-08-17,0,interactive
+HD_122705__2015-03-31__05-47-53,0,interactive
+HD_122705__2016-03-30__06-08-16,0,interactive
+HD_125451__2016-06-12__01-39-47,0,interactive
+HD_128819__2016-04-17__06-04-03,0,interactive
+HD_128819__2017-03-19__07-35-26,0,interactive
+HD_128987__2016-06-01__02-51-53,0,interactive
+HD_131399__2016-05-07__04-28-37,0,interactive
+HD_133803__2016-04-21__05-24-48,0,interactive
+HD_133803__2016-06-28__01-37-21,0,interactive
+HD_138204__2016-03-29__07-23-28,0,interactive
+HD_140840__2016-04-21__07-08-29,0,interactive
+HD_141190__2015-03-31__08-08-20,0,interactive
+HD_14228__2015-09-26__07-10-54,0,interactive
+HD_14228__2016-09-17__07-03-47,0,interactive
+HD_14228__2017-09-01__08-08-21,0,interactive
+HD_14228__2017-09-01__08-36-51,0,interactive
+HD_142705__2015-05-09__04-57-46,0,interactive
+HD_142851__2015-06-03__04-11-46,0,interactive
+HD_143488__2015-05-09__06-23-56,0,interactive
+HD_143488__2016-06-11__03-31-24,0,interactive
+HD_143567__2015-05-04__06-05-18,0,interactive
+HD_143637__2015-06-01__04-01-40,0,interactive
+HD_143637__2015-06-04__03-02-47,0,interactive
+HD_143637__2017-03-20__08-45-00,0,interactive
+HD_1466__2015-10-26__03-01-44,0,interactive
+HD_1466__2016-09-18__05-32-12,0,interactive
+HD_147553__2015-05-30__05-02-09,0,interactive
+HD_147553__2016-03-28__08-37-36,0,interactive
+HD_147553__2018-06-18__03-58-47,0,interactive
+HD_148055__2016-03-29__08-59-17,0,interactive
+HD_151726__2016-04-01__09-11-13,0,interactive
+HD_151726__2017-05-18__06-18-50,0,interactive
+HD_151798__2016-06-12__03-47-07,0,interactive
+HD_152391__2015-06-05__05-03-34,0,interactive
+HD_159492__2016-06-11__05-40-25,0,interactive
+HD_159911__2015-05-12__07-17-59,0,interactive
+HD_159911__2016-04-16__09-34-10,0,interactive
+HD_159911__2016-05-22__06-07-40,0,interactive
+HD_159911__2018-04-12__09-18-25,0,interactive
+HD_160305__2015-05-13__07-26-52,0,interactive
+HD_164249__2015-06-01__05-54-21,0,interactive
+HD_164249__2016-04-17__09-37-17,0,interactive
+HD_164249__2018-04-11__09-42-29,0,interactive
+HD_16978__2015-10-01__06-39-32,0,interactive
+HD_16978__2016-09-16__07-30-31,0,interactive
+HD_16978__2017-10-01__05-03-22,0,interactive
+HD_172555__2015-05-11__07-17-56,0,interactive
+HD_172555__2015-05-11__07-51-19,0,interactive
+HD_174429__2015-05-06__09-49-25,0,interactive
+HD_174429__2015-05-31__06-34-52,0,interactive
+HD_174429__2016-09-16__23-53-41,0,interactive
+HD_174429__2017-05-18__08-01-51,0,interactive
+HD_175726__2016-06-12__06-29-45,2,interactive
+HD_175726__2016-09-16__00-00-07,2,interactive
+HD_175726__2017-09-30__00-20-27,2,interactive
+HD_176367__2015-06-07__07-25-32,0,interactive
+HD_177724__2015-06-28__05-32-37,0,interactive
+HD_178253__2015-06-06__07-40-23,0,interactive
+HD_181296__2015-05-05__09-22-43,0,interactive
+HD_181296__2018-05-08__09-58-19,0,interactive
+HD_181327__2015-05-10__09-12-24,0,interactive
+HD_181869__2015-05-13__09-10-43,0,interactive
+HD_181869__2016-05-21__07-53-18,0,interactive
+HD_181869__2018-05-08__09-04-47,0,interactive
+HD_188228__2015-05-12__09-04-54,0,interactive
+HD_188228__2015-06-01__07-40-44,0,interactive
+HD_188228__2015-07-01__05-14-12,0,interactive
+HD_188228__2016-05-25__09-18-36,0,interactive
+HD_189245__2015-05-14__08-55-56,0,interactive
+HD_189285__2015-06-03__07-33-54,0,interactive
+HD_189285__2016-05-29__08-29-20,0,interactive
+HD_192425__2015-09-28__00-51-15,0,interactive
+HD_192425__2016-06-11__07-27-45,0,interactive
+HD_19545__2016-10-13__05-55-29,0,interactive
+HD_197890__2015-06-04__08-15-32,0,interactive
+HD_201184__2015-09-29__00-46-20,0,interactive
+HD_201919__2015-06-03__09-04-45,0,interactive
+HD_202917__2015-05-31__09-36-58,0,interactive
+HD_202917__2016-05-31__09-18-22,0,interactive
+HD_20630__2015-12-27__01-22-43,0,interactive
+HD_206860__2015-09-30__01-47-41,0,interactive
+HD_210049__2015-07-01__08-29-23,0,interactive
+HD_210049__2016-09-17__03-22-07,0,interactive
+HD_210049__2016-10-14__01-15-39,0,interactive
+HD_216803__2015-06-27__09-36-00,0,interactive
+HD_218396__2015-07-04__09-55-52,0,interactive
+HD_218396__2016-11-18__01-21-08,0,interactive
+HD_218396__2017-06-15__10-12-26,0,interactive
+HD_218396__2018-06-19__09-15-26,0,interactive
+HD_219482__2015-10-01__03-40-26,0,interactive
+HD_220825__2015-09-25__03-36-55,0,interactive
+HD_224228__2015-10-25__02-26-04,0,interactive
+HD_24636__2016-01-03__01-01-11,0,interactive
+HD_25284__2015-09-30__07-14-00,0,interactive
+HD_29391__2015-09-25__08-56-28,0,interactive
+HD_29391__2015-12-26__02-28-43,0,interactive
+HD_29391__2016-01-16__01-44-58,0,interactive
+HD_29391__2016-12-12__04-52-59,0,interactive
+HD_29391__2016-12-13__03-48-07,0,interactive
+HD_3003__2016-09-16__05-31-23,0,interactive
+HD_30447__2015-12-01__03-58-58,0,interactive
+HD_30447__2015-12-29__01-40-09,0,interactive
+HD_30447__2016-12-06__05-15-26,0,interactive
+HD_32195__2015-09-30__09-05-02,0,interactive
+HD_35114__2017-02-12__01-09-44,0,interactive
+HD_35650__2015-12-28__03-24-06,0,interactive
+HD_377__2016-10-14__02-57-13,0,interactive
+HD_38678__2017-02-11__00-52-32,0,interactive
+HD_39060__2018-09-12__07-39-45,3,interactive
+HD_39060__2018-09-14__08-18-07,2,interactive
+HD_44627__2015-02-06__02-21-02,0,interactive
+HD_45270__2016-01-16__03-24-43,0,interactive
+HD_51797__2016-01-03__04-28-49,0,interactive
+HD_55279__2015-12-27__05-19-54,0,interactive
+HD_55279__2017-02-08__02-59-38,0,interactive
+HD_56022__2015-12-29__06-30-09,0,interactive
+HD_71155__2016-01-19__05-00-11,0,interactive
+HD_74576__2016-01-03__05-37-08,0,interactive
+HD_74576__2016-01-03__06-20-39,0,interactive
+HD_74576__2016-03-28__00-10-22,0,interactive
+HD_74576__2016-12-12__07-55-28,0,interactive
+HD_75416__2016-01-02__07-07-51,0,interactive
+HD_75416__2016-12-13__07-47-26,0,interactive
+HD_75505__2015-02-06__04-17-12,0,interactive
+HD_75505__2018-01-06__05-11-44,0,interactive
+HD_77825__2016-04-17__00-37-21,0,interactive
+HD_77825__2017-02-13__04-41-12,0,interactive
+HD_84075__2015-02-05__04-36-52,0,interactive
+HD_84075__2016-01-18__06-13-16,0,interactive
+HD_84075__2017-02-11__04-54-44,0,interactive
+HD_8558__2015-09-24__06-06-43,0,interactive
+HD_8558__2015-10-28__03-08-29,0,interactive
+HD_8558__2016-10-14__05-09-10,0,interactive
+HD_88955__2016-03-27__02-19-10,0,interactive
+HD_88955__2018-01-05__08-09-37,0,interactive
+HD_88955__2018-02-27__04-08-45,0,interactive
+HD_9054__2015-09-30__05-10-46,0,interactive
+HD_9054__2017-09-29__05-43-40,0,interactive
+HD_90712__2016-01-03__08-04-45,0,interactive
+HD_95086__2015-05-05__00-00-28,0,interactive
+HD_95086__2015-05-05__01-27-44,0,interactive
+HD_95086__2015-05-11__23-44-00,0,interactive
+HD_95086__2016-01-18__08-08-49,0,interactive
+HD_95086__2016-04-16__01-47-40,0,interactive
+HD_95086__2016-05-30__23-51-02,0,interactive
+HD_95086__2017-05-09__23-56-34,0,interactive
+HD_95086__2018-01-06__08-12-47,0,interactive
+HD_95086__2018-02-24__05-29-47,0,interactive
+HD_95086__2018-03-28__03-45-05,0,interactive
+HD_96064__2016-04-21__01-42-09,0,interactive
+HD_96064__2017-02-09__07-00-09,0,interactive
+HD_96338__2015-02-06__06-28-32,0,interactive
+HD_987__2016-10-15__03-30-20,0,interactive
+HIP_107345__2015-07-05__07-01-35,0,interactive
+HIP_113201__2016-10-15__01-29-53,0,interactive
+HIP_1993__2015-11-29__01-10-02,0,interactive
+HIP_23200__2015-09-28__08-50-29,0,interactive
+HIP_23309__2016-01-03__02-49-24,0,interactive
+HIP_31878__2016-01-02__04-48-37,0,interactive
+HIP_37288__2015-12-01__08-03-25,0,interactive
+HIP_37288__2017-02-13__03-24-12,0,interactive
+HIP_37766__2015-12-26__06-00-18,0,interactive
+HIP_39826__2017-02-12__03-12-32,0,interactive
+HIP_51317__2016-01-01__08-10-38,0,interactive
+HIP_6276__2015-12-02__00-49-59,0,interactive
+HIP_81084__2015-05-11__05-47-39,0,interactive
+TYC_1090-543-1__2015-06-06__09-18-00,0,interactive
+TYC_1090-543-1__2016-09-17__01-28-31,0,interactive
+TYC_1090-543-1__2018-05-13__09-10-02,0,interactive
+TYC_1355-214-1__2015-02-07__03-32-34,0,interactive
+TYC_1355-214-1__2017-02-10__02-57-36,0,interactive
+TYC_486-4943-1__2015-05-31__07-41-39,0,interactive
+TYC_5164-567-1__2015-05-15__09-17-27,0,interactive
+TYC_5882-1169-1__2016-09-18__09-13-52,0,interactive
+TYC_7026-325-1__2016-01-02__00-53-50,0,interactive
+TYC_7084-794-1__2015-11-29__06-14-34,0,interactive
+TYC_7084-794-1__2016-01-19__02-50-22,0,interactive
+TYC_7084-794-1__2016-02-19__00-50-46,0,interactive
+TYC_7084-794-1__2019-03-06__01-35-45,0,interactive
+TYC_7183-1477-1__2016-03-30__02-14-07,0,interactive
+TYC_7190-2111-1__2015-05-09__23-57-36,0,interactive
+TYC_7190-2111-1__2017-02-07__06-41-05,0,interactive
+TYC_7286-248-1__2015-05-13__03-59-04,0,interactive
+TYC_7443-1102-1__2015-05-04__09-26-47,0,interactive
+TYC_7443-1102-1__2015-05-18__08-27-53,0,interactive
+TYC_7443-1102-1__2015-06-09__07-33-40,0,interactive
+TYC_7617-549-1__2016-12-13__05-46-04,0,interactive
+TYC_8047-232-1__2015-09-25__06-19-09,0,interactive
+TYC_8047-232-1__2016-01-17__00-50-17,0,interactive
+TYC_8060-1673-1__2015-09-24__08-00-43,0,interactive
+TYC_8060-1673-1__2015-12-28__01-45-20,0,interactive
+TYC_8128-1946-1__2015-11-30__07-50-30,0,interactive
+TYC_8137-2609-1__2015-11-29__07-52-38,0,interactive
+TYC_8137-2609-1__2018-01-26__03-25-50,0,interactive
+TYC_8404-354-1__2015-05-09__09-45-09,0,interactive
+TYC_8404-354-1__2015-05-30__07-28-42,0,interactive
+TYC_8728-2262-1__2015-06-03__05-56-44,0,interactive
+TYC_8760-1468-1__2015-06-27__05-23-59,0,interactive
+TYC_8760-1468-1__2018-04-19__09-32-42,0,interactive
+TYC_9073-762-1__2015-05-16__07-55-40,0,interactive
+TYC_9340-437-1__2015-10-25__00-30-26,0,interactive
+TYC_9340-437-1__2016-06-27__09-30-54,0,interactive
+HD_115470__2017-02-08__08-45-15,0,interactive
+HD_177724__2016-05-31__07-06-55,0,interactive
+HD_189285__2018-05-07__09-40-24,0,interactive
+2MASS_J20013718-3313139__2015-09-30__00-10-10,0,interactive
+HD_141943__2016-05-25__03-43-09,3,interactive
+HD_143637__2015-06-04__05-01-24,0,interactive
+HD_218396__2017-10-13__02-18-21,0,interactive
+HD_224392__2015-10-27__02-35-57,1,interactive
+HD_29391__2017-09-28__08-46-50,0,interactive
+HD_56022__2016-03-30__00-11-02,0,interactive
+TYC_5882-1169-1__2018-12-17__03-08-59,3,interactive
+TYC_5899-26-1__2016-01-18__01-13-47,0,interactive
+HD_224392__2016-06-28__10-06-24,1,interactive
+HD_3003__2015-09-28__04-39-33,1,interactive
+HD_115600__2015-06-04__01-05-14,3,interactive
+HD_141378__2015-06-05__03-13-45,0,interactive
+HD_218396__2017-10-08__02-12-08,0,interactive
+HD_218396__2017-10-12__00-22-17,0,interactive
+HD_218396__2017-10-12__02-58-12,0,interactive
+HD_61005__2015-02-03__03-17-59,3,interactive
+HIP_113201__2016-09-18__03-41-55,0,interactive
+TYC_9482-121-1__2016-06-28__08-13-14,0,interactive
+HD_192425__2015-06-22__06-08-20,2,interactive
+HIP_112312__2015-10-01__02-04-36,0,interactive
+HD_61005__2015-03-30__00-49-51,3,interactive
+2MASS_J14081015-4123525__2018-05-18__03-24-26,3,interactive
+HD_100546__2018-03-29__04-14-54,3,interactive
+HD_100546__2016-05-31__23-41-26,3,interactive
+HD_100546__2015-05-04__01-08-29,3,interactive
+HD_100546__2015-05-29__23-49-24,3,interactive
+HD_100546__2016-03-27__04-00-49,3,interactive
+HIP_6276__2016-11-17__04-41-07,1,interactive
+HD_148055__2015-04-05__07-36-58,1,interactive

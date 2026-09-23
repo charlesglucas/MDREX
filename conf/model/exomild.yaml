@@ -1,0 +1,357 @@
+name: "exomild"
+
+use_local_max: false
+interpolation: "bicubic"
+filter_alpha: true
+skip_norm_unet: false
+is_residual: false
+#gate_type: "sigmoid"
+#gate_type: "sigmoid"
+gate_type: "unet_normal"
+learnable_weights: true
+#pixel_wise_weights: false
+pixel_wise_weights: true
+oracle: false
+n_sources_max: 16
+iterative: false
+n_iter: 20
+linalg_library: "cusolver"
+use_dataparallel: false
+grad_iterative: true
+grad_astrometry: false
+#grad_params: false
+grad_params: true
+patch_wise: false
+use_modelco_loss: false
+#weights_predictor: null
+n_channels: 1
+learnable_proj: true
+#repeats: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+repeats: [1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0]
+batch_size: null
+low_memory_mode: false
+rot_zero_init: true
+params_terms:
+  - type: "spatial"
+    name: "p8_s1"
+    repeat: ${model.repeats.0}
+    patch_size: 8
+    stride: 4
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: "t l"
+    dim_prefeatures: "h w"
+    denoise_mean: false
+    groups: 1
+    mode_ab: "left"
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    #batch_size: null
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    #batch_size: 32
+    symmetry: 1
+    params_pipeline:
+      - type: "linear"
+        patch_wise: ${model.patch_wise}
+        size_in: 64
+        size_out: 64
+        learnable: ${model.learnable_proj}
+        is_identity: false
+  - type: "spatial"
+    name: "p8_s2"
+    repeat: ${model.repeats.1}
+    patch_size: 8
+    stride: 4
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: "t l"
+    dim_prefeatures: "h w"
+    groups: 1
+    mode_ab: "left"
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    #batch_size: null
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    #batch_size: 32
+    symmetry: 2
+    params_pipeline:
+      - type: "linear"
+        patch_wise: ${model.patch_wise}
+        size_in: 128
+        size_out: 64
+        learnable: ${model.learnable_proj}
+        is_identity: false
+  - type: "spatial"
+    name: "p8_s4"
+    repeat: ${model.repeats.2}
+    patch_size: 8
+    stride: 4
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: "t l"
+    dim_prefeatures: "h w"
+    groups: 1
+    mode_ab: "left"
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    #batch_size: null
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    #batch_size: 32
+    symmetry: 4
+    params_pipeline:
+      - type: "linear"
+        patch_wise: ${model.patch_wise}
+        size_in: 256
+        size_out: 64
+        learnable: ${model.learnable_proj}
+        is_identity: false
+  - type: "spatial"
+    name: "p16_s1"
+    repeat: ${model.repeats.3}
+    patch_size: 16
+    stride: 8
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: "t l"
+    dim_prefeatures: "h w"
+    groups: 1
+    mode_ab: "left"
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    #batch_size: 32
+    symmetry: 1
+    params_pipeline:
+      - type: "linear"
+        patch_wise: ${model.patch_wise}
+        size_in: 256
+        size_out: 64
+        learnable: ${model.learnable_proj}
+        is_identity: false
+  - type: "spatial"
+    name: "p16_s2"
+    repeat: ${model.repeats.4}
+    patch_size: 16
+    stride: 8
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: "t l"
+    dim_prefeatures: "h w"
+    groups: 1
+    mode_ab: "left"
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    #batch_size: 32
+    symmetry: 2
+    params_pipeline:
+      - type: "linear"
+        patch_wise: ${model.patch_wise}
+        size_in: 512
+        size_out: 64
+        learnable: ${model.learnable_proj}
+        is_identity: false
+  - type: "spatial"
+    name: "p16_s4"
+    repeat: ${model.repeats.5}
+    patch_size: 16
+    stride: 8
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: "t l"
+    dim_prefeatures: "h w"
+    groups: 1
+    mode_ab: "left"
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    #batch_size: 32
+    symmetry: 4
+    params_pipeline:
+      - type: "linear"
+        patch_wise: ${model.patch_wise}
+        size_in: 1024
+        size_out: 64
+        learnable: ${model.learnable_proj}
+        is_identity: false
+  - type: "spatial"
+    name: "p32_s1"
+    repeat: ${model.repeats.6}
+    patch_size: 32
+    stride: 16
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: "t l"
+    dim_prefeatures: "h w"
+    groups: 1
+    mode_ab: "left"
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    #batch_size: 32
+    symmetry: 1
+    params_pipeline:
+      - type: "linear"
+        patch_wise: ${model.patch_wise}
+        size_in: 1024
+        size_out: 64
+        learnable: ${model.learnable_proj}
+        is_identity: false
+  - type: "spatial"
+    name: "p32_s2"
+    repeat: ${model.repeats.7}
+    patch_size: 32
+    stride: 16
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: "t l"
+    dim_prefeatures: "h w"
+    groups: 1
+    mode_ab: "left"
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    # batch_size: null
+    low_memory_mode: ${model.low_memory_mode}
+    #batch_size: 32
+    batch_size: ${model.batch_size}
+    symmetry: 2
+    params_pipeline:
+      - type: "linear"
+        patch_wise: ${model.patch_wise}
+        size_in: 2048
+        size_out: 64
+        learnable: ${model.learnable_proj}
+        is_identity: false
+  - type: "spatial"
+    name: "p32_s4"
+    repeat: ${model.repeats.8}
+    patch_size: 32
+    stride: 16
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: "t l"
+    dim_prefeatures: "h w"
+    groups: 1
+    mode_ab: "left"
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    #batch_size: 32
+    low_memory_mode: ${model.low_memory_mode}
+    symmetry: 4
+    params_pipeline:
+      - type: "linear"
+        patch_wise: ${model.patch_wise}
+        size_in: 4096
+        size_out: 64
+        learnable: ${model.learnable_proj}
+        is_identity: false
+  - type: "spatial"
+    name: "p64_s1"
+    repeat: ${model.repeats.9}
+    patch_size: 64
+    stride: 32
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: "t l"
+    dim_prefeatures: "h w"
+    groups: 1
+    mode_ab: "left"
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    #batch_size: 32
+    symmetry: 1
+    params_pipeline:
+      - type: "linear"
+        patch_wise: ${model.patch_wise}
+        size_in: 4096
+        size_out: 64
+        learnable: ${model.learnable_proj}
+        is_identity: false
+  - type: "spatial"
+    name: "p64_s2"
+    repeat: ${model.repeats.10}
+    patch_size: 64
+    stride: 32
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: "t l"
+    dim_prefeatures: "h w"
+    groups: 1
+    mode_ab: "left"
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    #batch_size: 32
+    symmetry: 2
+    params_pipeline:
+      - type: "linear"
+        patch_wise: ${model.patch_wise}
+        size_in: 8192
+        size_out: 64
+        learnable: ${model.learnable_proj}
+        is_identity: false
+  - type: "spatial"
+    name: "p64_s2"
+    repeat: ${model.repeats.11}
+    patch_size: 64
+    stride: 32
+    dilation: 1
+    temporal_length: null
+    temporal_dilation: 1
+    temporal_stride: 1
+    dim_samples: "t l"
+    dim_prefeatures: "h w"
+    groups: 1
+    mode_ab: "left"
+    grad_params: ${model.grad_params}
+    use_dataparallel: ${model.use_dataparallel}
+    #batch_size: null
+    batch_size: ${model.batch_size}
+    low_memory_mode: ${model.low_memory_mode}
+    #batch_size: 32
+    symmetry: 4
+    params_pipeline:
+      - type: "linear"
+        patch_wise: ${model.patch_wise}
+        size_in: 16384
+        size_out: 64
+        learnable: ${model.learnable_proj}
+        is_identity: false
+ckpt: null
+# compatibility
+image_size: 256
+symmetry: "normal"
+timesteps: null

@@ -1,0 +1,47 @@
+name: "unet"
+eval_detection: true
+eval_charac: true
+eval_astro: true
+params:
+  use_cat: false
+  progressive: false
+  weight_sources: 1.0
+  differential_mode: false
+  patch_size_loss: 3
+  micro_batchsize: 1
+  use_class_weight_bce: false
+  with_log: true
+  gamma_bce: 0.0
+  k_max: null
+  use_profiler: false
+  aligned_on: "obj"
+  patch_size: null
+  use_weight_obs: false
+  T: null
+  target_type: "temporal"
+  source_type: "temporal"
+  use_error_register: false
+  n_iter: 200000
+  lr: 0.00005
+  weight_decay: 0.0
+  lr_step: 20000
+  lr_gamma: 0.33
+  ema_decay: 0.99
+  log_interval: 100
+  val_interval: 1000
+  bak_interval: 1000
+  detection_interval: 2500
+  astro_interval: 1000
+  save_interval: null
+  overfit_batch: false
+  loss_type: "nll"
+  use_amp: false
+  save_steps:
+    - 1000
+    - 2000
+    - 5000
+    - 10000
+    - 25000
+    - 30000
+    - 35000
+    - 40000

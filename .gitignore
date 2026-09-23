@@ -1,0 +1,44 @@
+# Données et résultats lourds
+results/
+data/
+wandb/
+*.fits
+*.npy
+*.npz
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+
+# Logs OAR
+OAR.*.stderr
+OAR.*.stdout
+debug.log
+allfiles.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.so
+.Python
+.env
+.venv
+env/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
