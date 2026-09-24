@@ -20,6 +20,7 @@ def main(cfg):
     # Load ground truth
     shape = "medium_ellipse"
     flux = 5e-6
+    suffix = "5em6"
     x_gt_store = np.zeros((6, 10, 256, 256), dtype=np.float32)
     for d in range(6):
         for (a, angle) in enumerate(range(0, 325, 36)):
@@ -32,7 +33,8 @@ def main(cfg):
             x_gt = flux*data[513-128:513+128, 513-128:513+128]
             x_gt_store[d, a, :, :] = x_gt
 
-    path = ROOT / f"results/distributions_5em6/musmooth1e6_musparse1e6/x_opt.fits"
+    mdrex_dir = "musmooth1e6_musparse1e6"
+    path = ROOT / f"results/distributions_5em6/{mdrex_dir}/x_opt.fits"
     with fits.open(path) as hdul:
         x_mdrex = hdul[0].data
    
@@ -123,7 +125,12 @@ def main(cfg):
         axs[i, 0].set_ylabel(row_labels[i])
         fig.colorbar(ims[i, 2], ax=axs[i, :], location='right', pad=0.02, shrink=0.9)
 
-
+    plt.savefig(
+        f"figures/distrib_{shape}_{suffix}_{mdrex_dir}.pdf",
+        dpi=300,
+        bbox_inches='tight',
+        pad_inches=0.05,
+    )
     plt.show()
 
 
