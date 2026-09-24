@@ -117,7 +117,7 @@ hydra:
     - hydra.mode=RUN
     task: []
   job:
-    name: syntheticdata_sure_gpu
+    name: disk_rec_distrib
     chdir: null
     override_dirname: ''
     id: ???
@@ -133,18 +133,18 @@ hydra:
   runtime:
     version: 1.3.2
     version_base: '1.1'
-    cwd: /srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
+    cwd: /Users/charleslucas/Documents/Science/astronomy/MDREX-main
     config_sources:
     - path: hydra.conf
       schema: pkg
       provider: hydra
-    - path: /srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/conf
+    - path: /Users/charleslucas/Documents/Science/astronomy/MDREX-main/conf
       schema: file
       provider: main
     - path: ''
       schema: structured
       provider: schema
-    output_dir: /srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
+    output_dir: /Users/charleslucas/Documents/Science/astronomy/MDREX-main
     choices:
       cluster: jeanzay
       sampler: exomild

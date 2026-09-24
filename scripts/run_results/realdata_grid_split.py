@@ -195,13 +195,9 @@ def main(cfg):
             print(f"Running mu_smooth={mu_smooth:g}, mu_sparse={mu_sparse:g}")
             xdisc_0 = np.zeros((C, H, W))
             (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_sparse, mu_smooth)
-            with torch.no_grad():
-                xtensor_opt = torch.tensor(xdisc_opt, dtype=torch.float32, device=y.device)
-                Ax = mdrex.forward_model(xtensor_opt).cpu().numpy()
             np.savez(
                 outfile,
                 x=xdisc_opt,
-                Ax=Ax,
                 mu_smooth=mu_smooth,
                 mu_sparse=mu_sparse,
                 fx=fx,
@@ -210,7 +206,6 @@ def main(cfg):
                 wavelengths=wavelengths,
             )
             print(f"Saved {outfile}")
-            del xtensor_opt, Ax
             torch.cuda.empty_cache()
 
 if __name__ == "__main__":
