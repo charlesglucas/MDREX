@@ -3327,46 +3327,40 @@ class EngineSpatial(nn.Module):
         xp = (xp - prenorm_mean) / prenorm_std
         xp = xp.view(1, bsp, T, self.S * self.K)
 
-        # fx, _ = self.features_pipeline(xp, idx=idx, with_jacobian=False)
-        
-        fx, _ = checkpoint(
-            lambda xp_: self.features_pipeline(xp_, idx=idx, with_jacobian=False),
-            xp,
-            use_reentrant=False,
-        )
+        bs, T = 1, xp.shape[2]
+        G = self.G
+        fs = C_inv.shape[-1]
 
-        bs, bsp, T, fs = fx.shape
-        fx = fx.view(bs, bsp, T, self.G, -1)
+        # Cholesky of C_inv (params are constants w.r.t. x): C_inv = L L^T
+        # => x^T C_inv x = ||L^T x||^2 and log|C_inv| = 2 * sum(log diag(L)).
+        with torch.no_grad():
+            C_inv = C_inv.detach().view(bs, bsp, G, fs, fs)
+            L, chol_info = torch.linalg.cholesky_ex(C_inv, upper=False)
+            # Fall back to identity for any non-positive-definite patch.
+            bad = (chol_info > 0).to(C_inv.dtype).view(bs, bsp, G, 1, 1)
+            eye = torch.eye(fs, device=C_inv.device, dtype=C_inv.dtype).view(1, 1, 1, fs, fs)
+            L = L * (1 - bad) + eye * bad
+            Lt = L.transpose(-1, -2).contiguous()  # (bs, bsp, G, fs, fs)
+            logdet = 2.0 * torch.log(torch.clamp(
+                torch.diagonal(L, dim1=-2, dim2=-1), min=1e-30
+            )).sum(dim=-1)  # (bs, bsp, G)
+            del L, C_inv, eye, bad
+        mean = mean.view(bs, bsp, T, G, fs)
 
-        C_inv = C_inv.view(bs, bsp, 1, self.G, fs, fs)
-        mean = mean.view(bs, bsp, T, self.G, fs)
+        def _ll_from_xp(xp_):
+            fx, _ = self.features_pipeline(xp_, idx=idx, with_jacobian=False)
+            fx = fx.view(bs, bsp, T, G, fs)
+            # Put T last so that Lt (no T dim) is NOT broadcast/expanded over T:
+            # (bs, bsp, G, fs, fs) @ (bs, bsp, G, fs, T) -> (bs, bsp, G, fs, T)
+            fx_c = (fx - mean).permute(0, 1, 3, 4, 2)
+            z = Lt @ fx_c
+            maha = (z * z).sum(dim=-2)  # (bs, bsp, G, T)
+            ll = -0.5 * maha + 0.5 * logdet.unsqueeze(-1)
+            return ll.mean(dim=2).view(bsp, T)  # mean over G
 
-        fx_c = (fx - mean).view(bs, bsp, T, self.G, fs, 1)
-
-        # Cholesky-based quadratic form and log-det.
-        # C_inv = L L^T  =>  x^T C_inv x = ||L^T x||^2
-        # log|C_inv| = 2 * sum(log diag(L))
-        # This avoids materialising C_inv @ fx_c (~125 MB) and the slogdet LU.
-        L, chol_info = torch.linalg.cholesky_ex(C_inv, upper=False)
-        # Fall back to identity for any non-positive-definite patch (shouldn't happen
-        # after shrinkage, but guards against numerical edge cases).
-        # Always apply the mask without a CPU sync (bad.any() would sync every batch).
-        bad = (chol_info > 0).float().view(bs, bsp, 1, self.G, 1, 1)
-        eye = torch.eye(fs, device=C_inv.device, dtype=C_inv.dtype).view(1, 1, 1, 1, fs, fs)
-        L = L * (1 - bad) + eye * bad
-
-        # log|C_inv| = 2 * sum_i log(L_ii)  [per patch, per group]
-        logdet = 2.0 * torch.log(torch.clamp(
-            torch.diagonal(L, dim1=-2, dim2=-1), min=1e-30
-        )).sum(dim=-1)  # (bs, bsp, 1, G)
-
-        # Triangular solve: z = L^T fx_c  =>  ||z||^2 = fx_c^T C_inv fx_c
-        Lt_fx_c = L.transpose(-1, -2) @ fx_c  # (bs, bsp, T, G, fs, 1)
-        maha = Lt_fx_c.transpose(-1, -2) @ Lt_fx_c  # (bs, bsp, T, G, 1, 1)
-
-        ll = -0.5 * maha + 0.5 * logdet.unsqueeze(2).unsqueeze(-1)
-        ll = torch.mean(ll, dim=3)   # mean over G
-        ll = ll.view(bsp, T)
+        # Checkpoint the whole chain: only xp is kept for backward, intermediates
+        # are recomputed batch by batch during backward (bounded peak memory).
+        ll = checkpoint(_ll_from_xp, xp, use_reentrant=False)
 
         return {"ll": ll}
     
