@@ -164,6 +164,21 @@ def main(cfg):
     outdir.mkdir(parents=True, exist_ok=True)
 
     # Data saved once (not duplicated in every hyperparameter file)
+    # Reference angle for north alignment and wavelengths, saved with each result
+    # so that plots do not need the raw data (same convention as disk_rec_realdata.py)
+    path_rotnth = path_folder / "ird_convert_recenter_dc5-IRD_SCIENCE_PARA_ROTATION_CUBE-rotnth.fits"
+    if path_rotnth.exists():
+        parallactic_angles = np.asarray(fits.getdata(path_rotnth), dtype=np.float32).reshape(-1)
+        rotation_deg = -float(np.median(parallactic_angles[0]))
+    else:
+        print(f"Warning: {path_rotnth} not found, rotation_deg not saved")
+        rotation_deg = np.nan
+    lambda_files = list(path_folder.glob("**/*-lam.fits"))
+    if len(lambda_files) == 1:
+        wavelengths = np.asarray(fits.getdata(lambda_files[0])).reshape(-1)
+    else:
+        wavelengths = lbda.detach().cpu().numpy().reshape(-1)
+
     y_file = outdir / "y.npz"
     if not y_file.exists():
         # atomic write: several jobs (one per couple) may start at the same time
@@ -191,6 +206,8 @@ def main(cfg):
                 mu_sparse=mu_sparse,
                 fx=fx,
                 status=str(status),
+                rotation_deg=rotation_deg,
+                wavelengths=wavelengths,
             )
             print(f"Saved {outfile}")
             del xtensor_opt, Ax
