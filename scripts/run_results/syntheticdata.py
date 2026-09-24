@@ -3,8 +3,8 @@ import sys, pathlib, os
 # Configure GPU memory management
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-ROOT = pathlib.Path(__file__).resolve().parents[2]
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 import torch
 import hydra
@@ -150,8 +150,8 @@ def main(cfg):
         # 3. Scheme over regularization parameters
         # ------------------------------------------------------------
 
-        s1 = 1; s2 = 5 # number of values for mu_smooth and mu_sparse
-        n_smooth = 7; n_sparse = 6 # starting exponents for mu_smooth and mu_sparse
+        s1 = 1; s2 = 1 # number of values for mu_smooth and mu_sparse
+        n_smooth = 6; n_sparse = 6 # starting exponents for mu_smooth and mu_sparse
         x_disk_store = np.empty((s1,s2), dtype=object)    
         for k in range(s1):
             for j in range(s2):

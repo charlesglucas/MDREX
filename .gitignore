@@ -1,7 +1,9 @@
 # Données et résultats lourds
 results/
+results-old/
 data/
 wandb/
+checkpoints_calib_exomild
 figures/
 *.fits
 *.npy
@@ -28,6 +30,7 @@ build/
 .Python
 .env
 .venv
+.venv_broken
 env/
 venv/
 

@@ -172,8 +172,8 @@ def main(cfg):
             print(f"Iter {iters:3d}, f={f:.4e}, ||g||={np.linalg.norm(g):.2e}, RMSE={rmse:.4e}, alpha={alpha:.2e}")
 
     ## Grid search over regularization parameters
-    s1 = 5; s2 = 5 # number of values for mu_smooth and mu_sparse
-    n_smooth = 3; n_sparse = 3 # starting exponents for mu_smooth and mu_sparse
+    s1 = 1; s2 = 1 # number of values for mu_smooth and mu_sparse
+    n_smooth = 6; n_sparse = 6 # starting exponents for mu_smooth and mu_sparse
     n_iter = 20000
     RMSE = np.zeros((s1,s2)); crit = np.zeros((s1,s2))
     x_disk_store = np.empty((s1,s2), dtype=object)
@@ -230,7 +230,7 @@ def main(cfg):
                     phi = torch.stack([torch.sum(-ll) for ll in log_likelihood]).mean()
                     mu_smooth = 10.0**(k+n_smooth); mu_sparse = 10.0**(j+n_sparse)
                     # mu_smooth = 0; mu_sparse = 0; epsilon = 1e-7
-                    loss = phi + mu_sparse*l2_l1_sparse_2d(x_tensor) + mu_smooth*l2_l1_edge_preserving_2d(x_tensor)
+                    loss = phi # + mu_sparse*l2_l1_sparse_2d(x_tensor) + mu_smooth*l2_l1_edge_preserving_2d(x_tensor)
                     loss.backward()
                     fx = loss.detach().cpu().numpy().astype(np.float32)
                     gx = x_tensor.grad.detach().cpu().numpy().astype(np.float32)
