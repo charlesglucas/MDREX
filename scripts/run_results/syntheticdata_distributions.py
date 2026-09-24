@@ -5,8 +5,9 @@ import argparse
 # Parse a few command-line options before Hydra consumes the rest.
 # This allows launching multiple processes (one per GPU) with different parameters.
 parser = argparse.ArgumentParser(add_help=False)
-parser.add_argument("--mu-smooth", type=float, default=None, help="Regularization weight smoothness (overrides grid search)")
-parser.add_argument("--mu-sparse", type=float, default=None, help="Regularization weight sparsity (overrides grid search)")
+parser.add_argument("--mu-smooth", type=float, default=None, help="Regularization weight smoothness")
+parser.add_argument("--mu-sparse", type=float, default=None, help="Regularization weight sparsity")
+parser.add_argument("--shape", type=float, default=None, help="Shape")
 parser.add_argument("--out", type=str, default=None, help="Output NPZ path (overrides default naming)")
 args, remaining = parser.parse_known_args()
 # Remove parsed args so Hydra doesn't complain.
@@ -14,6 +15,7 @@ sys.argv = [sys.argv[0]] + remaining
 
 MU_SMOOTH = args.mu_smooth
 MU_SPARSE = args.mu_sparse
+SHAPE = args.shape
 OUTPUT_PATH = args.out
 
 # Configure GPU memory management
@@ -105,7 +107,7 @@ def main(cfg):
     mask = torch.tensor(mask, device=device) # (C, H, W)
     torch.cuda.empty_cache()
     
-    shape = "medium_ellipse"
+    shape = SHAPE
     flux = 5e-6
     
     x_opt = np.zeros((6, 10, 256, 256), dtype=np.float32)
@@ -182,7 +184,7 @@ def main(cfg):
                 (xdisc, fx, gx, status) = mdrex.run_bfgs(xdisc, data, MU_SPARSE, MU_SMOOTH)
                 x_opt[i, a, :, :] = np.mean(xdisc, axis=0)
        
-    outdir = Path("results") / "distributions_5em6" / f"musmooth1e{np.int64(np.log10(MU_SMOOTH))}_musparse1e{np.int64(np.log10(MU_SPARSE))}"
+    outdir = Path("results") / f"{shape}_distributions_5em6" / f"musmooth1e{np.int64(np.log10(MU_SMOOTH))}_musparse1e{np.int64(np.log10(MU_SPARSE))}"
     outdir.mkdir(parents=True, exist_ok=True)
     outfile = outdir / "x_opt.fits"
     fits.writeto(outfile, x_opt, overwrite=True)

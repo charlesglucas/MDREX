@@ -10,8 +10,19 @@ import numpy as np
 from pathlib import Path
 import re
 import matplotlib.pyplot as plt
+from scipy.ndimage import affine_transform
 
 import astropy.io.fits as fits
+
+
+def derotate(img, angle_deg, center=(126.5, 126.5)):
+    """Rotate a disk back by its angle (bicubic). The synthetic disks rotate around pixel
+    (511.5, 511.5) of the 1024x1024 images, i.e. (126.5, 126.5) in the [513-128:513+128] crop
+    (checked on the ground truths: exact at 180 deg)."""
+    t = np.deg2rad(angle_deg)
+    R = np.array([[np.cos(t), -np.sin(t)], [np.sin(t), np.cos(t)]])
+    c = np.array(center)
+    return affine_transform(img, R, offset=c - R @ c, order=3)
 
 
 @hydra.main(config_path="../../conf", config_name="config")
@@ -34,7 +45,7 @@ def main(cfg):
             x_gt_store[d, a, :, :] = x_gt
 
     mdrex_dir = "musmooth1e6_musparse1e6"
-    path = ROOT / f"results/distributions_5em6/{mdrex_dir}/x_opt.fits"
+    path = ROOT / f"results/distributions_5em6/{shape}_{mdrex_dir}/x_opt.fits"
     with fits.open(path) as hdul:
         x_mdrex = hdul[0].data
    
@@ -101,18 +112,28 @@ def main(cfg):
     print("\\end{table*}")
 
 
-    ## Plot example reconstructions
-    j=5
-    titles = ["1-folded", "2-folded", "3-folded"]
+    ## Plot reconstruction error, averaged over the disk angles
+    # each reconstruction is derotated by its angle before averaging. The ground truths are derotated
+    # and averaged the same way, so that the interpolation blur is the same on both sides.
+    angles = list(range(0, 325, 36))
+    x_mdrex_mean = np.stack([
+        np.mean([derotate(x_mdrex[k][a], angle) for (a, angle) in enumerate(angles)], axis=0)
+        for k in range(6)
+    ])
+    x_gt_mean = np.stack([
+        np.mean([derotate(x_gt_store[k][a], angle) for (a, angle) in enumerate(angles)], axis=0)
+        for k in range(6)
+    ])
+    titles = ["1-folded", "2-folded", "4-folded"]
     row_labels = ["1 resolution", "4 resolutions"]
 
-    fig, axs = plt.subplots(2, 3, figsize=(9, 6))
-    fig.subplots_adjust(wspace=0.05, hspace=0.15, right=0.9)
+    fig, axs = plt.subplots(2, 3, figsize=(9, 5.4))
+    fig.subplots_adjust(wspace=0.05, hspace=0.05, right=0.9)
 
     ims = np.empty((2, 3), dtype=object)
     for k in range(6):
         i, c = divmod(k, 3)
-        ims[i, c] = axs[i, c].imshow(np.abs(x_mdrex[k][j] - x_gt_store[k][j])/flux, cmap='gray', vmin=0, vmax=.2)
+        ims[i, c] = axs[i, c].imshow(np.abs(x_mdrex_mean[k] - x_gt_mean[k])/flux, cmap='gray', vmin=0, vmax=.2)
         axs[i, c].set_xticks([])
         axs[i, c].set_yticks([])
         for spine in axs[i, c].spines.values():

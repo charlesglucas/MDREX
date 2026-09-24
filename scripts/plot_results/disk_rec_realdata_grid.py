@@ -6,6 +6,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 import torch
+import torch.nn.functional as F
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -19,7 +20,7 @@ from utils.rotation import BatchRotationOperator
 #   results/realdata/<result>/musmooth<mu>_musparse<mu>.npz  (e.g. musmooth1e3_musparse5e4.npz)
 #
 # Figure 1: all the (mu_smooth, mu_sparse) results available for one star, to choose the couple.
-# Figure 2: the couple chosen by hand (MU_SMOOTH, MU_SPARSE), x and A_0 x in RGB.
+# Figure 2: the couple chosen by hand (MU_SMOOTH, MU_SPARSE), x and x convolved by the PSF, in RGB.
 
 # ------------------------------------------------------------
 # Settings (can also be overridden from the command line)
@@ -156,15 +157,50 @@ def get_wavelengths(data):
     return None
 
 
-def load_images(f, rotation_deg):
-    """Returns x (C, H, W) and A_0 x at frame 0 (C, H, W), north-aligned if possible."""
+def get_psf(data):
+    """PSF (C, 1, k, k) with the same preprocessing as in run_results/realdata_grid*.py."""
+    if data is None:
+        return None
+    psf_files = [f for f in (data_root() / data).glob("*") if "psf_master_cube" in f.name.lower()]
+    if len(psf_files) != 1:
+        print(f"Warning: PSF ('*psf_master_cube*') not found in {data_root() / data}")
+        return None
+    psf = fits.getdata(psf_files[0]).astype(np.float32)
+    if psf.ndim == 4:
+        psf = psf[:, 0]
+    psf = torch.tensor(psf)
+    psf_size = psf.shape[-1]
+    border = 15
+    mask_out = torch.ones_like(psf)[0].bool()
+    mask_out[border : psf_size - border, border : psf_size - border] = 0
+    for c in range(psf.shape[0]):
+        psf[c] = psf[c] - psf[c, mask_out].mean()
+    crop_size = 13
+    psf_crop = psf[
+        :,
+        1 + (psf_size - crop_size) // 2 : 1 + (psf_size + crop_size) // 2,
+        1 + (psf_size - crop_size) // 2 : 1 + (psf_size + crop_size) // 2,
+    ]
+    return psf_crop.reshape(psf.shape[0], 1, crop_size, crop_size)
+
+
+def convolve(x, psf):
+    """x (C, H, W) convolved channel by channel with psf (C, 1, k, k)."""
+    x_t = torch.from_numpy(x)[None]
+    return F.conv2d(x_t, weight=psf, padding="same", groups=x.shape[0])[0].numpy()
+
+
+def load_images(f, rotation_deg, psf=None):
+    """Returns x (C, H, W) and x convolved by the PSF (C, H, W, None if no PSF),
+    north-aligned if possible (convolution done before the rotation, in the detector frame)."""
     d = np.load(f, allow_pickle=True)
     x = d["x"].astype(np.float32)
-    ax0 = d["Ax"][0, :, 0].astype(np.float32)
+    x_conv = convolve(x, psf) if psf is not None else None
     if rotation_deg is not None:
         x = north_align_disk(x, rotation_deg)
-        ax0 = north_align_disk(ax0, rotation_deg)
-    return x, ax0
+        if x_conv is not None:
+            x_conv = north_align_disk(x_conv, rotation_deg)
+    return x, x_conv
 
 
 def set_crop(ax, shape):
@@ -207,7 +243,7 @@ def plot_grid(result, entries, e_smooth, e_sparse, rotation_deg, title):
 
 
 # ------------------------------------------------------------
-# Figure 2: chosen couple, x and A_0 x in RGB (as in disk_rec_realdata.py)
+# Figure 2: chosen couple, x and PSF-convolved x in RGB (as in disk_rec_realdata.py)
 # ------------------------------------------------------------
 def to_rgb(data1, data2):
     vmin = min(data1.min(), data2.min())
@@ -220,8 +256,8 @@ def to_rgb(data1, data2):
     return np.clip(rgb, 0.0, 1.0), Normalize(vmin=vmin, vmax=vmax)
 
 
-def plot_couple(result, f, mu_smooth, mu_sparse, rotation_deg, wavelengths, title):
-    x, ax0 = load_images(f, rotation_deg)
+def plot_couple(result, f, mu_smooth, mu_sparse, rotation_deg, wavelengths, title, psf):
+    x, x_conv = load_images(f, rotation_deg, psf)
     if wavelengths is not None:
         labels = [rf"$\lambda = {wavelengths[i]:.3f}\,\mu\mathrm{{m}}$" for i in range(2)]
     else:
@@ -229,13 +265,12 @@ def plot_couple(result, f, mu_smooth, mu_sparse, rotation_deg, wavelengths, titl
     blue_map = LinearSegmentedColormap.from_list("black_blue", ["black", "blue"])
     orange_map = LinearSegmentedColormap.from_list("black_orange", ["black", "orange"])
 
-    fig = plt.figure(figsize=(4.8, 9))
+    rows = [(x, r"$\widehat{\mathbf{x}}_{\lambda}$")]
+    if x_conv is not None:
+        rows.append((x_conv, r"$\mathbf{h}_{\lambda} * \widehat{\mathbf{x}}_{\lambda}$"))
+    fig = plt.figure(figsize=(4.8, 4.5 * len(rows)))
     fig.subplots_adjust(left=0.12, right=0.82, bottom=0.12, top=0.92, hspace=0.23)
-    grid = fig.add_gridspec(2, 1)
-    rows = [
-        (x, r"$\widehat{\mathbf{x}}_{\lambda}$"),
-        (ax0, r"$\mathbf{A}_{\lambda,0}\,\widehat{\mathbf{x}}_{\lambda}$"),
-    ]
+    grid = fig.add_gridspec(len(rows), 1)
     for row, (img, annotation) in enumerate(rows):
         rgb, norm = to_rgb(img[0], img[1])
         ax = fig.add_subplot(grid[row, 0])
@@ -294,7 +329,8 @@ def main():
                 f"Available couples: {[(f'{a:g}', f'{b:g}') for a, b in sorted(entries)]}"
             )
         wavelengths = saved_wavelengths if saved_wavelengths is not None else get_wavelengths(args.data)
-        plot_couple(result, entries[key], *key, rotation_deg, wavelengths, title)
+        psf = get_psf(args.data)
+        plot_couple(result, entries[key], *key, rotation_deg, wavelengths, title, psf)
     else:
         print("Set MU_SMOOTH / MU_SPARSE (or --mu-smooth / --mu-sparse) to plot the chosen couple")
 
