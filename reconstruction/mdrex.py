@@ -224,23 +224,27 @@ class MDREX:
                     params = self.exomild.fit_params(diff_leaf, self.lbda)
                 n_terms = len(params)
                 phi = 0.0
+                grad_diff = torch.zeros_like(diff_leaf)
                 for term, p in zip(self.exomild.all_terms, params):
                     ll = term.get_log_likelihood(diff_leaf, self.lbda, p)
                     phi_term = torch.sum(-ll) / n_terms
-                    phi_term.backward()
+                    # Only d/d diff: .backward() would also compute (huge, unused)
+                    # gradients w.r.t. the ExoMILD parameters.
+                    (g,) = torch.autograd.grad(phi_term, diff_leaf)
+                    grad_diff += g
                     phi += phi_term.item()
-                    del ll, phi_term
+                    del ll, phi_term, g
                 del params
                 torch.cuda.empty_cache()
                 reg_sparse = mu_sparse * self.l2_l1_sparse_2d(x_tensor)
                 reg_smooth = mu_smooth * self.l2_l1_edge_preserving_2d(x_tensor)
                 # Chain rule through forward_model: d phi/dx = J^T (d phi/d diff)
-                surrogate = torch.sum(diff * diff_leaf.grad) + reg_sparse + reg_smooth
+                surrogate = torch.sum(diff * grad_diff) + reg_sparse + reg_smooth
                 loss = phi + reg_sparse.detach() + reg_smooth.detach()
             (grad_x,) = torch.autograd.grad(surrogate, x_tensor, retain_graph=False, create_graph=False, allow_unused=False)
             fx = loss.cpu().numpy().astype(np.float32)
             gx = grad_x.detach().cpu().numpy().astype(np.float32)
-            del loss, surrogate, grad_x, im, diff, diff_leaf, x_tensor
+            del loss, surrogate, grad_x, grad_diff, im, diff, diff_leaf, x_tensor
             gc.collect()
             torch.cuda.empty_cache()
             return fx, gx
