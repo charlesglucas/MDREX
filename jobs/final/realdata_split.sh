@@ -3,7 +3,7 @@
 
 SMS=(1e6)
 SPS=(1e6 5e6 1e7)
-DATA='HR_4796A/2015-02-03/IRDIS/data/'
+DATA='HR_4796/2015-02-03/IRDIS/data/'
 BAND='h2_h3'
 DATARES='HR_4796A-2015-02-03'
 for sm in "${SMS[@]}"; do

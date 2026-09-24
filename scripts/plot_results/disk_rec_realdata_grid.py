@@ -30,6 +30,7 @@ args = parser.parse_args()
 
 display_titles = {
     "HR_4796": "HR 4796A",
+    "HR_4796A-2015-02-03": "HR 4796A",
     "RY_lup": "RY Lupi",
     "PDS_70": "PDS 70",
     "HD_169142": "HD 169142",
