@@ -117,7 +117,7 @@ hydra:
     - hydra.mode=RUN
     task: []
   job:
-    name: syntheticdata_all
+    name: syntheticdata_sure_gpu
     chdir: null
     override_dirname: ''
     id: ???
