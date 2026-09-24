@@ -1,0 +1,102 @@
+name: "train"
+batch_size: 1
+interpolation: "linear"
+#interpolation: "quintic"
+#repeat_idx: null
+repeat_train: null
+obj_size: 256
+num_workers: 0 #!!!16
+crop: 10
+crop_bg: 40
+n_min: 3
+n_max: 10
+alpha_min: 1e-6
+#alpha_max: 1e-3
+alpha_max: 3e-5
+distance_min: 25
+sampling_mode: "cartesian"
+rv_mode: "linear"
+exp_coeff: null
+symmetric_flux_train: false
+subset: null
+scale: 1
+sep_max: 1.38
+#psf_model: "interpolation"
+psf_model: "gaussian_2d"
+psf_size_inj: null
+#shuffle: false
+#range_max_adaptive: 0.5
+use_adaptive: true
+range_max_adaptive: 4.0
+#augmentations: ["rot90","time_flip","spatial_flip","rot_flip","rot_reverse"]
+#augmentations: []
+#augmentations: ["shuffle_frames"]
+augmentations: ["rot90","time_flip","spatial_flip","rot_flip","rot_reverse", "shuffle_frames"]
+force_rot: null
+#split_train: "train"
+#split_val: "val"
+#clips_per_obs_train: null
+#clips_per_obs_val: null
+dataset_params_train:
+  path_db: "/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/DiscDSM/data/db_new"
+  # path_db: "/scratch/vasher/tbodrito/exo/data/db_new"
+  #path_obs_cond: "data/observing_conditions"
+  #path_dtts: "data/dtts"
+  #patch_size: 8
+  #spatial_stride: 4
+  suffix_lmdb: "lmdb_256"
+  #n_frames: 16
+  n_frames: 64
+  stride: 1
+  dilation: 1
+  drop_short_clips: true
+  rot_scale: 1
+  clips_per_obs_max: null
+  #clips_per_obs_max: 1
+  multibands: false
+  channel_idx: 0 #!!!null
+  n_repeat: null
+  n_obs_max: null
+  filter_obs_params:
+    n_frames_min: 16
+    #n_frames_min: 30
+    #rot_min: 10
+    rot_min: 0
+    frame_quality: 2
+    #dual_filter: "B_H"
+    dual_filter: "DB_H23"
+    split: "train"
+    status: [0]
+    obs_id: null
+    obs_category: null
+dataset_params_val:
+  path_db: "data/db_new"
+  #path_obs_cond: "data/observing_conditions"
+  #path_dtts: "data/dtts"
+  #patch_size: 8
+  #spatial_stride: 4
+  suffix_lmdb: "lmdb_256"
+  #n_frames: 16
+  n_frames: 64
+  stride: 1
+  dilation: 1
+  drop_short_clips: true
+  rot_scale: 1
+  #clips_per_obs_max: null
+  clips_per_obs_max: 1
+  multibands: false
+  channel_idx: 0
+  n_repeat: 20
+  filter_obs_params:
+    n_frames_min: 16
+    rot_min: 10
+    frame_quality: 2
+    #dual_filter: "B_H"
+    dual_filter: "DB_H23"
+    #split: "val"
+    split: null
+    #split: "test"
+    status: [0]
+    obs_id: "HD_216803__2015-06-27__09-36-00"
+    obs_category: null
+    #obs_id: null
