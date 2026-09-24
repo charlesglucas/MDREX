@@ -39,7 +39,8 @@ def main(cfg):
     with fits.open(path) as hdul:
         x_rexpaco = hdul[0].data[:,:,:,251-128:251+128, 251-128:251+128]
 
-    path = ROOT / "results/mdrex_results/musmooth1e6_musparse1e6/x_opt.fits"
+    mdrex_dir = "musmooth1e6_musparse1e6"
+    path = ROOT / f"results/mdrex_results/{mdrex_dir}/x_opt.fits"
     with fits.open(path) as hdul:
         x_mdrex = hdul[0].data
    
@@ -218,62 +219,91 @@ def main(cfg):
 
 
 
+    shape_ids = ["medium_ellipse", "spiral", "circle"]
     fluxes = [1e-6, 5e-6, 1e-5]
     suffixes = ["1em6", "5em6", "1em5"]
 
-    for f, (flux, suffix) in enumerate(zip(fluxes, suffixes)):
-        fig, axs = plt.subplots(2, 2, figsize=(6, 4), gridspec_kw={'width_ratios': [1, 1]})
-        fig.subplots_adjust(wspace=0.03, hspace=0.15, right=0.84, top=0.92)
+    for s, shape_id in enumerate(shape_ids):
+        for f, (flux, suffix) in enumerate(zip(fluxes, suffixes)):
+            fig = plt.figure(figsize=(6, 6))
+            gs = fig.add_gridspec(3, 2, wspace=0.03, hspace=0.25, right=0.84, top=0.92)
+            ax_gt = fig.add_subplot(gs[0, :])
+            axs = np.array([[fig.add_subplot(gs[1,0]), fig.add_subplot(gs[1,1])],
+                            [fig.add_subplot(gs[2,0]), fig.add_subplot(gs[2,1])]])
 
-        # --- ligne du haut : plage commune ---
-        vmin_top = min(x_rexpaco[f,0,0].min(), x_mdrex[f,0,0].min())
-        im1 = axs[0,0].imshow(x_rexpaco[f,0,0], cmap='hot', vmin=vmin_top, vmax=2*flux)
-        im2 = axs[0,1].imshow(x_mdrex[f,0,0], cmap='hot', vmin=vmin_top, vmax=2*flux)
+            # --- ligne du haut : vérité terrain centrée ---
+            vmin_top = min(x_rexpaco[f,0,s].min(), x_mdrex[f,0,s].min())
+            im0 = ax_gt.imshow(x_gt_store[f,0,s], cmap='hot', vmin=vmin_top, vmax=2*flux)
+            ax_gt.set_title("Ground Truth")
 
-        # --- ligne du bas : plage symétrique commune ---
-        data1 = np.abs(x_rexpaco[f,0,0] - x_gt_store[f,0,0])/flux
-        data2 = np.abs(x_mdrex[f,0,0]   - x_gt_store[f,0,0])/flux
-        im3 = axs[1,0].imshow(data1, cmap='gray', vmin=0, vmax=1)
-        im4 = axs[1,1].imshow(data2, cmap='gray', vmin=0, vmax=1)
+            # --- ligne du milieu : plage commune ---
+            im1 = axs[0,0].imshow(x_rexpaco[f,0,s], cmap='hot', vmin=vmin_top, vmax=2*flux)
+            im2 = axs[0,1].imshow(x_mdrex[f,0,s], cmap='hot', vmin=vmin_top, vmax=2*flux)
 
-        # --- cosmétique ---
-        for ax in axs.flat:          # ← .flat pour itérer sur chaque axe
-            ax.set_xticks([])
-            ax.set_yticks([])
-            ax.set_frame_on(True)
-            for spine in ax.spines.values():
-                spine.set_visible(True)
-                spine.set_edgecolor('black')
-                spine.set_linewidth(1.5)
+            # --- ligne du bas : plage symétrique commune ---
+            data1 = np.abs(x_rexpaco[f,0,s] - x_gt_store[f,0,s])/flux
+            data2 = np.abs(x_mdrex[f,0,s]   - x_gt_store[f,0,s])/flux
+            im3 = axs[1,0].imshow(data1, cmap='gray', vmin=0, vmax=1)
+            im4 = axs[1,1].imshow(data2, cmap='gray', vmin=0, vmax=1)
 
-        axs[0,0].set_title(r"$\mathrm{REXPACO}$")
-        axs[0,1].set_title(r"$\mathrm{MD-REX}$")
-        axs[0,0].set_ylabel(r"Reconstruction")
-        axs[1,0].set_ylabel(r"Relative error")
+            # --- cosmétique ---
+            for ax in [ax_gt, *axs.flat]:
+                ax.set_xticks([])
+                ax.set_yticks([])
+                ax.set_frame_on(True)
+                for spine in ax.spines.values():
+                    spine.set_visible(True)
+                    spine.set_edgecolor('black')
+                    spine.set_linewidth(1.5)
 
-        # --- colorbar ligne du haut ---
-        cbar1 = fig.colorbar(im1, ax=axs[0,:], location='right', pad=0.05, shrink=1)
-        cbar1.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
-        cbar1.ax.yaxis.set_offset_position('right')
-        cbar1.ax.yaxis.get_offset_text().set_visible(True)
-        cbar1.ax.yaxis.get_offset_text().set_fontsize(10)
+            axs[0,0].set_title(r"$\mathrm{REXPACO}$")
+            axs[0,1].set_title(r"$\mathrm{MD-REX}$")
+            axs[0,0].set_ylabel(r"Reconstruction")
+            axs[1,0].set_ylabel(r"Relative error")
 
-        # --- colorbar ligne du bas ---
-        cbar2 = fig.colorbar(im3, ax=axs[1,:], location='right', pad=0.05, shrink=1)
-        cbar2.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
-        cbar2.ax.yaxis.set_offset_position('right')
-        cbar2.ax.yaxis.get_offset_text().set_visible(True)
-        cbar2.ax.yaxis.get_offset_text().set_fontsize(10)
+            # --- colorbar ligne du milieu ---
+            cbar1 = fig.colorbar(im1, ax=axs[0,:], location='right', pad=0.05, shrink=1)
+            cbar1.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+            cbar1.ax.yaxis.set_offset_position('right')
+            offset1 = cbar1.ax.yaxis.get_offset_text()
+            offset1.set_visible(True)
+            offset1.set_fontsize(10)
+            offset1.set_horizontalalignment('center')
+            offset1.set_verticalalignment('bottom')
+            offset1.set_position((0.5, 1.02))
 
-        plt.savefig(
-            f"figures/comp_medium_ellipse_{suffix}.pdf",
-            dpi=300,
-            bbox_inches='tight',
-            bbox_extra_artists=[cbar1.ax.yaxis.get_offset_text(),
-                                cbar2.ax.yaxis.get_offset_text()],
-            pad_inches=0.05,
-        )
-        plt.show()
+            # --- colorbar ligne du bas ---
+            cbar2 = fig.colorbar(im3, ax=axs[1,:], location='right', pad=0.05, shrink=1)
+            cbar2.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+            cbar2.ax.yaxis.set_offset_position('right')
+            cbar2.ax.yaxis.get_offset_text().set_visible(True)
+            cbar2.ax.yaxis.get_offset_text().set_fontsize(10)
+
+            # --- colorbar ligne du haut (placée à part pour garder ax_gt centré) ---
+            gt_pos = ax_gt.get_position()
+            cb_width = 0.046 * gt_pos.width
+            cb_pad = 0.13 * gt_pos.width
+            cax0 = fig.add_axes([gt_pos.x1 + cb_pad, gt_pos.y0, cb_width, gt_pos.height])
+            cbar0 = fig.colorbar(im0, cax=cax0)
+            cbar0.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+            cbar0.ax.yaxis.set_offset_position('right')
+            offset0 = cbar0.ax.yaxis.get_offset_text()
+            offset0.set_visible(True)
+            offset0.set_fontsize(10)
+            offset0.set_horizontalalignment('center')
+            offset0.set_verticalalignment('bottom')
+            offset0.set_position((0.5, 1.02))
+
+            plt.savefig(
+                f"figures/comp_{shape_id}_{suffix}_{mdrex_dir}.pdf",
+                dpi=300,
+                bbox_inches='tight',
+                bbox_extra_artists=[cbar0.ax.yaxis.get_offset_text(),
+                                    cbar1.ax.yaxis.get_offset_text(),
+                                    cbar2.ax.yaxis.get_offset_text()],
+                pad_inches=0.05,
+            )
+            plt.show()
 
 
 if __name__ == "__main__":

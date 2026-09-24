@@ -144,7 +144,7 @@ class ExoMILD(nn.Module):
         )
 
         print(f"[ExoMILD] {linalg_library=}")
-        if linalg_library is not None:
+        if linalg_library is not None and torch.cuda.is_available():
             torch.backends.cuda.preferred_linalg_library(linalg_library)
         self.grad_iterative = grad_iterative
         print(f"[ExoMILD] {self.grad_iterative=}")

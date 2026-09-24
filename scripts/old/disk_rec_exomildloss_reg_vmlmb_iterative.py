@@ -1,7 +1,7 @@
 import sys, pathlib, os
 
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
+ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 from matplotlib.colors import LogNorm
 import torch
@@ -16,7 +16,7 @@ from inference.inference import load_folder
 
 from models.exomild.exomild import ExoMILD
 from utils.viz import cube_3d_viewer
-from disk.debris_disk import Disk
+# from disk.debris_disk import Disk
 from utils.rotation import BatchRotationOperator
 from collections import defaultdict
 from astropy.io import fits
@@ -28,7 +28,7 @@ from models.exomild.spatial_term import SpatialTerm
 from torch.autograd import gradcheck
 
 
-@hydra.main(config_path="../conf", config_name="config", version_base=None)
+@hydra.main(config_path="../../conf", config_name="config", version_base=None)
 def main(cfg):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -40,8 +40,8 @@ def main(cfg):
     cfg_model.batch_size = None
 
     # Load only selected frames
-    path_folder = ROOT / "SyntheticDisks/DataAssessment/HIP_72192/2015-06-11/IRDIS/data"
-    path_frame = ROOT / "SyntheticDisks/DataAssessment/HIP_72192/2015-06-11/IRDIS/frame_selection_vector/"
+    path_folder = ROOT / "data/nuisances/HIP_72192/2015-06-11/IRDIS/data"
+    path_frame = ROOT / "data/nuisances/HIP_72192/2015-06-11/IRDIS/frame_selection_vector/"
     hdul = fits.open(path_frame / "ird_sortframes_vector_dc-IRD_FRAME_SELECTION_VECTOR-frame_selection_vector.fits")
     frames = hdul[0].data
 
@@ -129,10 +129,10 @@ def main(cfg):
         return torch.sum(torch.sqrt(grad_sq + epsilon**2))
     
     def l2_l1_sparse_2d(x, epsilon=1e-7):
-        return torch.sum(x)
+        return torch.sum(torch.abs(x))
 
     ## Load disk
-    path_disk = ROOT / "SyntheticDisks/DataAssessment/medium_ellipse/"
+    path_disk = ROOT / "data/synthetic_disks/medium_ellipse/"
     hdul = fits.open(path_disk / "hid_fake_disk_image_medium_ellipse_0degrees.fits")
     data = hdul[0].data
 

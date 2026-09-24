@@ -28,7 +28,7 @@ from math import sqrt, isnan
 # PREAMBLE
 
 # Numpy floating-point `dtype`s.
-FLOATS = (_np.float32, _np.float64, _np.float128)
+FLOATS = (_np.float32, _np.float64, _np.longdouble)
 
 DEBUG = True
 NOT_POSITIVE_DEFINITE = -1
@@ -1520,8 +1520,8 @@ def promote_multiplier(alpha, x):
         return _np.float64(alpha)
     elif T == _np.float32 or T == _np.complex64:
         return _np.float32(alpha)
-    elif T == _np.float128 or T == _np.complex256:
-        return _np.float128(alpha)
+    elif T == _np.longdouble or T == _np.complex256:
+        return _np.longdouble(alpha)
 
 def scale(x, alpha):
     """
