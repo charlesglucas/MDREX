@@ -2,6 +2,7 @@
 results/
 data/
 wandb/
+figures/
 *.fits
 *.npy
 *.npz

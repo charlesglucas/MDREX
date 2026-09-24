@@ -117,7 +117,7 @@ hydra:
     - hydra.mode=RUN
     task: []
   job:
-    name: disk_rec_comp
+    name: disk_rec_exomildloss_reg_vmlmb_iterative
     chdir: null
     override_dirname: ''
     id: ???
@@ -132,7 +132,7 @@ hydra:
         exclude_keys: []
   runtime:
     version: 1.3.2
-    version_base: '1.1'
+    version_base: '1.3'
     cwd: /Users/charleslucas/Documents/Science/astronomy/MDREX-main
     config_sources:
     - path: hydra.conf

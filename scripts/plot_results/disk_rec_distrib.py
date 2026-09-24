@@ -101,12 +101,29 @@ def main(cfg):
 
     ## Plot example reconstructions
     j=5
-    plt.figure(1)
+    titles = ["1-folded", "2-folded", "3-folded"]
+    row_labels = ["1 resolution", "4 resolutions"]
+
+    fig, axs = plt.subplots(2, 3, figsize=(9, 6))
+    fig.subplots_adjust(wspace=0.05, hspace=0.15, right=0.9)
+
+    ims = np.empty((2, 3), dtype=object)
     for k in range(6):
-        plt.subplot(2,3,k+1)
-        plt.imshow(x_mdrex[k][j] - x_gt_store[k][j], cmap='bwr', vmin=-3e-6, vmax=3e-6)
-        plt.title(r"MD-REX")
-        plt.colorbar()
+        i, c = divmod(k, 3)
+        ims[i, c] = axs[i, c].imshow(np.abs(x_mdrex[k][j] - x_gt_store[k][j])/flux, cmap='gray', vmin=0, vmax=.2)
+        axs[i, c].set_xticks([])
+        axs[i, c].set_yticks([])
+        for spine in axs[i, c].spines.values():
+            spine.set_visible(False)
+
+    for c in range(3):
+        axs[0, c].set_title(titles[c])
+
+    for i in range(2):
+        axs[i, 0].set_ylabel(row_labels[i])
+        fig.colorbar(ims[i, 2], ax=axs[i, :], location='right', pad=0.02, shrink=0.9)
+
+
     plt.show()
 
 
