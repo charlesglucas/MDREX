@@ -158,7 +158,7 @@ def main(cfg):
                 xdisc_0 = np.zeros((C, H, W))
                 mu_smooth = 10**(k+n_smooth)
                 mu_sparse = 10**(j+n_sparse)
-                (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_smooth, mu_sparse)
+                (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_sparse, mu_smooth)
                 
         y_numpy = y.detach().cpu().numpy()
         np.savez(ROOT / f"results/results_realdata.npz", y=y_numpy, x=x_disk_store, n_smooth=n_smooth, n_sparse=n_sparse)
@@ -167,7 +167,7 @@ def main(cfg):
         xdisc_0 = np.zeros((C, H, W))
         mu_smooth = 1e7
         mu_sparse = 1e7
-        (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_smooth, mu_sparse)
+        (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_sparse, mu_smooth)
         torch.cuda.empty_cache()
 
         # ------------------------------------------------------------

@@ -53,7 +53,9 @@ def main(cfg):
 
     # allocate the storage array: shape = (K, J, ...) where K,J are # of mus
     x_disk_store = np.zeros((len(mu_smooth_vals), len(mu_sparse_vals)) + shape_x)
-    x_gt = np.zeros((len(mu_smooth_vals), len(mu_sparse_vals)) + shape_x)
+    # x_gt is saved once in data.npz (new runs); older result files contain it in each file
+    data_file = path / "data.npz"
+    x_gt = np.load(data_file)["x_gt"] if data_file.exists() else np.load(files[0][0])["x_gt"]
     MSE = np.zeros((len(mu_smooth_vals), len(mu_sparse_vals)))
     PSNR = np.zeros((len(mu_smooth_vals), len(mu_sparse_vals)))
     SURE = np.zeros((len(mu_smooth_vals), len(mu_sparse_vals)))
@@ -66,9 +68,8 @@ def main(cfg):
         j = idx_sparse[mp]   # index for mu_sparse
         data = np.load(f, allow_pickle=True)
         x_disk_store[k, j] = data["x"]
-        x_gt[k, j] = data["x_gt"]
         MSE[k, j] = data["mse"]
-        PSNR[k, j] = -20*np.log10(np.sqrt(np.mean((x_disk_store[k, j] - x_gt[k, j])**2)) / np.sqrt(np.mean(x_gt[k, j]**2)))
+        PSNR[k, j] = -20*np.log10(np.sqrt(np.mean((x_disk_store[k, j] - x_gt)**2)) / np.sqrt(np.mean(x_gt**2)))
         SURE[k, j] = data["sure"]
         DA[k, j] = data["data_term"]
         DE[k, j] = data["div_est"]
