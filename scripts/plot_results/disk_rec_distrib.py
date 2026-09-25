@@ -133,7 +133,7 @@ def main(cfg):
     ims = np.empty((2, 3), dtype=object)
     for k in range(6):
         i, c = divmod(k, 3)
-        ims[i, c] = axs[i, c].imshow(np.abs(x_mdrex_mean[k] - x_gt_mean[k])/flux, cmap='gray', vmin=0, vmax=.2)
+        ims[i, c] = axs[i, c].imshow(np.abs(x_mdrex_mean[k] - x_gt_mean[k])/flux, cmap='gray', vmin=0, vmax=.15)
         axs[i, c].set_xticks([])
         axs[i, c].set_yticks([])
         for spine in axs[i, c].spines.values():

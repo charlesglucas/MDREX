@@ -125,7 +125,7 @@ def main(cfg):
     with fits.open(path) as hdul:
         x_rexpaco = hdul[0].data[:,:,:,251-128:251+128, 251-128:251+128]
 
-    mdrex_dir = "musmooth1e7_musparse1e5"
+    mdrex_dir = "musmooth1e5_musparse1e7"
     path = ROOT / f"results/mdrex_results/{mdrex_dir}/x_opt.fits"
     with fits.open(path) as hdul:
         x_mdrex = hdul[0].data
