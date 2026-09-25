@@ -7,7 +7,7 @@ import argparse
 parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument("--mu-smooth", type=float, default=None, help="Regularization weight smoothness")
 parser.add_argument("--mu-sparse", type=float, default=None, help="Regularization weight sparsity")
-parser.add_argument("--shape", type=float, default=None, help="Shape")
+parser.add_argument("--shape", type=str, default=None, help="Shape")
 parser.add_argument("--out", type=str, default=None, help="Output NPZ path (overrides default naming)")
 args, remaining = parser.parse_known_args()
 # Remove parsed args so Hydra doesn't complain.
@@ -184,7 +184,7 @@ def main(cfg):
                 (xdisc, fx, gx, status) = mdrex.run_bfgs(xdisc, data, MU_SPARSE, MU_SMOOTH)
                 x_opt[i, a, :, :] = np.mean(xdisc, axis=0)
        
-    outdir = Path("results") / f"{shape}_distributions_5em6" / f"musmooth1e{np.int64(np.log10(MU_SMOOTH))}_musparse1e{np.int64(np.log10(MU_SPARSE))}"
+    outdir = Path("results") / f"distributions_5em6" / f"{shape}_musmooth1e{np.int64(np.log10(MU_SMOOTH))}_musparse1e{np.int64(np.log10(MU_SPARSE))}"
     outdir.mkdir(parents=True, exist_ok=True)
     outfile = outdir / "x_opt.fits"
     fits.writeto(outfile, x_opt, overwrite=True)
