@@ -25,10 +25,10 @@ from utils.rotation import BatchRotationOperator
 # ------------------------------------------------------------
 # Settings (can also be overridden from the command line)
 # ------------------------------------------------------------
-RESULT = "HD_169142-2019-05-19"            # folder in results/realdata (= --datares of the run)
-DATA = "HD_169142/2019-05-19/IRDIS/data"    # real data folder (parallactic angles, wavelengths)
-MU_SMOOTH = None                          # chosen couple, e.g. 1e6 (None: only figure 1)
-MU_SPARSE = None                          # chosen couple, e.g. 5e6
+RESULT = "RX_J161533255-2019-05-18"            # folder in results/realdata (= --datares of the run)
+DATA = "RX_J161533255/2019-05-18/IRDIS/data"    # real data folder (parallactic angles, wavelengths)
+MU_SMOOTH = 5e7                    # chosen couple, e.g. 1e6 (None: only figure 1)
+MU_SPARSE = 5e6                 # chosen couple, e.g. 5e6
 CROP = False                              # zoom on the central half of the image
 
 parser = argparse.ArgumentParser()
@@ -267,7 +267,7 @@ def plot_couple(result, f, mu_smooth, mu_sparse, rotation_deg, wavelengths, titl
 
     rows = [(x, r"$\widehat{\mathbf{x}}_{\lambda}$")]
     if x_conv is not None:
-        rows.append((x_conv, r"$\mathbf{h}_{\lambda} * \widehat{\mathbf{x}}_{\lambda}$"))
+        rows.append((x_conv, r"$\mathbf{H}_{\lambda} * \widehat{\mathbf{x}}_{\lambda}$"))
     fig = plt.figure(figsize=(4.8, 4.5 * len(rows)))
     fig.subplots_adjust(left=0.12, right=0.82, bottom=0.12, top=0.92, hspace=0.23)
     grid = fig.add_gridspec(len(rows), 1)
@@ -294,7 +294,7 @@ def plot_couple(result, f, mu_smooth, mu_sparse, rotation_deg, wavelengths, titl
             cbar.update_ticks()
             cbar.ax.tick_params(labelsize=11)
             cbar.set_label(label, fontsize=13)
-    fig.suptitle(rf"$\mu_{{smooth}}={tex_mu(mu_smooth)},\ \mu_{{sparse}}={tex_mu(mu_sparse)}$", fontsize=12, y=0.99)
+    # fig.suptitle(rf"$\mu_{{smooth}}={tex_mu(mu_smooth)},\ \mu_{{sparse}}={tex_mu(mu_sparse)}$", fontsize=12, y=0.99)
     outfile = ROOT / "figures" / f"{result}_musmooth{fmt_mu(mu_smooth)}_musparse{fmt_mu(mu_sparse)}_RGB.pdf"
     fig.savefig(outfile, dpi=300, bbox_inches="tight", pad_inches=0.1)
     print(f"Saved {outfile}")
