@@ -193,7 +193,7 @@ def main(cfg):
         print(f"Running single combination: mu_smooth={mu_smooth}, mu_sparse={mu_sparse}")
 
         xdisc_0 = np.zeros((C, H, W))
-        (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_smooth, mu_sparse)
+        (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_sparse, mu_smooth)
 
         ## Compute MC-SURE and MSE
         x_tensor_opt = torch.tensor(xdisc_opt, dtype=torch.float32, device=device)
@@ -250,7 +250,16 @@ def main(cfg):
         else:
             out_path = out_dir / "results.npz"
 
-    np.savez(out_path, y=y_numpy, x=xdisc_opt, x_gt=x_gt_numpy, mse=mse_total, sure=sure_total, mu_smooth=MU_SMOOTH, mu_sparse=MU_SPARSE, data_term=data_term, div_est=div_est)
+    # y and x_gt are the same for every (mu_smooth, mu_sparse) of a given (shape, flux):
+    # saved once in data.npz next to the result files instead of in each of them (~50 MB each)
+    data_path = out_path.parent / "data.npz"
+    if not data_path.exists():
+        tmp_path = out_path.parent / f"data.tmp{os.getpid()}.npz"  # atomic: jobs may run in parallel
+        np.savez(tmp_path, y=y_numpy, x_gt=x_gt_numpy)
+        os.replace(tmp_path, data_path)
+        print(f"Saved y and x_gt to {data_path}")
+
+    np.savez(out_path, x=xdisc_opt, mse=mse_total, sure=sure_total, mu_smooth=MU_SMOOTH, mu_sparse=MU_SPARSE, data_term=data_term, div_est=div_est)
     print(f"Saved results to {out_path}")
     
     
