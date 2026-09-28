@@ -125,11 +125,16 @@ def main(cfg):
     with fits.open(path) as hdul:
         x_rexpaco = hdul[0].data[:,:,:,251-128:251+128, 251-128:251+128]
 
-    mdrex_dir = "musmooth1e5_musparse1e7"
-    path = ROOT / f"results/mdrex_results/{mdrex_dir}/x_opt.fits"
-    with fits.open(path) as hdul:
-        x_mdrex = hdul[0].data
-   
+    # Hyperparameters (mu_smooth, mu_sparse) adapted to each shape (SURE grids)
+    mdrex_dirs = {"medium_ellipse": "musmooth1e6_musparse1e6",
+                  "spiral": "musmooth1e7_musparse1e5",
+                  "circle": "musmooth1e7_musparse1e5"}
+    x_mdrex = np.zeros_like(x_gt_store)
+    for (s, shape) in enumerate(["medium_ellipse", "spiral", "circle"]):
+        path = ROOT / f"results/mdrex_results/{mdrex_dirs[shape]}/x_opt.fits"
+        with fits.open(path) as hdul:
+            x_mdrex[:, :, s] = hdul[0].data[:, :, s]
+
     # ======================================================================
     # 3. PSF CONVOLUTION of the ground truth and of the reconstructions
     # ======================================================================
@@ -143,14 +148,16 @@ def main(cfg):
     # ======================================================================
     # Table 1: disks x
     psnr = compute_psnr(x_gt_store, x_rexpaco, x_mdrex)
+    mu_caption = ("MD-REX uses $\\boldsymbol{\\mu} = (10^6, 10^6)$ for the ellipse and "
+                  "$\\boldsymbol{\\mu} = (10^7, 10^5)$ for the spiral and the circle.")
     print_psnr_table(psnr, "{\\bf Comparison of performances.} PSNR (whole image and support) averaged over "
-                           "parallactic angles for MD-REX and REXPACO reconstructions.")
+                           "parallactic angles for MD-REX and REXPACO reconstructions. " + mu_caption)
 
     # Table 2: disks convolved by the PSF (support: convolved ground truth > threshold)
     psnr_conv = compute_psnr(x_gt_conv, x_rexpaco_conv, x_mdrex_conv)
     print_psnr_table(psnr_conv, "{\\bf Comparison of performances on PSF-convolved disks.} PSNR (whole image and "
                                 "support) averaged over parallactic angles for MD-REX and REXPACO reconstructions "
-                                "convolved by the PSF.")
+                                "convolved by the PSF. " + mu_caption)
 
     # ======================================================================
     # 5. GROUND-TRUTH SHAPES
@@ -253,7 +260,7 @@ def main(cfg):
                 offset0.set_position((0.5, 1.02))
 
                 plt.savefig(
-                    f"figures/comp{tag}_{shape_id}_{suffix}_{mdrex_dir}.pdf",
+                    f"figures/comp{tag}_{shape_id}_{suffix}_{mdrex_dirs[shape_id]}.pdf",
                     dpi=300,
                     bbox_inches='tight',
                     bbox_extra_artists=[cbar0.ax.yaxis.get_offset_text(),

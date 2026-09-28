@@ -29,7 +29,7 @@ def derotate(img, angle_deg, center=(126.5, 126.5)):
 def main(cfg):
 
     # Load ground truth
-    shape = "medium_ellipse"
+    shape = "circle"
     flux = 5e-6
     suffix = "5em6"
     x_gt_store = np.zeros((6, 10, 256, 256), dtype=np.float32)
@@ -44,7 +44,7 @@ def main(cfg):
             x_gt = flux*data[513-128:513+128, 513-128:513+128]
             x_gt_store[d, a, :, :] = x_gt
 
-    mdrex_dir = "musmooth1e6_musparse1e6"
+    mdrex_dir = "musmooth1e7_musparse1e5"
     path = ROOT / f"results/distributions_5em6/{shape}_{mdrex_dir}/x_opt.fits"
     with fits.open(path) as hdul:
         x_mdrex = hdul[0].data
