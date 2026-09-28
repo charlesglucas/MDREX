@@ -17,8 +17,8 @@ import matplotlib.pyplot as plt
 def main(cfg):
 
     # Load results
-    shape = "medium_ellipse"
-    flux = "1em5"
+    shape = "spiral"
+    flux = "5em6"
     path = Path(ROOT / f"results/grids_111111111111/grid_sure_{shape}_alpha{flux}")
     # path = Path(ROOT / f"results/grids_100100100100/grid_sure_{shape}_alpha{flux}")
     pattern = re.compile(r"musmooth([0-9.]+)_musparse([0-9.]+)\.npz")
@@ -74,8 +74,9 @@ def main(cfg):
         DA[k, j] = data["data_term"]
         DE[k, j] = data["div_est"]
 
-    n_sparse = np.log10(mu_sparse_vals[0]).astype(int)
-    n_smooth = np.log10(mu_smooth_vals[0]).astype(int)
+    # Tick labels from the actual grid values: rows (axis 0, y) = mu_smooth, columns (axis 1, x) = mu_sparse
+    labels_smooth = [f"$10^{{{np.log10(v):g}}}$" for v in mu_smooth_vals]
+    labels_sparse = [f"$10^{{{np.log10(v):g}}}$" for v in mu_sparse_vals]
 
     # Find best parameters
     idx_best = np.unravel_index(np.argmin(MSE), MSE.shape)
@@ -109,13 +110,13 @@ def main(cfg):
     plt.subplot(2,2,1); plt.imshow(np.squeeze(best_x_disk_sure.mean(axis=0, keepdims=True))); plt.title(r"$\mathbf{x}_{\rm SURE}$"); plt.colorbar()
     plt.subplot(2,2,2); plt.imshow(np.squeeze(best_x_disk_mse.mean(axis=0, keepdims=True))); plt.title(r"$\mathbf{x}_{\rm MSE}$"); plt.colorbar()
     plt.subplot(2,2,3); plt.imshow(SURE, cmap="RdBu_r", norm=sure_norm);  plt.title(r"$\mathrm{SURE}$"); plt.colorbar()
-    exponents = np.arange(s1) + n_smooth; tick_values = np.arange(s1); plt.xticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
-    exponents = np.arange(s2) + n_sparse; tick_values = np.arange(s2); plt.yticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
+    plt.xticks(np.arange(s2), labels_sparse)
+    plt.yticks(np.arange(s1), labels_smooth)
     plt.ylabel(r"$\mu_{\rm smooth}$"); plt.xlabel(r"$\mu_{\rm sparse}$")
     plt.plot(j_sure_best, k_sure_best, "rx", markersize=12);
     plt.subplot(2,2,4); plt.imshow(MSE, cmap="RdBu_r", norm=LogNorm());  plt.title(r"$\mathrm{MSE}$"); plt.colorbar()
-    exponents = np.arange(s1) + n_smooth; tick_values = np.arange(s1); plt.xticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
-    exponents = np.arange(s2) + n_sparse; tick_values = np.arange(s2); plt.yticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
+    plt.xticks(np.arange(s2), labels_sparse)
+    plt.yticks(np.arange(s1), labels_smooth)
     plt.ylabel(r"$\mu_{\rm smooth}$"); plt.xlabel(r"$\mu_{\rm sparse}$")
     plt.plot(j_mse_best, k_mse_best, "rx", markersize=12);
     plt.tight_layout()
@@ -123,25 +124,25 @@ def main(cfg):
 
     plt.figure(2)
     plt.subplot(1,2,1); plt.imshow(DA, cmap="viridis");  plt.title(r"$\mathrm{Data Term}$"); plt.colorbar()
-    exponents = np.arange(s1) + n_smooth; tick_values = np.arange(s1); plt.xticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
-    exponents = np.arange(s2) + n_sparse; tick_values = np.arange(s2); plt.yticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
+    plt.xticks(np.arange(s2), labels_sparse)
+    plt.yticks(np.arange(s1), labels_smooth)
     plt.ylabel(r"$\mu_{\rm smooth}$"); plt.xlabel(r"$\mu_{\rm sparse}$")
     plt.subplot(1,2,2); plt.imshow(DE, cmap="viridis", norm=LogNorm());  plt.title(r"$\mathrm{Divergence Estimate}$"); plt.colorbar()
-    exponents = np.arange(s1) + n_smooth; tick_values = np.arange(s1); plt.xticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
-    exponents = np.arange(s2) + n_sparse; tick_values = np.arange(s2); plt.yticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
+    plt.xticks(np.arange(s2), labels_sparse)
+    plt.yticks(np.arange(s1), labels_smooth)
     plt.ylabel(r"$\mu_{\rm smooth}$"); plt.xlabel(r"$\mu_{\rm sparse}$")
     plt.tight_layout()
     plt.show()
 
     # plt.subplots(1,2, figsize=(7, 3))
     # plt.subplot(1,2,1); plt.imshow(SURE, cmap="RdBu_r", norm=sure_norm);  plt.title(r"$\mathrm{SURE}$"); plt.colorbar(shrink=1)
-    # exponents = np.arange(s1) + n_smooth; tick_values = np.arange(s1); plt.xticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
-    # exponents = np.arange(s2) + n_sparse; tick_values = np.arange(s2); plt.yticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
+    # plt.xticks(np.arange(s2), labels_sparse)
+    # plt.yticks(np.arange(s1), labels_smooth)
     # plt.ylabel(r"$\mu_{\rm smooth}$"); plt.xlabel(r"$\mu_{\rm sparse}$")
     # plt.plot(j_sure_best, k_sure_best, "rx", markersize=12);
     # plt.subplot(1,2,2); plt.imshow(MSE, cmap="RdBu_r", norm=LogNorm());  plt.title(r"$\mathrm{MSE}$"); plt.colorbar(shrink=1)
-    # exponents = np.arange(s1) + n_smooth; tick_values = np.arange(s1); plt.xticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
-    # exponents = np.arange(s2) + n_sparse; tick_values = np.arange(s2); plt.yticks(tick_values, [f"$10^{{{e}}}$" for e in exponents])
+    # plt.xticks(np.arange(s2), labels_sparse)
+    # plt.yticks(np.arange(s1), labels_smooth)
     # plt.ylabel(r"$\mu_{\rm smooth}$"); plt.xlabel(r"$\mu_{\rm sparse}$")
     # plt.plot(j_mse_best, k_mse_best, "rx", markersize=12);
     # plt.tight_layout()
@@ -163,8 +164,8 @@ def main(cfg):
     cbar1.ax.yaxis.get_offset_text().set_verticalalignment('bottom')
     cbar1.ax.yaxis.get_offset_text().set_fontsize(12)
     cbar1.ax.tick_params(labelsize=12)
-    exponents = np.arange(s1) + n_smooth; tick_values = np.arange(s1); ax1.set_xticks(tick_values); ax1.set_xticklabels([f"$10^{{{e}}}$" for e in exponents], fontsize=12)
-    exponents = np.arange(s2) + n_sparse; tick_values = np.arange(s2); ax1.set_yticks(tick_values); ax1.set_yticklabels([f"$10^{{{e}}}$" for e in exponents], fontsize=12)
+    ax1.set_xticks(np.arange(s2)); ax1.set_xticklabels(labels_sparse, fontsize=12)
+    ax1.set_yticks(np.arange(s1)); ax1.set_yticklabels(labels_smooth, fontsize=12)
     ax1.set_ylabel(r"$\mu_{\rm smooth}$", fontsize=14); ax1.set_xlabel(r"$\mu_{\rm sparse}$", fontsize=14)
     ax1.tick_params(axis='both', which='major', labelsize=12)
     ax1.plot(j_mse_best, k_mse_best, "rx", markersize=12, markeredgewidth=2)
@@ -185,8 +186,8 @@ def main(cfg):
     cbar2.ax.yaxis.get_offset_text().set_verticalalignment('bottom')
     cbar2.ax.yaxis.get_offset_text().set_fontsize(12)
     cbar2.ax.tick_params(labelsize=12)
-    exponents = np.arange(s1) + n_smooth; tick_values = np.arange(s1); ax2.set_xticks(tick_values); ax2.set_xticklabels([f"$10^{{{e}}}$" for e in exponents], fontsize=12)
-    exponents = np.arange(s2) + n_sparse; tick_values = np.arange(s2); ax2.set_yticks(tick_values); ax2.set_yticklabels([f"$10^{{{e}}}$" for e in exponents], fontsize=12)
+    ax2.set_xticks(np.arange(s2)); ax2.set_xticklabels(labels_sparse, fontsize=12)
+    ax2.set_yticks(np.arange(s1)); ax2.set_yticklabels(labels_smooth, fontsize=12)
     ax2.set_ylabel(r"$\mu_{\rm smooth}$", fontsize=14); ax2.set_xlabel(r"$\mu_{\rm sparse}$", fontsize=14)
     ax2.tick_params(axis='both', which='major', labelsize=12)
     ax2.plot(j_mse_best, k_mse_best, "rx", markersize=12, markeredgewidth=2)
