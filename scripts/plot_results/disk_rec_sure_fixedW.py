@@ -138,7 +138,7 @@ def main(cfg):
 
     # Load results
     shape = "medium_ellipse"
-    flux = "5em6"
+    flux = "1em5"
     path = Path(ROOT / f"results/grids_111111111111/grid_sure_{shape}_alpha{flux}")
     # path = Path(ROOT / f"results/grids_100100100100/grid_sure_{shape}_alpha{flux}")
     pattern = re.compile(r"musmooth([0-9.]+)_musparse([0-9.]+)\.npz")
@@ -204,7 +204,7 @@ def main(cfg):
 
     # SURE is defined up to a constant and its variations are small compared to its level:
     # display SURE - min(SURE) (+1 for the log scale)
-    SURE_disp = SURE - SURE.min() + 1
+    SURE_disp = SURE # - SURE.min() + 1
 
     # Compute N-RMSE of SURE solution
     diffgt = best_x_disk_sure - x_gt
@@ -217,12 +217,12 @@ def main(cfg):
     plt.figure(1)
     plt.subplot(2,2,1); plt.imshow(np.squeeze(best_x_disk_sure.mean(axis=0, keepdims=True))); plt.title(r"$\mathbf{x}_{\rm SURE}$"); plt.colorbar()
     plt.subplot(2,2,2); plt.imshow(np.squeeze(best_x_disk_mse.mean(axis=0, keepdims=True))); plt.title(r"$\mathbf{x}_{\rm MSE}$"); plt.colorbar()
-    plt.subplot(2,2,3); plt.imshow(SURE_disp, cmap="RdBu_r", norm=LogNorm());  plt.title(r"$\mathrm{SURE}$"); plt.colorbar()
+    plt.subplot(2,2,3); plt.imshow(SURE_disp, cmap="RdBu_r");  plt.title(r"$\mathrm{SURE}$"); plt.colorbar()
     plt.xticks(np.arange(s2), labels_sparse)
     plt.yticks(np.arange(s1), labels_smooth)
     plt.ylabel(r"$\mu_{\rm smooth}$"); plt.xlabel(r"$\mu_{\rm sparse}$")
     plt.plot(j_sure_best, k_sure_best, "rx", markersize=12);
-    plt.subplot(2,2,4); plt.imshow(MSE, cmap="RdBu_r", norm=LogNorm());  plt.title(r"$\mathrm{MSE}$"); plt.colorbar()
+    plt.subplot(2,2,4); plt.imshow(MSE, cmap="RdBu_r");  plt.title(r"$\mathrm{MSE}$"); plt.colorbar()
     plt.xticks(np.arange(s2), labels_sparse)
     plt.yticks(np.arange(s1), labels_smooth)
     plt.ylabel(r"$\mu_{\rm smooth}$"); plt.xlabel(r"$\mu_{\rm sparse}$")
@@ -235,16 +235,17 @@ def main(cfg):
     plt.xticks(np.arange(s2), labels_sparse)
     plt.yticks(np.arange(s1), labels_smooth)
     plt.ylabel(r"$\mu_{\rm smooth}$"); plt.xlabel(r"$\mu_{\rm sparse}$")
-    plt.subplot(1,2,2); plt.imshow(DE, cmap="viridis", norm=LogNorm());  plt.title(r"$\mathrm{Divergence Estimate}$"); plt.colorbar()
+    plt.subplot(1,2,2); plt.imshow(DE, cmap="viridis");  plt.title(r"$\mathrm{Divergence Estimate}$"); plt.colorbar()
     plt.xticks(np.arange(s2), labels_sparse)
     plt.yticks(np.arange(s1), labels_smooth)
     plt.ylabel(r"$\mu_{\rm smooth}$"); plt.xlabel(r"$\mu_{\rm sparse}$")
     plt.tight_layout()
     plt.show()
 
+    s1, s2 = MSE.shape
     fig = plt.figure(figsize=(5, 8))
     ax1 = fig.add_subplot(2, 1, 1)
-    im1 = ax1.imshow(MSE, cmap="RdBu_r", norm=LogNorm())
+    im1 = ax1.imshow(MSE, cmap="RdBu_r")
     ax1.set_title(r"$\mathrm{MSE}$", fontsize=18)
     cbar1 = fig.colorbar(im1, ax=ax1, shrink=1)
     cbar1_formatter = ScalarFormatter(useMathText=True)
@@ -266,7 +267,7 @@ def main(cfg):
     ax1.set_aspect('equal', adjustable='box')
 
     ax2 = fig.add_subplot(2, 1, 2)
-    im2 = ax2.imshow(SURE_disp, cmap="RdBu_r", norm=LogNorm())
+    im2 = ax2.imshow(SURE_disp, cmap="RdBu_r")
     ax2.set_title(r"$\mathrm{MC-SURE}$", fontsize=18)
     cbar2 = fig.colorbar(im2, ax=ax2, shrink=1)
     cbar2.ax.tick_params(labelsize=12)
@@ -279,7 +280,7 @@ def main(cfg):
     ax2.set_aspect('equal', adjustable='box')
 
     fig.tight_layout()
-    fig.savefig(f"figures/grids_{shape}_{flux}_fixedW_{W_REF}.pdf")
+    fig.savefig(f"figures/grids_{shape}_{flux}_fixedC{W_REF}.pdf")
     plt.show()
 
 

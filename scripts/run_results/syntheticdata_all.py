@@ -177,7 +177,11 @@ def main(cfg):
                     (xdisc, fx, gx, status) = mdrex.run_bfgs(xdisc, data, MU_SPARSE, MU_SMOOTH)
                     x_opt[f, a, s, :, :] = np.mean(xdisc, axis=0)
        
-    outdir = Path("results") / "mdrex_results" / f"musmooth1e{np.int64(np.log10(MU_SMOOTH))}_musparse1e{np.int64(np.log10(MU_SPARSE))}"
+    def mu_to_str(mu):  # 1e6 -> "1e6", 5e5 -> "5e5" (int(log10) would map 5e5 to "1e5")
+        mantissa, exp = f"{mu:.0e}".split("e")
+        return f"{mantissa}e{int(exp)}"
+
+    outdir = Path("results") / "mdrex_results" / f"musmooth{mu_to_str(MU_SMOOTH)}_musparse{mu_to_str(MU_SPARSE)}"
     outdir.mkdir(parents=True, exist_ok=True)
     outfile = outdir / "x_opt.fits"
     fits.writeto(outfile, x_opt, overwrite=True)
