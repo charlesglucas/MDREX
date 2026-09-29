@@ -207,9 +207,12 @@ class MDREX:
         self.to_patches = None
         self.to_params = None
 
-    def run_bfgs(self, x_disc_0, y, mu_sparse, mu_smooth):
+    def run_bfgs(self, x_disc_0, y, mu_sparse, mu_smooth, ftol=1.0e-8):
         """
         Run BFGS optimization for given regularization parameters and return the optimized solution, function value, gradient, and status.
+        ftol: relative tolerance of VMLMB on the objective (|f - f_prev| <= ftol |f|). The objective is dominated by
+        the data term (|f| ~ 1e7-1e8), so ftol=1e-8 stops as soon as an iteration gains less than ~0.1-1:
+        use a smaller ftol (or 0, convergence then decided by gtol / xtol) if the solution depends on the run.
         """
         # --- objective + gradient ---
         def fg(x_disc):
@@ -232,7 +235,9 @@ class MDREX:
                     # gradients w.r.t. the ExoMILD parameters.
                     (g,) = torch.autograd.grad(phi_term, diff_leaf)
                     grad_diff += g
-                    phi += phi_term.item()
+                    # objective value accumulated in float64: in float32, |f| ~ 1e7-1e8 has a resolution of ~1-8,
+                    # coarser than the convergence test of VMLMB (ftol * |f|)
+                    phi += torch.sum(-ll.detach(), dtype=torch.float64).item() / n_terms
                     del ll, phi_term, g
                 del params
                 torch.cuda.empty_cache()
@@ -240,15 +245,19 @@ class MDREX:
                 reg_smooth = mu_smooth * self.l2_l1_edge_preserving_2d(x_tensor)
                 # Chain rule through forward_model: d phi/dx = J^T (d phi/d diff)
                 surrogate = torch.sum(diff * grad_diff) + reg_sparse + reg_smooth
-                loss = phi + reg_sparse.detach() + reg_smooth.detach()
+                with torch.no_grad():
+                    x64 = x_tensor.detach().double()
+                    loss = (phi + mu_sparse * self.l2_l1_sparse_2d(x64).item()
+                            + mu_smooth * self.l2_l1_edge_preserving_2d(x64).item())
+                    del x64
             (grad_x,) = torch.autograd.grad(surrogate, x_tensor, retain_graph=False, create_graph=False, allow_unused=False)
-            fx = loss.cpu().numpy().astype(np.float32)
+            fx = np.float64(loss)
             gx = grad_x.detach().cpu().numpy().astype(np.float32)
             del loss, surrogate, grad_x, grad_diff, im, diff, diff_leaf, x_tensor
             gc.collect()
             torch.cuda.empty_cache()
             return fx, gx
-        xdisc_opt, fx, gx, status = optm.vmlmb(fg, x_disc_0, verb=1, lower=0, maxiter=100000, observer=None)
+        xdisc_opt, fx, gx, status = optm.vmlmb(fg, x_disc_0, verb=1, lower=0, maxiter=100000, observer=None, ftol=ftol)
         return xdisc_opt, fx, gx, status
 
     ## Data term
