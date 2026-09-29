@@ -25,14 +25,16 @@ from utils.rotation import BatchRotationOperator
 # ------------------------------------------------------------
 # Settings (can also be overridden from the command line)
 # ------------------------------------------------------------
-RESULT = "RX_J161533255-2019-05-18"            # folder in results/realdata (= --datares of the run)
-DATA = "RX_J161533255/2019-05-18/IRDIS/data"    # real data folder (parallactic angles, wavelengths)
-MU_SMOOTH = 5e7                    # chosen couple, e.g. 1e6 (None: only figure 1)
-MU_SPARSE = 5e6                 # chosen couple, e.g. 5e6
+# None = choose interactively from a numbered list
+RESULT = None                    # folder in results/realdata (= --datares of the run), name or list index
+DATA = None                      # real data folder, None = deduced from RESULT (e.g. HD_169142/2019-05-19/IRDIS/data)
+MU_SMOOTH = None                 # chosen couple, e.g. 1e6 (None: choose from the available couples)
+MU_SPARSE = None                 # chosen couple, e.g. 5e6
 CROP = False                              # zoom on the central half of the image
+CROP_STARS = ("RY_lup", "HD_106906")      # always zoomed (as in disk_rec_realdata.py)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--result", type=str, default=RESULT)
+parser.add_argument("--result", type=str, default=RESULT, help="name or index in the list (omit to choose)")
 parser.add_argument("--data", type=str, default=DATA)
 parser.add_argument("--mu-smooth", type=float, default=MU_SMOOTH)
 parser.add_argument("--mu-sparse", type=float, default=MU_SPARSE)
@@ -80,6 +82,73 @@ def available_results():
         d.name for d in results_root.iterdir()
         if d.is_dir() and any(d.glob("musmooth*_musparse*.npz"))
     )
+
+
+def choose(options, what, allow_skip=False):
+    """Prints a numbered list and returns the chosen option (index or exact name)."""
+    print(f"\nAvailable {what}:")
+    for i, o in enumerate(options):
+        print(f"  [{i}] {o}")
+    skip = " (Enter to skip)" if allow_skip else ""
+    while True:
+        answer = input(f"Choose {what} (number){skip}: ").strip()
+        if not answer and allow_skip:
+            return None
+        if answer.isdigit() and int(answer) < len(options):
+            return options[int(answer)]
+        if answer in map(str, options):
+            return options[list(map(str, options)).index(answer)]
+        print(f"Invalid choice: {answer!r}")
+
+
+def select_result(result):
+    results = available_results()
+    if not results:
+        raise FileNotFoundError(f"No result in {ROOT / 'results' / 'realdata'}")
+    if result is None:
+        return choose(results, "results")
+    if result.isdigit() and int(result) < len(results):
+        return results[int(result)]
+    if result not in results:
+        print(f"Result {result!r} not found")
+        return choose(results, "results")
+    return result
+
+
+def find_data(result):
+    """Deduces the real data folder from the result name, e.g.
+    HD_169142-2019-05-19 -> HD_169142/2019-05-19/IRDIS/data,
+    HD_106906-2016-03-28-h2_h3 -> HD_106906/2016-03-28/IRDIS/h2_h3/data."""
+    m = re.match(r"(.+?)-(\d{4}-\d{2}-\d{2})(?:-(.+))?$", result)
+    root = data_root()
+    if m is None or not root.exists():
+        return None
+    star, date, suffix = m.groups()
+    # star folder = longest folder name that prefixes the star (HR_4796A -> HR_4796)
+    stars = [d.name for d in root.iterdir() if d.is_dir() and star.startswith(d.name)]
+    if not stars:
+        return None
+    date_dir = root / max(stars, key=len) / date
+    candidates = sorted(
+        str(f.parent.relative_to(root))
+        for f in date_dir.glob("**/*PARA_ROTATION_CUBE-rotnth.fits")
+    )
+    if suffix:
+        candidates = [c for c in candidates if suffix in c] or candidates
+    if len(candidates) > 1:
+        return choose(candidates, "data folders")
+    return candidates[0] if candidates else None
+
+
+def select_couple(entries, mu_smooth, mu_sparse):
+    if mu_smooth is not None and mu_sparse is not None:
+        if (mu_smooth, mu_sparse) in entries:
+            return mu_smooth, mu_sparse
+        print(f"No result for mu_smooth={mu_smooth:g}, mu_sparse={mu_sparse:g}")
+    couples = sorted(entries)
+    labels = [f"mu_smooth={fmt_mu(a)}, mu_sparse={fmt_mu(b)}" for a, b in couples]
+    label = choose(labels, "couples for figure 2", allow_skip=True)
+    return None if label is None else couples[labels.index(label)]
 
 
 def load_grid(result_dir):
@@ -265,13 +334,14 @@ def plot_couple(result, f, mu_smooth, mu_sparse, rotation_deg, wavelengths, titl
     blue_map = LinearSegmentedColormap.from_list("black_blue", ["black", "blue"])
     orange_map = LinearSegmentedColormap.from_list("black_orange", ["black", "orange"])
 
-    rows = [(x, r"$\widehat{\mathbf{x}}_{\lambda}$")]
+    # x is a contrast; H * x is in ADU (the PSF is not normalized, its sum is the stellar flux in ADU)
+    rows = [(x, r"$\widehat{\mathbf{x}}_{\lambda}$", "")]
     if x_conv is not None:
-        rows.append((x_conv, r"$\mathbf{H}_{\lambda} * \widehat{\mathbf{x}}_{\lambda}$"))
+        rows.append((x_conv, r"$\mathbf{H}_{\lambda} * \widehat{\mathbf{x}}_{\lambda}$", " [ADU]"))
     fig = plt.figure(figsize=(4.8, 4.5 * len(rows)))
     fig.subplots_adjust(left=0.12, right=0.82, bottom=0.12, top=0.92, hspace=0.23)
     grid = fig.add_gridspec(len(rows), 1)
-    for row, (img, annotation) in enumerate(rows):
+    for row, (img, annotation, unit) in enumerate(rows):
         rgb, norm = to_rgb(img[0], img[1])
         ax = fig.add_subplot(grid[row, 0])
         ax.imshow(rgb, origin="lower")
@@ -289,11 +359,14 @@ def plot_couple(result, f, mu_smooth, mu_sparse, rotation_deg, wavelengths, titl
             (orange_map, orange_cax, "vertical", labels[1]),
         ]:
             cbar = fig.colorbar(ScalarMappable(norm, cmap), cax=cax, orientation=orientation)
+            # integer mantissas (0, 1, 2, ... x 10^n) as in disk_rec_realdata.py: tick labels of constant
+            # width, so that the tight bounding box (hence the size in the paper) is the same for all stars
+            cbar.locator = ticker.MultipleLocator(10 ** np.floor(np.log10(norm.vmax)))
             cbar.formatter = ticker.ScalarFormatter(useMathText=True)
             cbar.formatter.set_powerlimits((0, 0))
             cbar.update_ticks()
             cbar.ax.tick_params(labelsize=11)
-            cbar.set_label(label, fontsize=13)
+            cbar.set_label(label + unit, fontsize=13)
     # fig.suptitle(rf"$\mu_{{smooth}}={tex_mu(mu_smooth)},\ \mu_{{sparse}}={tex_mu(mu_sparse)}$", fontsize=12, y=0.99)
     outfile = ROOT / "figures" / f"{result}_musmooth{fmt_mu(mu_smooth)}_musparse{fmt_mu(mu_sparse)}_RGB.pdf"
     fig.savefig(outfile, dpi=300, bbox_inches="tight", pad_inches=0.1)
@@ -303,7 +376,12 @@ def plot_couple(result, f, mu_smooth, mu_sparse, rotation_deg, wavelengths, titl
 
 def main():
     (ROOT / "figures").mkdir(exist_ok=True)
-    result = args.result
+    result = select_result(args.result)
+    if args.data is None:
+        args.data = find_data(result)
+    print(f"Result: {result}\nData:   {args.data}")
+    if result.startswith(CROP_STARS):
+        args.crop = True
     title = get_title(result)
     entries, e_smooth, e_sparse = load_grid(ROOT / "results" / "realdata" / result)
     print(f"{result}: {len(entries)} files, mu_smooth {[f'{m:g}' for m in e_smooth]}, "
@@ -321,18 +399,13 @@ def main():
     plot_grid(result, entries, e_smooth, e_sparse, rotation_deg, title)
 
     # Figure 2: couple chosen by hand
-    if args.mu_smooth is not None and args.mu_sparse is not None:
-        key = (args.mu_smooth, args.mu_sparse)
-        if key not in entries:
-            raise KeyError(
-                f"No result for mu_smooth={args.mu_smooth:g}, mu_sparse={args.mu_sparse:g}. "
-                f"Available couples: {[(f'{a:g}', f'{b:g}') for a, b in sorted(entries)]}"
-            )
+    key = select_couple(entries, args.mu_smooth, args.mu_sparse)
+    if key is not None:
         wavelengths = saved_wavelengths if saved_wavelengths is not None else get_wavelengths(args.data)
         psf = get_psf(args.data)
         plot_couple(result, entries[key], *key, rotation_deg, wavelengths, title, psf)
     else:
-        print("Set MU_SMOOTH / MU_SPARSE (or --mu-smooth / --mu-sparse) to plot the chosen couple")
+        print("No couple chosen, figure 2 skipped")
 
     plt.show()
 
