@@ -148,8 +148,14 @@ def main(cfg):
     # ======================================================================
     # Table 1: disks x
     psnr = compute_psnr(x_gt_store, x_rexpaco, x_mdrex)
-    mu_caption = ("MD-REX uses $\\boldsymbol{\\mu} = (10^6, 10^6)$ for the ellipse and "
-                  "$\\boldsymbol{\\mu} = (10^7, 10^5)$ for the spiral and the circle.")
+    def mu_latex(mdrex_dir):  # "musmooth1e7_musparse5e5" -> "(10^7, 5 \cdot 10^5)"
+        vals = []
+        for m, e in re.findall(r"mu(?:smooth|sparse)([0-9]+)e([0-9]+)", mdrex_dir):
+            vals.append(f"10^{{{e}}}" if m == "1" else f"{m} \\cdot 10^{{{e}}}")
+        return f"({vals[0]}, {vals[1]})"
+    names = {"medium_ellipse": "ellipse", "spiral": "spiral", "circle": "circle"}
+    mu_caption = "MD-REX uses " + ", ".join(
+        [f"$\\boldsymbol{{\\mu}} = {mu_latex(d)}$ for the {names[s]}" for s, d in mdrex_dirs.items()]) + "."
     print_psnr_table(psnr, "{\\bf Comparison of performances.} PSNR (whole image and support) averaged over "
                            "parallactic angles for MD-REX and REXPACO reconstructions. " + mu_caption)
 
