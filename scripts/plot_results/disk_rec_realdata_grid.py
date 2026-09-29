@@ -334,10 +334,10 @@ def plot_couple(result, f, mu_smooth, mu_sparse, rotation_deg, wavelengths, titl
     blue_map = LinearSegmentedColormap.from_list("black_blue", ["black", "blue"])
     orange_map = LinearSegmentedColormap.from_list("black_orange", ["black", "orange"])
 
-    # x is a contrast; H * x is in ADU (the PSF is not normalized, its sum is the stellar flux in ADU)
+    # x is a contrast; H * x is in ADU (the PSF is not normalized, its sum is the stellar flux in ADU), unit not displayed
     rows = [(x, r"$\widehat{\mathbf{x}}_{\lambda}$", "")]
     if x_conv is not None:
-        rows.append((x_conv, r"$\mathbf{H}_{\lambda} * \widehat{\mathbf{x}}_{\lambda}$", " [ADU]"))
+        rows.append((x_conv, r"$\mathbf{H}_{\lambda} * \widehat{\mathbf{x}}_{\lambda}$", ""))
     fig = plt.figure(figsize=(4.8, 4.5 * len(rows)))
     fig.subplots_adjust(left=0.12, right=0.82, bottom=0.12, top=0.92, hspace=0.23)
     grid = fig.add_gridspec(len(rows), 1)

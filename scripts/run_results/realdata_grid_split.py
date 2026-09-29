@@ -11,6 +11,8 @@ parser.add_argument("--band", type=str, required=True, help="Real data relative 
 parser.add_argument("--mu-smooth", type=float, nargs="+", required=True, help="Value(s) of mu_smooth, e.g. --mu-smooth 1e3 1e4")
 parser.add_argument("--mu-sparse", type=float, nargs="+", required=True, help="Value(s) of mu_sparse, e.g. --mu-sparse 1e3 1e4")
 parser.add_argument("--overwrite", action="store_true", help="Recompute existing result files")
+parser.add_argument("--ftol", type=float, default=1e-8, help="Relative tolerance of VMLMB on the objective (default 1e-8); "
+                    "results with another value are saved in results/realdata/<datares>-ftol<value>")
 args, remaining = parser.parse_known_args()
 # Remove parsed args so Hydra doesn't complain.
 sys.argv = [sys.argv[0]] + remaining
@@ -22,6 +24,7 @@ DATARES = args.datares
 MU_SMOOTHS = args.mu_smooth
 MU_SPARSES = args.mu_sparse
 OVERWRITE = args.overwrite
+FTOL = args.ftol
 if DATA is None:
     raise ValueError("Missing --data argument for real data path")
 
@@ -160,7 +163,8 @@ def main(cfg):
 
     mdrex = MDREX(y=y, rot=rot, psf=psf_crop, mask=mask, lbda=lbda, model_state=model_state, **cfg_model)
 
-    outdir = ROOT / "results" / "realdata" / DATARES
+    # non-default ftol: separate folder, so as not to mix (or skip) results obtained with ftol=1e-8
+    outdir = ROOT / "results" / "realdata" / (DATARES if FTOL == 1e-8 else f"{DATARES}-ftol{FTOL:g}")
     outdir.mkdir(parents=True, exist_ok=True)
 
     # Data saved once (not duplicated in every hyperparameter file)
@@ -194,12 +198,13 @@ def main(cfg):
                 continue
             print(f"Running mu_smooth={mu_smooth:g}, mu_sparse={mu_sparse:g}")
             xdisc_0 = np.zeros((C, H, W))
-            (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_sparse, mu_smooth)
+            (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_sparse, mu_smooth, ftol=FTOL)
             np.savez(
                 outfile,
                 x=xdisc_opt,
                 mu_smooth=mu_smooth,
                 mu_sparse=mu_sparse,
+                ftol=FTOL,
                 fx=fx,
                 status=str(status),
                 rotation_deg=rotation_deg,
