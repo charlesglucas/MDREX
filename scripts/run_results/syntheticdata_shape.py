@@ -5,10 +5,10 @@ import argparse
 # Parse a few command-line options before Hydra consumes the rest.
 # This allows launching multiple processes (one per GPU) with different parameters.
 parser = argparse.ArgumentParser(add_help=False)
-parser.add_argument("--mu-smooth", type=float, default=None, help="Regularization weight smoothness")
-parser.add_argument("--mu-sparse", type=float, default=None, help="Regularization weight sparsity")
-parser.add_argument("--shape", type=str, default=None, help="Shape")
+parser.add_argument("--mu-smooth", type=float, default=None, help="Regularization weight smoothness (overrides grid search)")
+parser.add_argument("--mu-sparse", type=float, default=None, help="Regularization weight sparsity (overrides grid search)")
 parser.add_argument("--out", type=str, default=None, help="Output NPZ path (overrides default naming)")
+parser.add_argument("--shape", type=str, default="spiral", choices=["medium_ellipse", "spiral", "circle"], help="Geometry to reconstruct")
 args, remaining = parser.parse_known_args()
 # Remove parsed args so Hydra doesn't complain.
 sys.argv = [sys.argv[0]] + remaining
@@ -101,73 +101,71 @@ def main(cfg):
     path_coronograph = ROOT / "data/coronograph"
     k1k2_path = os.path.join(path_coronograph,"sphere_irdis_k1_k2_coronagraph_transmission_map.fits")
     with fits.open(k1k2_path, memmap=False) as hdul:
-            mask = np.array(hdul[0].data, dtype=np.float32)
+        mask = np.array(hdul[0].data, dtype=np.float32)
     deltaH = (mask.shape[1] - H) // 2; deltaW = (mask.shape[2] - W) // 2; 
     mask = mask[:, deltaH:deltaH+H, deltaW:deltaW+W] # (C, H, W)
     mask = torch.tensor(mask, device=device) # (C, H, W)
     torch.cuda.empty_cache()
-    
-    shape = SHAPE
-    flux = 5e-6
-    
-    x_opt = np.zeros((6, 10, 256, 256), dtype=np.float32)
-    
-    repeatlist = [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                  [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0],
-                  [1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
-    
-    for i in range(6):
-        new_repeats = repeatlist[i]
 
-        # ------------------------------------------------------------
-        # 2. Set-up EXOMILD coniguration and load pre-trained weights
-        # ------------------------------------------------------------
+    # ------------------------------------------------------------
+    # 2. Set-up EXOMILD coniguration and load pre-trained weights
+    # ------------------------------------------------------------
 
-        ## Data-fidelity term
-        cfg_model = cfg.model
-        # cfg_model.repeats = [1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0]
-        cfg_model.repeats = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-        cfg_model.use_dataparallel = False
-        cfg_model.batch_size = 256
-        cfg_model.n_channels = 2
-        # ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/1_asdi/2024-11-09_20-10-01/banger_ms_bs16_lr5e-4_unetnormal_aug_111_100_100_100_seed5/ckpt/ckpt_40000.pt"
-        ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/exomild_H2/ckpt/ckpt_40000.pt"
-        print(f"Loading checkpoint {ckpt_path}")
-        # new_repeats = [1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0]
-        # new_repeats = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-        keep_indices = [i for i, v in enumerate(new_repeats) if v == 1]
-        print("Conserved blocks :", keep_indices)
-        state = torch.load(ckpt_path, map_location=device)["net"]
-        state = {k.replace(".module.", "."): v for k, v in state.items()}
-        state_cleaned = {}
-        BLOCK_PREFIX = "model.blocks."   
-        for key, val in state.items():
-            if key.startswith(BLOCK_PREFIX):
-                parts = key[len(BLOCK_PREFIX):].split(".")
-                idx = int(parts[0])
-                if idx in keep_indices:
-                    state_cleaned[key] = val
-            else:
+    ## Data-fidelity term
+    cfg_model = cfg.model
+    # cfg_model.repeats = [1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0]
+    # cfg_model.repeats = [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0]
+    # cfg_model.repeats = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    cfg_model.repeats = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    cfg_model.use_dataparallel = False
+    cfg_model.batch_size = 256 # None
+    cfg_model.n_channels = 2
+    # ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/1_asdi/2024-11-09_20-10-01/banger_ms_bs16_lr5e-4_unetnormal_aug_111_100_100_100_seed5/ckpt/ckpt_40000.pt"
+    ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/exomild_H2/ckpt/ckpt_40000.pt"
+    print(f"Loading checkpoint {ckpt_path}")
+    # new_repeats = [1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0]
+    new_repeats = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    # new_repeats = [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0]
+    # new_repeats = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    keep_indices = [i for i, v in enumerate(new_repeats) if v == 1]
+    print("Conserved blocks :", keep_indices)
+    state = torch.load(ckpt_path, map_location=device)["net"]
+    state = {k.replace(".module.", "."): v for k, v in state.items()}
+    state_cleaned = {}
+    BLOCK_PREFIX = "model.blocks."   
+    for key, val in state.items():
+        if key.startswith(BLOCK_PREFIX):
+            parts = key[len(BLOCK_PREFIX):].split(".")
+            idx = int(parts[0])
+            if idx in keep_indices:
                 state_cleaned[key] = val
-        print("Conserved weights :", len(state_cleaned), "out of", len(state))
-        cfg_model.repeats = new_repeats
-        cfg_dict = dict(cfg_model)
-        cfg_dict.pop('name', None)
-        cfg_dict.pop('ckpt', None)
-        model = get_model(name="exomild", ckpt=None, **cfg_dict)
-        keys_to_remove = [k for k in state_cleaned.keys() if "weights_terms" in k or "features_pipeline.transforms.0.D" in k]
-        for k in keys_to_remove:
-            state_cleaned.pop(k, None)
-        model.load_state_dict(state_cleaned, strict=False)
-        model_state = model.state_dict()
-        del model
+        else:
+            state_cleaned[key] = val
+    print("Conserved weights :", len(state_cleaned), "out of", len(state))
+    cfg_model.repeats = new_repeats
+    cfg_dict = dict(cfg_model)
+    cfg_dict.pop('name', None)
+    cfg_dict.pop('ckpt', None)
+    model = get_model(name="exomild", ckpt=None, **cfg_dict)
+    keys_to_remove = [k for k in state_cleaned.keys() if "weights_terms" in k or "features_pipeline.transforms.0.D" in k]
+    for k in keys_to_remove:
+        state_cleaned.pop(k, None)
+    model.load_state_dict(state_cleaned, strict=False)
+    model_state = model.state_dict()
+    del model
 
-        # ------------------------------------------------------------
-        # 3. Ground truth loading
-        # ------------------------------------------------------------
+    # ------------------------------------------------------------
+    # 3. Ground truth loading
+    # ------------------------------------------------------------
 
-        mdrex = MDREX(y=y, rot=rot, psf=psf_crop, mask=mask, lbda=lbda, model_state=model_state, **cfg_model)
-        
+    mdrex = MDREX(y=y, rot=rot, psf=psf_crop, mask=mask, lbda=lbda, model_state=model_state, **cfg_model)
+    
+    # Same as syntheticdata_all.py but only the geometry SHAPE (--shape) is reconstructed; x_opt keeps
+    # the (flux, angle, shape) layout of syntheticdata_all.py (other shapes left at zero)
+    x_opt = np.zeros((3, 10, 3, 256, 256), dtype=np.float32)
+    for (s, shape) in enumerate(["medium_ellipse", "spiral", "circle"]):
+        if shape != SHAPE:
+            continue
         for (a, angle) in enumerate(range(0, 325, 36)):
             path_disk = ROOT / f"data/synthetic_disks/{shape}/"
             filename = f"hid_fake_disk_image_{shape}_{angle}degrees.fits"
@@ -176,19 +174,20 @@ def main(cfg):
             if data.dtype.byteorder not in ('=', '|'):
                 data = data.byteswap().view(data.dtype.newbyteorder('='))
             datadisk = data[513-128:513+128, 513-128:513+128]
-            with torch.no_grad():
-                xdisc = np.zeros((C, H, W))
-                x_gt = flux*torch.tensor(datadisk, dtype=torch.float32, device=device) 
-                x_gt = x_gt.unsqueeze(0).repeat(C, 1, 1)
-                data = mdrex.forward_model(x_gt) + y 
-                (xdisc, fx, gx, status) = mdrex.run_bfgs(xdisc, data, MU_SPARSE, MU_SMOOTH)
-                x_opt[i, a, :, :] = np.mean(xdisc, axis=0)
+            for (f, flux) in enumerate([1e-6, 5e-6, 1e-5]):
+                with torch.no_grad():
+                    xdisc = np.zeros((C, H, W))
+                    x_gt = flux*torch.tensor(datadisk, dtype=torch.float32, device=device) 
+                    x_gt = x_gt.unsqueeze(0).repeat(C, 1, 1)
+                    data = mdrex.forward_model(x_gt) + y 
+                    (xdisc, fx, gx, status) = mdrex.run_bfgs(xdisc, data, MU_SPARSE, MU_SMOOTH)
+                    x_opt[f, a, s, :, :] = np.mean(xdisc, axis=0)
        
     def mu_to_str(mu):  # 1e6 -> "1e6", 5e5 -> "5e5" (int(log10) would map 5e5 to "1e5")
         mantissa, exp = f"{mu:.0e}".split("e")
         return f"{mantissa}e{int(exp)}"
 
-    outdir = Path("results") / f"distributions_5em6" / f"{shape}_musmooth{mu_to_str(MU_SMOOTH)}_musparse{mu_to_str(MU_SPARSE)}"
+    outdir = Path("results") / "mdrex_results" / f"musmooth{mu_to_str(MU_SMOOTH)}_musparse{mu_to_str(MU_SPARSE)}_{SHAPE}"
     outdir.mkdir(parents=True, exist_ok=True)
     outfile = outdir / "x_opt.fits"
     fits.writeto(outfile, x_opt, overwrite=True)
