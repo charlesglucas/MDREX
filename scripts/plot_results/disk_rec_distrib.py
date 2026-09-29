@@ -134,6 +134,10 @@ def main(cfg):
     for k in range(6):
         i, c = divmod(k, 3)
         ims[i, c] = axs[i, c].imshow(np.abs(x_mdrex_mean[k] - x_gt_mean[k])/flux, cmap='gray', vmin=0, vmax=.15)
+        # PSNR on the whole image, mean +- std over the angles (same values as in the table)
+        axs[i, c].text(0.03, 0.97, f"PSNR = {mean_vals_whole[k]:.2f} $\\pm$ {std_vals_whole[k]:.2f} dB",
+                       transform=axs[i, c].transAxes, ha="left", va="top", color="white", fontsize=9,
+                       bbox=dict(facecolor="black", alpha=0.6, edgecolor="none", pad=2))
         axs[i, c].set_xticks([])
         axs[i, c].set_yticks([])
         for spine in axs[i, c].spines.values():
