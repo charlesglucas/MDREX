@@ -22,6 +22,8 @@ from utils.rotation import BatchRotationOperator
 # itself and SURE selects x = 0. The divergence saved in the result files (div_est) is reused as is.
 #   W_REF = "y"  : C_inv estimated on y (residual at x = 0), usable on real data
 #   W_REF = "gt" : C_inv estimated on y - A x_gt (nuisance only), oracle
+#   W_REF = "pilot": C_inv estimated on y - A x_hat(mu_0), where mu_0 minimizes the SURE computed with
+#                    W_REF = "y" (the disk is removed before estimating the covariance), usable on real data
 # The MSE (reference) is always computed with the oracle metric W_gt.
 W_REF = "y"
 
@@ -101,14 +103,22 @@ def mahalanobis(pc, C_inv):
 
 
 @torch.no_grad()
-def fixed_metric_terms(path, files, mu_smooth_vals, mu_sparse_vals, device):
-    """Data term with fixed W_REF and MSE with fixed W_gt, cached in the results folder."""
-    cache = path / f"sure_fixedW_{W_REF}.npz"
+def fixed_metric_terms(path, files, mu_smooth_vals, mu_sparse_vals, device, DE=None, w_ref=None):
+    """Data term with fixed metric w_ref (default W_REF) and MSE with fixed W_gt, cached in the results
+    folder. DE (2 * divergence) is needed for w_ref = "pilot" (SURE with C^y to find mu_0)."""
+    w_ref = W_REF if w_ref is None else w_ref
+    cache = path / f"sure_fixedW_{w_ref}.npz"
     if cache.exists():
         c = np.load(cache)
         if list(c["mu_smooth"]) == mu_smooth_vals and list(c["mu_sparse"]) == mu_sparse_vals:
             print(f"Loading cached fixed-W terms from {cache}")
             return c["data_term"], c["mse"], int(c["N"])
+    if w_ref == "pilot":
+        # 1st pass: SURE with C^y, its minimizer mu_0 gives the pilot reconstruction
+        DA_y, _, N = fixed_metric_terms(path, files, mu_smooth_vals, mu_sparse_vals, device, w_ref="y")
+        k0, j0 = np.unravel_index(np.argmin(DA_y - N + DE), DA_y.shape)
+        f0 = [f for f, ms, mp in files if (ms, mp) == (mu_smooth_vals[k0], mu_sparse_vals[j0])][0]
+        print(f"Pilot: mu_0 = ({mu_smooth_vals[k0]:.0e}, {mu_sparse_vals[j0]:.0e})")
 
     forward_model, to_patches, centered = load_forward_model(device)
     data = np.load(path / "data.npz")
@@ -116,7 +126,13 @@ def fixed_metric_terms(path, files, mu_smooth_vals, mu_sparse_vals, device):
     x_gt = torch.tensor(data["x_gt"], device=device)
     Ax_gt = forward_model(x_gt)
     C_inv_gt = shrinkage_cov_inv(centered(to_patches(y - Ax_gt)))
-    C_inv = C_inv_gt if W_REF == "gt" else shrinkage_cov_inv(centered(to_patches(y)))
+    if w_ref == "gt":
+        C_inv = C_inv_gt
+    elif w_ref == "pilot":  # covariance of the residual of the pilot reconstruction (disk removed)
+        x0 = torch.tensor(np.load(f0)["x"], dtype=torch.float32, device=device)
+        C_inv = shrinkage_cov_inv(centered(to_patches(y - forward_model(x0))))
+    else:
+        C_inv = shrinkage_cov_inv(centered(to_patches(y)))
 
     DA = np.zeros((len(mu_smooth_vals), len(mu_sparse_vals)))
     MSE = np.zeros((len(mu_smooth_vals), len(mu_sparse_vals)))
@@ -185,7 +201,7 @@ def main(cfg):
         DE[k, j] = data["div_est"]   # already 2 * divergence
 
     # --- data term and MSE with a fixed metric, then SURE = data term - N + 2 div ---
-    DA, MSE, N = fixed_metric_terms(path, files, mu_smooth_vals, mu_sparse_vals, device)
+    DA, MSE, N = fixed_metric_terms(path, files, mu_smooth_vals, mu_sparse_vals, device, DE=DE)
     SURE = DA - N + DE
 
     # Tick labels from the actual grid values: rows (axis 0, y) = mu_smooth, columns (axis 1, x) = mu_sparse
