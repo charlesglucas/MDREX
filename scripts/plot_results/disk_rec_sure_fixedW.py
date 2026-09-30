@@ -25,7 +25,7 @@ from utils.rotation import BatchRotationOperator
 #   W_REF = "pilot": C_inv estimated on y - A x_hat(mu_0), where mu_0 minimizes the SURE computed with
 #                    W_REF = "y" (the disk is removed before estimating the covariance), usable on real data
 # The MSE (reference) is always computed with the oracle metric W_gt.
-W_REF = "y"
+W_REF = "pilot"
 
 
 # ------------------------------------------------------------
@@ -298,6 +298,26 @@ def main(cfg):
     fig.tight_layout()
     fig.savefig(f"figures/grids_{shape}_{flux}_fixedC{W_REF}.pdf")
     plt.show()
+
+    if W_REF == "pilot":
+        # refined MC-SURE alone (no MSE row), same layout as the bottom panel above, to be placed under
+        # the MSE / MC-SURE (C^y) figure in the paper
+        fig_r = plt.figure(figsize=(5, 4))
+        ax3 = fig_r.add_subplot(1, 1, 1)
+        im3 = ax3.imshow(SURE_disp, cmap="RdBu_r")
+        ax3.set_title(r"$\mathrm{Refined\ MC-SURE}$", fontsize=18)
+        cbar3 = fig_r.colorbar(im3, ax=ax3, shrink=1)
+        cbar3.ax.tick_params(labelsize=12)
+        ax3.set_xticks(np.arange(s2)); ax3.set_xticklabels(labels_sparse, fontsize=12)
+        ax3.set_yticks(np.arange(s1)); ax3.set_yticklabels(labels_smooth, fontsize=12)
+        ax3.set_ylabel(r"$\mu_{\rm smooth}$", fontsize=14); ax3.set_xlabel(r"$\mu_{\rm sparse}$", fontsize=14)
+        ax3.tick_params(axis='both', which='major', labelsize=12)
+        ax3.plot(j_mse_best, k_mse_best, "rx", markersize=12, markeredgewidth=2)
+        ax3.plot(j_sure_best, k_sure_best, "m+", markersize=12, markeredgewidth=2)
+        ax3.set_aspect('equal', adjustable='box')
+        fig_r.tight_layout()
+        fig_r.savefig(f"figures/grids_{shape}_{flux}_refinedSURE.pdf")
+        plt.show()
 
 
 if __name__ == "__main__":
