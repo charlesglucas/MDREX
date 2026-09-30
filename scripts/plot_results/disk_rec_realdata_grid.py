@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-from matplotlib.colors import LinearSegmentedColormap, Normalize
+from matplotlib.colors import AsinhNorm, LinearSegmentedColormap, LogNorm, Normalize, PowerNorm
 from matplotlib.cm import ScalarMappable
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from astropy.io import fits
@@ -314,15 +314,31 @@ def plot_grid(result, entries, e_smooth, e_sparse, rotation_deg, title):
 # ------------------------------------------------------------
 # Figure 2: chosen couple, x and PSF-convolved x in RGB (as in disk_rec_realdata.py)
 # ------------------------------------------------------------
-def to_rgb(data1, data2):
-    vmin = min(data1.min(), data2.min())
+STRETCH = "log"        # display stretch of the RGB figures: "linear", "sqrt", "log" or "asinh"
+LOG_RANGE = 3e1        # "log": dynamic range, values below vmax / LOG_RANGE are shown in black
+ASINH_WIDTH = 0.05     # "asinh": linear up to ASINH_WIDTH * vmax, logarithmic above (Lupton et al. 2004)
+PANEL_WIDTH = 4.4       # width (inches) of the saved RGB figures, identical for all the stars
+
+
+def to_rgb(data1, data2, gamma=0.5):
+    """RGB composite of the two channels with the stretch STRETCH (square root or log enhance the faint parts),
+    applied to the image and returned for the colorbars so that both are consistent."""
+    # vmin = 0: small negative values (bicubic north alignment, negative wings of the centered PSF) are shown
+    # in black; with the square root, a negative vmin would lift the zero level to grey
+    vmin = 0.0
     vmax = max(data1.max(), data2.max())
-    d1 = (data1 - vmin) / (vmax - vmin)
-    d2 = (data2 - vmin) / (vmax - vmin)
+    if STRETCH == "log":
+        norm = LogNorm(vmin=vmax / LOG_RANGE, vmax=vmax, clip=True)
+    elif STRETCH == "asinh":
+        norm = AsinhNorm(linear_width=ASINH_WIDTH * vmax, vmin=vmin, vmax=vmax, clip=True)
+    else:
+        norm = PowerNorm(gamma=gamma if STRETCH == "sqrt" else 1.0, vmin=vmin, vmax=vmax, clip=True)
+    d1 = np.ma.filled(norm(np.maximum(data1, norm.vmin)), 0.0)
+    d2 = np.ma.filled(norm(np.maximum(data2, norm.vmin)), 0.0)
     color_map = np.array([[0.0, 0.5, 1.0],
                           [1.0, 0.5, 0.0]], dtype=np.float32)
     rgb = d1[..., None] * color_map[0] + d2[..., None] * color_map[1]
-    return np.clip(rgb, 0.0, 1.0), Normalize(vmin=vmin, vmax=vmax)
+    return np.clip(rgb, 0.0, 1.0), norm
 
 
 def plot_couple(result, f, mu_smooth, mu_sparse, rotation_deg, wavelengths, title, psf):
@@ -361,15 +377,28 @@ def plot_couple(result, f, mu_smooth, mu_sparse, rotation_deg, wavelengths, titl
             cbar = fig.colorbar(ScalarMappable(norm, cmap), cax=cax, orientation=orientation)
             # integer mantissas (0, 1, 2, ... x 10^n) as in disk_rec_realdata.py: tick labels of constant
             # width, so that the tight bounding box (hence the size in the paper) is the same for all stars
-            cbar.locator = ticker.MultipleLocator(10 ** np.floor(np.log10(norm.vmax)))
-            cbar.formatter = ticker.ScalarFormatter(useMathText=True)
-            cbar.formatter.set_powerlimits((0, 0))
+            # integer mantissas within [0, vmax] only (ticks outside would be piled up at the ends by the stretch)
+            step = 10 ** np.floor(np.log10(norm.vmax))
+            cbar.locator = (ticker.LogLocator(base=10) if STRETCH == "log"
+                            else ticker.FixedLocator(np.arange(0, norm.vmax * (1 + 1e-9), step)))
+            if STRETCH == "log":
+                cbar.formatter = ticker.LogFormatterSciNotation(base=10)
+            else:
+                cbar.formatter = ticker.ScalarFormatter(useMathText=True)
+                cbar.formatter.set_powerlimits((0, 0))
             cbar.update_ticks()
             cbar.ax.tick_params(labelsize=11)
             cbar.set_label(label + unit, fontsize=13)
     # fig.suptitle(rf"$\mu_{{smooth}}={tex_mu(mu_smooth)},\ \mu_{{sparse}}={tex_mu(mu_sparse)}$", fontsize=12, y=0.99)
     outfile = ROOT / "figures" / f"{result}_musmooth{fmt_mu(mu_smooth)}_musparse{fmt_mu(mu_sparse)}_RGB.pdf"
-    fig.savefig(outfile, dpi=300, bbox_inches="tight", pad_inches=0.1)
+    # tight bounding box widened (symmetrically) to a common width, so that all the panels of the paper have
+    # the same size whatever the tick labels (e.g. 10^-7 vs 10^0 with the log stretch)
+    from matplotlib.transforms import Bbox
+    fig.canvas.draw()
+    tb = fig.get_tightbbox(fig.canvas.get_renderer()).padded(0.1)
+    width = max(tb.width, PANEL_WIDTH)
+    x0 = tb.x0 - (width - tb.width) / 2
+    fig.savefig(outfile, dpi=300, bbox_inches=Bbox.from_extents(x0, tb.y0, x0 + width, tb.y1))
     print(f"Saved {outfile}")
     return fig
 
