@@ -12,5 +12,6 @@ launch() {  # launch <shape> "<mu_smooth values>" "<mu_sparse values>"
       --shape $1 --angle 0 --mu-smooth $2 --mu-sparse $3"
 }
 
-launch spiral "1e6 5e6 1e7" "5e4 1e5 5e5"
-launch circle "5e6 1e7 5e7" "5e4 1e5 5e5"
+# done: spiral "1e6 5e6 1e7" x "5e4 1e5 5e5", circle "5e6 1e7 5e7" x "5e4 1e5 5e5"
+# spiral: the optimum at 5e-6 and 1e-5 is at the edge mu_sparse = 5e4 -> smaller mu_sparse
+launch spiral "1e6 5e6 1e7" "1e4 2e4"

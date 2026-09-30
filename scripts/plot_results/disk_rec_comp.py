@@ -128,7 +128,7 @@ def main(cfg):
     # Hyperparameters (mu_smooth, mu_sparse) adapted to each shape (SURE grids)
     mdrex_dirs = {"medium_ellipse": "musmooth1e6_musparse1e6",
                   "spiral": "musmooth1e6_musparse1e5",
-                  "circle": "musmooth1e7_musparse1e5"}
+                  "circle": "musmooth5e6_musparse1e5_circle"}
     x_mdrex = np.zeros_like(x_gt_store)
     for (s, shape) in enumerate(["medium_ellipse", "spiral", "circle"]):
         path = ROOT / f"results/mdrex_results/{mdrex_dirs[shape]}/x_opt.fits"
