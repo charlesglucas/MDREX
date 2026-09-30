@@ -112,18 +112,22 @@ def main(cfg):
     print("\\end{table*}")
 
 
-    ## Plot reconstruction error, averaged over the disk angles
-    # each reconstruction is derotated by its angle before averaging. The ground truths are derotated
-    # and averaged the same way, so that the interpolation blur is the same on both sides.
+    ## Plot reconstruction error for a single parallactic angle, the same for the 6 configurations.
+    # ANGLE = None: most representative angle, i.e. whose PSNR is the closest to the mean over the angles
+    # (deviation normalized by the std over the angles, summed over the 6 configurations).
+    # The PSNR displayed in each panel is still the mean +- std over all the angles.
+    # 144 deg: most representative angle over both geometries of the paper (ellipse (1e6,1e6), circle (5e6,1e5))
+    ANGLE = 144
     angles = list(range(0, 325, 36))
-    x_mdrex_mean = np.stack([
-        np.mean([derotate(x_mdrex[k][a], angle) for (a, angle) in enumerate(angles)], axis=0)
-        for k in range(6)
-    ])
-    x_gt_mean = np.stack([
-        np.mean([derotate(x_gt_store[k][a], angle) for (a, angle) in enumerate(angles)], axis=0)
-        for k in range(6)
-    ])
+    psnr_angles = -20*np.log10(NMSE_mdrex)   # (6, 10)
+    if ANGLE is None:
+        dev = np.abs(psnr_angles - psnr_angles.mean(1, keepdims=True)) / psnr_angles.std(1, keepdims=True)
+        a0 = int(np.argmin(dev.sum(0)))
+    else:
+        a0 = angles.index(ANGLE)
+    print(f"Displayed parallactic angle: {angles[a0]} deg")
+    x_mdrex_mean = np.stack([x_mdrex[k][a0] for k in range(6)])
+    x_gt_mean = np.stack([x_gt_store[k][a0] for k in range(6)])
     titles = ["1-folded", "2-folded", "4-folded"]
     row_labels = ["1 resolution", "4 resolutions"]
 

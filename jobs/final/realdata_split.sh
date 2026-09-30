@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # One job per (mu_smooth:mu_sparse) couple (add --overwrite to recompute existing result files).
-# RY Lup: less sparsity than (1e7,1e6) / (1e6,1e7), which crush the disk
-COUPLES=(1e6:1e5 1e6:5e5 1e7:1e5 1e7:5e5 5e7:1e5 5e7:5e5)
+# RY Lup: less regularization, the couples computed so far capture at most 40% of the disk signal (cADI)
+# done: 1e6:1e5 1e6:5e5 1e6:1e7 1e7:1e5 1e7:5e5 1e7:1e6 5e7:1e5 5e7:5e5
+COUPLES=(1e6:5e4 1e6:1e4 1e5:1e5 1e5:5e4 1e5:1e4)
 DATA='RY_lup/2016-04-16/IRDIS/data/'
 BAND='h2_h3'   # RY Lup observed in DB_H23 (lambda = 1.593 / 1.667 um)
 DATARES='RY_lup-2016-04-16'

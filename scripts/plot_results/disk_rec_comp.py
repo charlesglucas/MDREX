@@ -53,16 +53,18 @@ def convolve_stack(x, psf):
     return F.conv2d(x_t, weight=psf, padding="same").reshape(shape).numpy()
 
 
-def compute_psnr(x_gt, x_rexpaco, x_mdrex, support_threshold=2e-7):
-    """PSNR = -20 log10(N-RMSE) on the whole image and on the support (x_gt > threshold),
-    for every (flux, angle, shape). Returns a dict of (3, 10, 3) arrays."""
+def compute_psnr(x_gt, x_rexpaco, x_mdrex, support_threshold=0.04):
+    """PSNR = -20 log10(N-RMSE) on the whole image and on the support, for every (flux, angle, shape).
+    Support: x_gt > support_threshold * max(x_gt), a threshold RELATIVE to the maximum of the disk, so that
+    the support is the same for the three contrasts (0.04 = former absolute threshold 2e-7 at alpha = 5e-6).
+    Returns a dict of (3, 10, 3) arrays."""
     nrmse = {k: np.zeros((3, 10, 3), dtype=np.float32)
              for k in ["rexpaco", "mdrex", "rexpaco_supp", "mdrex_supp"]}
     for s in range(3):
         for a in range(10):
             for f in range(3):
                 gt = x_gt[f, a, s]
-                mask = gt > support_threshold
+                mask = gt > support_threshold * gt.max()
                 for name, x in [("rexpaco", x_rexpaco[f, a, s]), ("mdrex", x_mdrex[f, a, s])]:
                     nrmse[name][f, a, s] = np.sqrt(np.sum((gt - x)**2) / np.sum(gt**2))
                     nrmse[name + "_supp"][f, a, s] = np.sqrt(np.sum((gt[mask] - x[mask])**2) / np.sum(gt[mask]**2))
@@ -178,8 +180,21 @@ def main(cfg):
     print_psnr_table(psnr, psnr_conv,
                      "{\\bf Comparison of performances.} PSNR (whole image and support) averaged over parallactic "
                      "angles for MD-REX and REXPACO, computed on the reconstructions $\\widehat{\\mathbf{x}}$ and on "
-                     "the reconstructions convolved by the PSF $\\mathbf{H} * \\widehat{\\mathbf{x}}$. " + mu_caption
+                     "the reconstructions convolved by the PSF $\\mathbf{H} * \\widehat{\\mathbf{x}}$; the support is the set of "
+                     "pixels where the ground truth exceeds 4\\% of its maximum. " + mu_caption
                      + " The best method is in bold.")
+
+    # Same table with a single couple (mu_smooth, mu_sparse) for all the geometries and contrasts, as REXPACO
+    fixed_dir = "musmooth1e7_musparse1e5"
+    with fits.open(ROOT / f"results/mdrex_results/{fixed_dir}/x_opt.fits") as hdul:
+        x_mdrex_fixed = hdul[0].data
+    psnr_fixed = compute_psnr(x_gt_store, x_rexpaco, x_mdrex_fixed)
+    psnr_conv_fixed = compute_psnr(x_gt_conv, x_rexpaco_conv, convolve_stack(x_mdrex_fixed, psf))
+    print_psnr_table(psnr_fixed, psnr_conv_fixed,
+                     "{\\bf Comparison of performances with fixed hyperparameters.} Same as "
+                     "Table~\\ref{table:PSNR} with the same hyperparameters "
+                     f"$\\boldsymbol{{\\mu}} = {mu_latex(fixed_dir)}$ for all the geometries and contrasts. "
+                     "The best method is in bold.", label="table:PSNR-fixed")
 
     # ======================================================================
     # 5. GROUND-TRUTH SHAPES
