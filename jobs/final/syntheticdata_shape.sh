@@ -11,6 +11,6 @@ launch() {  # launch <shape> <mu_smooth> <mu_sparse>
       --mu-smooth $2 --mu-sparse $3 --shape $1"
 }
 
-# best compromise over the 3 contrasts on the single-angle grids (results/grid_shape/*_angle0)
-launch spiral 5e6 1e5
-launch circle 5e6 1e5
+# done: spiral 5e6 1e5, circle 5e6 1e5 (best compromise over the 3 contrasts on the single-angle grids)
+# same couple for the ellipse: a single couple for all the geometries, as for REXPACO
+launch medium_ellipse 5e6 1e5

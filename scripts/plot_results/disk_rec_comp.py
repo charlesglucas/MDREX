@@ -69,28 +69,45 @@ def compute_psnr(x_gt, x_rexpaco, x_mdrex, support_threshold=2e-7):
     return {k: -20 * np.log10(v) for k, v in nrmse.items()}
 
 
-def print_psnr_table(psnr, caption):
-    """LaTeX table: PSNR mean +- std over parallactic angles, whole image and support."""
-    mean = {k: np.mean(v, 1) for k, v in psnr.items()}
-    std = {k: np.std(v, 1) for k, v in psnr.items()}
+def print_psnr_table(psnr, psnr_conv, caption, label="table:PSNR"):
+    """LaTeX table: PSNR mean +- std over parallactic angles, whole image and support, computed on the
+    reconstructions x (psnr) and on the reconstructions convolved by the PSF (psnr_conv). For each shape:
+    REXPACO / MD-REX on x, then on H * x; the best method of each column is in bold."""
     shapes = ["Ellipse", "Spiral", "Circle"]
     contrasts = ["$\\alpha = 1\\cdot 10^{-6}$", "$\\alpha = 5\\cdot 10^{-6}$", "$\\alpha = 1\\cdot10^{-5}$"]
+    quantities = [(psnr, "$\\widehat{\\mathbf{x}}$"), (psnr_conv, "$\\mathbf{H} * \\widehat{\\mathbf{x}}$")]
 
-    def cells(k, i):
-        return " & ".join([f"${mean[k][j,i]:.2f} \\pm {std[k][j,i]:.2f}$" for j in range(3)])
+    def cells(p, method, i):
+        """REXPACO or MD-REX row: whole image then support, best of the two methods in bold."""
+        out = []
+        for key in ["", "_supp"]:
+            for j in range(3):
+                mean = {m: np.round(np.mean(p[m + key], 1)[j, i], 2) for m in ["rexpaco", "mdrex"]}
+                std = np.std(p[method + key], 1)[j, i]
+                other = "mdrex" if method == "rexpaco" else "rexpaco"
+                value = f"{mean[method]:.2f}"
+                if mean[method] > mean[other]:
+                    value = f"\\mathbf{{{value}}}"
+                out.append(f"${value} \\pm {std:.2f}$")
+        return " & ".join(out)
 
     print("\\begin{table*}[h!]")
     print("\\centering")
     print(f"\\caption{{{caption}}}")
-    print("\\begin{tabular}{llcccccc}")
+    print(f"\\label{{{label}}}")
+    print("\\begin{tabular}{lllcccccc}")
     print("\\hline")
-    print(" & & \\multicolumn{3}{c}{Whole image} & \\multicolumn{3}{c}{Support} \\\\")
-    print(" & & " + " & ".join(contrasts) + " & " + " & ".join(contrasts) + " \\\\")
+    print(" & & & \\multicolumn{3}{c}{Whole image} & \\multicolumn{3}{c}{Support} \\\\")
+    print(" & & & " + " & ".join(contrasts) + " & " + " & ".join(contrasts) + " \\\\")
     print("\\hline")
     for i, c in enumerate(shapes):
-        print(f"\\multirow{{2}}{{*}}{{{c}}} & REXPACO & {cells('rexpaco', i)} & {cells('rexpaco_supp', i)} \\\\")
-        print(f" & MD-REX & {cells('mdrex', i)} & {cells('mdrex_supp', i)} \\\\")
-    print("\\hline")
+        for k, (p, quantity) in enumerate(quantities):
+            first = f"\\multirow{{4}}{{*}}{{{c}}} " if k == 0 else " "
+            print(f"{first}& \\multirow{{2}}{{*}}{{{quantity}}} & REXPACO & {cells(p, 'rexpaco', i)} \\\\")
+            print(f" & & MD-REX & {cells(p, 'mdrex', i)} \\\\")
+            if k == 0:
+                print("\\cline{2-9}")
+        print("\\hline")
     print("\\end{tabular}")
     print("\\end{table*}")
     print()
@@ -127,7 +144,7 @@ def main(cfg):
 
     # Hyperparameters (mu_smooth, mu_sparse) adapted to each shape (SURE grids)
     mdrex_dirs = {"medium_ellipse": "musmooth1e6_musparse1e6",
-                  "spiral": "musmooth1e6_musparse1e5",
+                  "spiral": "musmooth5e6_musparse1e5_spiral",
                   "circle": "musmooth5e6_musparse1e5_circle"}
     x_mdrex = np.zeros_like(x_gt_store)
     for (s, shape) in enumerate(["medium_ellipse", "spiral", "circle"]):
@@ -146,24 +163,23 @@ def main(cfg):
     # ======================================================================
     # 4. PSNR TABLES (LaTeX)
     # ======================================================================
-    # Table 1: disks x
+    # PSNR on the disks x and on the disks convolved by the PSF (support: convolved ground truth > threshold)
     psnr = compute_psnr(x_gt_store, x_rexpaco, x_mdrex)
+    psnr_conv = compute_psnr(x_gt_conv, x_rexpaco_conv, x_mdrex_conv)
     def mu_latex(mdrex_dir):  # "musmooth1e7_musparse5e5" -> "(10^7, 5 \cdot 10^5)"
         vals = []
         for m, e in re.findall(r"mu(?:smooth|sparse)([0-9]+)e([0-9]+)", mdrex_dir):
-            vals.append(f"10^{{{e}}}" if m == "1" else f"{m} \\cdot 10^{{{e}}}")
+            vals.append(f"10^{{{e}}}" if m == "1" else f"{m}\\cdot 10^{{{e}}}")
         return f"({vals[0]}, {vals[1]})"
     names = {"medium_ellipse": "ellipse", "spiral": "spiral", "circle": "circle"}
-    mu_caption = "MD-REX uses " + ", ".join(
-        [f"$\\boldsymbol{{\\mu}} = {mu_latex(d)}$ for the {names[s]}" for s, d in mdrex_dirs.items()]) + "."
-    print_psnr_table(psnr, "{\\bf Comparison of performances.} PSNR (whole image and support) averaged over "
-                           "parallactic angles for MD-REX and REXPACO reconstructions. " + mu_caption)
-
-    # Table 2: disks convolved by the PSF (support: convolved ground truth > threshold)
-    psnr_conv = compute_psnr(x_gt_conv, x_rexpaco_conv, x_mdrex_conv)
-    print_psnr_table(psnr_conv, "{\\bf Comparison of performances on PSF-convolved disks.} PSNR (whole image and "
-                                "support) averaged over parallactic angles for MD-REX and REXPACO reconstructions "
-                                "convolved by the PSF. " + mu_caption)
+    mus = [f"$\\boldsymbol{{\\mu}} = {mu_latex(d)}$ for the {names[s]}" for s, d in mdrex_dirs.items()]
+    mu_caption = "MD-REX uses " + ", ".join(mus[:-1]) + " and " + mus[-1] + "."
+    # Single table: reconstructions x and reconstructions convolved by the PSF
+    print_psnr_table(psnr, psnr_conv,
+                     "{\\bf Comparison of performances.} PSNR (whole image and support) averaged over parallactic "
+                     "angles for MD-REX and REXPACO, computed on the reconstructions $\\widehat{\\mathbf{x}}$ and on "
+                     "the reconstructions convolved by the PSF $\\mathbf{H} * \\widehat{\\mathbf{x}}$. " + mu_caption
+                     + " The best method is in bold.")
 
     # ======================================================================
     # 5. GROUND-TRUTH SHAPES
