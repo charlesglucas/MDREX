@@ -112,22 +112,37 @@ def main(cfg):
     print("\\end{table*}")
 
 
-    ## Plot reconstruction error for a single parallactic angle, the same for the 6 configurations.
-    # ANGLE = None: most representative angle, i.e. whose PSNR is the closest to the mean over the angles
-    # (deviation normalized by the std over the angles, summed over the 6 configurations).
-    # The PSNR displayed in each panel is still the mean +- std over all the angles.
-    # 144 deg: most representative angle over both geometries of the paper (ellipse (1e6,1e6), circle (5e6,1e5))
-    ANGLE = 144
+    ## Plot reconstruction error
+    # ANGLE = "mean": averaged over the disk angles, each reconstruction and ground truth being derotated by
+    #                 its angle before averaging (same interpolation blur on both sides)
+    # ANGLE = <deg>:  a single parallactic angle; ANGLE = None: the most representative angle (PSNR closest to
+    #                 the mean over the angles, deviation normalized by the std, summed over the 6 configurations)
+    # The PSNR displayed in each panel is always the mean +- std over all the angles.
+    ANGLE = "mean"
     angles = list(range(0, 325, 36))
-    psnr_angles = -20*np.log10(NMSE_mdrex)   # (6, 10)
-    if ANGLE is None:
-        dev = np.abs(psnr_angles - psnr_angles.mean(1, keepdims=True)) / psnr_angles.std(1, keepdims=True)
-        a0 = int(np.argmin(dev.sum(0)))
+    if ANGLE == "mean":
+        x_mdrex_mean = np.stack([
+            np.mean([derotate(x_mdrex[k][a], angle) for (a, angle) in enumerate(angles)], axis=0)
+            for k in range(6)
+        ])
+        x_gt_mean = np.stack([
+            np.mean([derotate(x_gt_store[k][a], angle) for (a, angle) in enumerate(angles)], axis=0)
+            for k in range(6)
+        ])
     else:
-        a0 = angles.index(ANGLE)
-    print(f"Displayed parallactic angle: {angles[a0]} deg")
-    x_mdrex_mean = np.stack([x_mdrex[k][a0] for k in range(6)])
-    x_gt_mean = np.stack([x_gt_store[k][a0] for k in range(6)])
+        psnr_angles = -20*np.log10(NMSE_mdrex)   # (6, 10)
+        if ANGLE is None:
+            dev = np.abs(psnr_angles - psnr_angles.mean(1, keepdims=True)) / psnr_angles.std(1, keepdims=True)
+            a0 = int(np.argmin(dev.sum(0)))
+        else:
+            a0 = angles.index(ANGLE)
+        print(f"Displayed parallactic angle: {angles[a0]} deg")
+        x_mdrex_mean = np.stack([x_mdrex[k][a0] for k in range(6)])
+        x_gt_mean = np.stack([x_gt_store[k][a0] for k in range(6)])
+    err = np.abs(x_mdrex_mean - x_gt_mean) / flux
+    print("relative error percentiles 99 / 99.9 / max:", np.round([np.percentile(err, 99), np.percentile(err, 99.9), err.max()], 3))
+    # max of the colorbar: the error of the circle is larger than that of the ellipse
+    vmax = {"medium_ellipse": 0.15, "spiral": 0.15, "circle": 0.3}[shape]
     titles = ["1-folded", "2-folded", "4-folded"]
     row_labels = ["1 resolution", "4 resolutions"]
 
@@ -137,7 +152,7 @@ def main(cfg):
     ims = np.empty((2, 3), dtype=object)
     for k in range(6):
         i, c = divmod(k, 3)
-        ims[i, c] = axs[i, c].imshow(np.abs(x_mdrex_mean[k] - x_gt_mean[k])/flux, cmap='gray', vmin=0, vmax=.15)
+        ims[i, c] = axs[i, c].imshow(err[k], cmap='gray', vmin=0, vmax=vmax)
         # PSNR on the whole image, mean +- std over the angles (same values as in the table)
         axs[i, c].text(0.03, 0.97, f"PSNR = {mean_vals_whole[k]:.2f} $\\pm$ {std_vals_whole[k]:.2f} dB",
                        transform=axs[i, c].transAxes, ha="left", va="top", color="white", fontsize=9,

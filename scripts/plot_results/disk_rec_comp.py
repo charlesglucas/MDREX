@@ -14,6 +14,7 @@ import re
 import matplotlib.pyplot as plt
 
 import astropy.io.fits as fits
+from scipy.ndimage import affine_transform
 
 
 # ======================================================================
@@ -51,6 +52,15 @@ def convolve_stack(x, psf):
     shape = x.shape
     x_t = torch.from_numpy(np.ascontiguousarray(x, dtype=np.float32)).reshape(-1, 1, *shape[-2:])
     return F.conv2d(x_t, weight=psf, padding="same").reshape(shape).numpy()
+
+
+def derotate(img, angle_deg, center=(126.5, 126.5)):
+    """Rotate a disk back by its angle (bicubic), as in disk_rec_distrib.py: the synthetic disks rotate
+    around pixel (126.5, 126.5) of the 256x256 crop."""
+    t = np.deg2rad(angle_deg)
+    R = np.array([[np.cos(t), -np.sin(t)], [np.sin(t), np.cos(t)]])
+    c = np.array(center)
+    return affine_transform(img, R, offset=c - R @ c, order=3)
 
 
 def compute_psnr(x_gt, x_rexpaco, x_mdrex, support_threshold=0.04):
@@ -216,10 +226,22 @@ def main(cfg):
     fluxes = [1e-6, 5e-6, 1e-5]
     suffixes = ["1em6", "5em6", "1em5"]
 
+    # COMP_ANGLE = 0: first parallactic angle; COMP_ANGLE = "mean": reconstructions and ground truths derotated
+    # by their angle and averaged over the 10 angles (as in disk_rec_distrib.py), files suffixed "_mean"
+    COMP_ANGLE = "mean"
+    angles = list(range(0, 325, 36))
+
+    def select(arr):  # (flux, angle, shape, H, W) -> (flux, shape, H, W)
+        if COMP_ANGLE == "mean":
+            return np.mean([np.stack([np.stack([derotate(arr[f, a, s], ang) for s in range(3)]) for f in range(3)])
+                            for a, ang in enumerate(angles)], axis=0)
+        return arr[:, angles.index(COMP_ANGLE)]
+    mean_tag = "_mean" if COMP_ANGLE == "mean" else ""
+
     # Same comparison on x (tag "") and on x convolved by the PSF (tag "_conv")
     datasets = [
-        (x_gt_store, x_rexpaco, x_mdrex, ""),
-        (x_gt_conv, x_rexpaco_conv, x_mdrex_conv, "_conv"),
+        (select(x_gt_store), select(x_rexpaco), select(x_mdrex), ""),
+        (select(x_gt_conv), select(x_rexpaco_conv), select(x_mdrex_conv), "_conv"),
     ]
     for (gt_all, rex_all, md_all, tag) in datasets:
         for s, shape_id in enumerate(shape_ids):
@@ -231,17 +253,17 @@ def main(cfg):
                                 [fig.add_subplot(gs[2,0]), fig.add_subplot(gs[2,1])]])
 
                 # --- ligne du haut : vérité terrain centrée ---
-                vmin_top = min(rex_all[f,0,s].min(), md_all[f,0,s].min())
-                im0 = ax_gt.imshow(gt_all[f,0,s], cmap='hot', vmin=vmin_top, vmax=2*flux)
+                vmin_top = min(rex_all[f,s].min(), md_all[f,s].min())
+                im0 = ax_gt.imshow(gt_all[f,s], cmap='hot', vmin=vmin_top, vmax=2*flux)
                 ax_gt.set_title("Ground Truth")
 
                 # --- ligne du milieu : plage commune ---
-                im1 = axs[0,0].imshow(rex_all[f,0,s], cmap='hot', vmin=vmin_top, vmax=2*flux)
-                im2 = axs[0,1].imshow(md_all[f,0,s], cmap='hot', vmin=vmin_top, vmax=2*flux)
+                im1 = axs[0,0].imshow(rex_all[f,s], cmap='hot', vmin=vmin_top, vmax=2*flux)
+                im2 = axs[0,1].imshow(md_all[f,s], cmap='hot', vmin=vmin_top, vmax=2*flux)
 
                 # --- ligne du bas : plage symétrique commune ---
-                data1 = np.abs(rex_all[f,0,s] - gt_all[f,0,s])/flux
-                data2 = np.abs(md_all[f,0,s]   - gt_all[f,0,s])/flux
+                data1 = np.abs(rex_all[f,s] - gt_all[f,s])/flux
+                data2 = np.abs(md_all[f,s]   - gt_all[f,s])/flux
                 im3 = axs[1,0].imshow(data1, cmap='gray', vmin=0, vmax=1)
                 im4 = axs[1,1].imshow(data2, cmap='gray', vmin=0, vmax=1)
 
@@ -297,7 +319,7 @@ def main(cfg):
                 offset0.set_position((0.5, 1.02))
 
                 plt.savefig(
-                    f"figures/comp{tag}_{shape_id}_{suffix}_{mdrex_dirs[shape_id]}.pdf",
+                    f"figures/comp{tag}_{shape_id}_{suffix}_{mdrex_dirs[shape_id]}{mean_tag}.pdf",
                     dpi=300,
                     bbox_inches='tight',
                     bbox_extra_artists=[cbar0.ax.yaxis.get_offset_text(),
