@@ -28,6 +28,19 @@ from utils.rotation import BatchRotationOperator
 W_REF = "pilot"
 
 
+def sci_colorbar(cbar, nbins=4, decimals=2):
+    """Colorbar in scientific notation: common factor x10^n on top (as for the MSE), at most nbins + 1 round ticks
+    and the same number of decimals for all the colorbars, so that the panels are aligned in the paper."""
+    from matplotlib.ticker import MaxNLocator, FuncFormatter
+    vmin, vmax = cbar.mappable.get_clim()
+    e = int(np.floor(np.log10(max(abs(vmin), abs(vmax)))))
+    cbar.locator = MaxNLocator(nbins=nbins, steps=[1, 2, 2.5, 5, 10])
+    cbar.formatter = FuncFormatter(lambda v, pos: f"{v / 10**e:.{decimals}f}".replace("-", "\u2212"))
+    cbar.update_ticks()
+    cbar.ax.text(0.0, 1.02, rf"$\times 10^{{{e}}}$", transform=cbar.ax.transAxes, ha="left", va="bottom", fontsize=12)
+    cbar.ax.tick_params(labelsize=12)
+
+
 # ------------------------------------------------------------
 # Forward model and patch statistics (same as reconstruction/mdrex.py)
 # ------------------------------------------------------------
@@ -264,16 +277,7 @@ def main(cfg):
     im1 = ax1.imshow(MSE, cmap="RdBu_r")
     ax1.set_title(r"$\mathrm{MSE}$", fontsize=18)
     cbar1 = fig.colorbar(im1, ax=ax1, shrink=1)
-    cbar1_formatter = ScalarFormatter(useMathText=True)
-    cbar1_formatter.set_scientific(True)
-    cbar1_formatter.set_powerlimits((0, 0))
-    cbar1.ax.yaxis.set_major_formatter(cbar1_formatter)
-    cbar1.ax.yaxis.set_offset_position('right')
-    cbar1.ax.yaxis.get_offset_text().set_visible(True)
-    cbar1.ax.yaxis.get_offset_text().set_horizontalalignment('left')
-    cbar1.ax.yaxis.get_offset_text().set_verticalalignment('bottom')
-    cbar1.ax.yaxis.get_offset_text().set_fontsize(12)
-    cbar1.ax.tick_params(labelsize=12)
+    sci_colorbar(cbar1)
     ax1.set_xticks(np.arange(s2)); ax1.set_xticklabels(labels_sparse, fontsize=12)
     ax1.set_yticks(np.arange(s1)); ax1.set_yticklabels(labels_smooth, fontsize=12)
     ax1.set_ylabel(r"$\mu_{\rm smooth}$", fontsize=14); ax1.set_xlabel(r"$\mu_{\rm sparse}$", fontsize=14)
@@ -286,7 +290,7 @@ def main(cfg):
     im2 = ax2.imshow(SURE_disp, cmap="RdBu_r")
     ax2.set_title(r"$\mathrm{MC-SURE}$", fontsize=18)
     cbar2 = fig.colorbar(im2, ax=ax2, shrink=1)
-    cbar2.ax.tick_params(labelsize=12)
+    sci_colorbar(cbar2)
     ax2.set_xticks(np.arange(s2)); ax2.set_xticklabels(labels_sparse, fontsize=12)
     ax2.set_yticks(np.arange(s1)); ax2.set_yticklabels(labels_smooth, fontsize=12)
     ax2.set_ylabel(r"$\mu_{\rm smooth}$", fontsize=14); ax2.set_xlabel(r"$\mu_{\rm sparse}$", fontsize=14)
@@ -307,7 +311,7 @@ def main(cfg):
         im3 = ax3.imshow(SURE_disp, cmap="RdBu_r")
         ax3.set_title(r"$\mathrm{Refined\ MC-SURE}$", fontsize=18)
         cbar3 = fig_r.colorbar(im3, ax=ax3, shrink=1)
-        cbar3.ax.tick_params(labelsize=12)
+        sci_colorbar(cbar3)
         ax3.set_xticks(np.arange(s2)); ax3.set_xticklabels(labels_sparse, fontsize=12)
         ax3.set_yticks(np.arange(s1)); ax3.set_yticklabels(labels_smooth, fontsize=12)
         ax3.set_ylabel(r"$\mu_{\rm smooth}$", fontsize=14); ax3.set_xlabel(r"$\mu_{\rm sparse}$", fontsize=14)
