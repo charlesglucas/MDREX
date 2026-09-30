@@ -18,7 +18,10 @@ parser.add_argument("--band", type=str, required=True, help="Real data relative 
 parser.add_argument("--mu-smooth", type=float, nargs="+", required=True, help="Value(s) of mu_smooth, e.g. --mu-smooth 1e3 1e4")
 parser.add_argument("--mu-sparse", type=float, nargs="+", required=True, help="Value(s) of mu_sparse, e.g. --mu-sparse 1e3 1e4")
 parser.add_argument("--overwrite", action="store_true", help="Recompute existing result files")
-parser.add_argument("--seed", type=int, default=42, help="Seed of the Monte Carlo probe delta (same for all couples)")
+parser.add_argument("--seed", type=int, default=42, help="Seed of the Monte Carlo probe delta (same for all couples); "
+                    "another seed is saved in results/realdata_sure/<datares>[-ftol<value>]-seed<seed>")
+parser.add_argument("--warm-start", action="store_true", help="Start the reconstruction of y + xi delta from x(y) instead "
+                    "of 0, so that the finite difference reflects the perturbation rather than the optimizer path")
 parser.add_argument("--ftol", type=float, default=1e-8, help="Relative tolerance of VMLMB on the objective (default 1e-8); "
                     "results with another value are saved in results/realdata/<datares>-ftol<value>")
 args, remaining = parser.parse_known_args()
@@ -34,6 +37,7 @@ MU_SPARSES = args.mu_sparse
 OVERWRITE = args.overwrite
 FTOL = args.ftol
 SEED = args.seed
+WARM_START = args.warm_start
 if DATA is None:
     raise ValueError("Missing --data argument for real data path")
 
@@ -174,7 +178,8 @@ def main(cfg):
 
     # non-default ftol: separate folder, so as not to mix (or skip) results obtained with ftol=1e-8
     xdir = ROOT / "results" / "realdata" / (DATARES if FTOL == 1e-8 else f"{DATARES}-ftol{FTOL:g}")  # x(y) reused from here
-    outdir = ROOT / "results" / "realdata_sure" / (DATARES if FTOL == 1e-8 else f"{DATARES}-ftol{FTOL:g}")
+    tag = ("" if FTOL == 1e-8 else f"-ftol{FTOL:g}") + ("-warm" if WARM_START else "") + ("" if SEED == 42 else f"-seed{SEED}")
+    outdir = ROOT / "results" / "realdata_sure" / f"{DATARES}{tag}"
     outdir.mkdir(parents=True, exist_ok=True)
 
     # Data saved once (not duplicated in every hyperparameter file)
@@ -225,7 +230,8 @@ def main(cfg):
                 xdisc_opt = np.load(xfile)["x"]
             else:
                 (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_sparse, mu_smooth, ftol=FTOL)
-            (xdisc_eps, fx_eps, gx_eps, status_eps) = mdrex.run_bfgs(xdisc_0, y_eps, mu_sparse, mu_smooth, ftol=FTOL)
+            x_init = xdisc_opt.copy() if WARM_START else xdisc_0
+            (xdisc_eps, fx_eps, gx_eps, status_eps) = mdrex.run_bfgs(x_init, y_eps, mu_sparse, mu_smooth, ftol=FTOL)
             with torch.no_grad():
                 div2 = (2.0 / xi * torch.sum(delta * (theta(xdisc_eps, y_eps) - theta(xdisc_opt, y)))).item()
             print(f"  2 * divergence = {div2:.6e}")
@@ -236,6 +242,7 @@ def main(cfg):
                 div2=div2,
                 xi=float(xi),
                 seed=SEED,
+                warm_start=WARM_START,
                 mu_smooth=mu_smooth,
                 mu_sparse=mu_sparse,
                 ftol=FTOL,

@@ -14,6 +14,8 @@ parser.add_argument("--result", type=str, default="RY_lup-2016-04-16", help="fol
 parser.add_argument("--data", type=str, default=None, help="real data folder, None = deduced from --result")
 parser.add_argument("--band", type=str, default=None, help="coronagraph band (h2_h3 or k1_k2), None = read from the results")
 parser.add_argument("--results-root", type=str, default=None, help="default: results/realdata_sure")
+parser.add_argument("--extra-probes", type=str, nargs="*", default=[],
+                    help="other folders of results/realdata_sure (other seeds): the divergence is averaged over the probes")
 args = parser.parse_args()
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
@@ -98,7 +100,18 @@ def main():
     residual_patches = {}
     for k in keys:
         residual_patches[k] = patches(y - A(torch.tensor(entries[k]["x"], dtype=torch.float32)))
-    div2 = {k: float(entries[k]["div2"]) for k in keys}
+    div2 = {k: [float(entries[k]["div2"])] for k in keys}
+    for extra in args.extra_probes:  # other Monte Carlo probes (seeds): average of the divergences
+        other = load_results(folder.parent / extra)
+        for k in keys:
+            if k in other:
+                div2[k].append(float(other[k]["div2"]))
+    if args.extra_probes:
+        print("2 * divergence per probe (mean, std):")
+        for k in keys:
+            print(f"  ({k[0]:.0e}, {k[1]:.0e}) " + "  ".join(f"{v:.4e}" for v in div2[k])
+                  + f"   mean {np.mean(div2[k]):.4e}  std {np.std(div2[k]):.2e}")
+    div2 = {k: float(np.mean(v)) for k, v in div2.items()}
 
     def sure(C_inv):
         return {k: mahalanobis(residual_patches[k], C_inv) - N + div2[k] for k in keys}
