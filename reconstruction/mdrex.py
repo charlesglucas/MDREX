@@ -207,15 +207,19 @@ class MDREX:
         self.to_patches = None
         self.to_params = None
 
-    def run_bfgs(self, x_disc_0, y, mu_sparse, mu_smooth, ftol=1.0e-8):
+    def run_bfgs(self, x_disc_0, y, mu_sparse, mu_smooth, ftol=1.0e-8, xtol=1.0e-6, gtol=1.0e-5):
         """
         Run BFGS optimization for given regularization parameters and return the optimized solution, function value, gradient, and status.
         ftol: relative tolerance of VMLMB on the objective (|f - f_prev| <= ftol |f|). The objective is dominated by
         the data term (|f| ~ 1e7-1e8), so ftol=1e-8 stops as soon as an iteration gains less than ~0.1-1:
         use a smaller ftol (or 0, convergence then decided by gtol / xtol) if the solution depends on the run.
+        xtol, gtol: relative tolerances of VMLMB on the variables and on the gradient (VMLMB defaults).
+        The number of evaluations of the objective of the last call is stored in self.n_eval.
         """
         # --- objective + gradient ---
+        self.n_eval = 0
         def fg(x_disc):
+            self.n_eval += 1
             x_tensor = torch.tensor(x_disc, dtype=torch.float32, device=y.device, requires_grad=True)
             with torch.set_grad_enabled(True):
                 im = self.forward_model(x_tensor)
@@ -257,7 +261,7 @@ class MDREX:
             gc.collect()
             torch.cuda.empty_cache()
             return fx, gx
-        xdisc_opt, fx, gx, status = optm.vmlmb(fg, x_disc_0, verb=1, lower=0, maxiter=100000, observer=None, ftol=ftol)
+        xdisc_opt, fx, gx, status = optm.vmlmb(fg, x_disc_0, verb=1, lower=0, maxiter=100000, observer=None, ftol=ftol, xtol=xtol, gtol=gtol)
         return xdisc_opt, fx, gx, status
 
     ## Data term
