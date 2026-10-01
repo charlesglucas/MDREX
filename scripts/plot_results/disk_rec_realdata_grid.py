@@ -119,6 +119,7 @@ def find_data(result):
     """Deduces the real data folder from the result name, e.g.
     HD_169142-2019-05-19 -> HD_169142/2019-05-19/IRDIS/data,
     HD_106906-2016-03-28-h2_h3 -> HD_106906/2016-03-28/IRDIS/h2_h3/data."""
+    result = re.sub(r"-ftol[^-]*$", "", result)  # tolerance tag of the results folder, e.g. ...-h2_h3-ftol0
     m = re.match(r"(.+?)-(\d{4}-\d{2}-\d{2})(?:-(.+))?$", result)
     root = data_root()
     if m is None or not root.exists():
@@ -185,6 +186,7 @@ def fmt_mu(mu):
 
 
 def get_title(result):
+    result = re.sub(r"-ftol[^-]*$", "", result)
     title = display_titles.get(result)
     if title is None:
         # fall back on the star name (part before the date), e.g. HD_169142-2019-05-19 -> HD_169142
