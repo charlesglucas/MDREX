@@ -317,7 +317,9 @@ def main(cfg):
         ax3.set_ylabel(r"$\mu_{\rm smooth}$", fontsize=14); ax3.set_xlabel(r"$\mu_{\rm sparse}$", fontsize=14)
         ax3.tick_params(axis='both', which='major', labelsize=12)
         ax3.plot(j_mse_best, k_mse_best, "rx", markersize=12, markeredgewidth=2)
-        ax3.plot(j_sure_best, k_sure_best, "m+", markersize=12, markeredgewidth=2)
+        # refined MC-SURE minimum: yellow circle (the purple '+' is the MC-SURE minimum with C^y)
+        ax3.plot(j_sure_best, k_sure_best, "o", markersize=13, markerfacecolor="none", markeredgecolor="yellow",
+                 markeredgewidth=2.5)
         ax3.set_aspect('equal', adjustable='box')
         fig_r.tight_layout()
         fig_r.savefig(f"figures/grids_{shape}_{flux}_refinedSURE.pdf")
