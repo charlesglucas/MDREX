@@ -84,10 +84,10 @@ def compute_psnr(x_gt, x_rexpaco, x_mdrex, support_threshold=0.04):
 def print_psnr_table(psnr, psnr_conv, caption, label="table:PSNR"):
     """LaTeX table: PSNR mean +- std over parallactic angles, whole image and support, computed on the
     reconstructions x (psnr) and on the reconstructions convolved by the PSF (psnr_conv). For each shape:
-    REXPACO / MD-REX on x, then on H * x; the best method of each column is in bold."""
+    REXPACO / MD-REX on x, then on H_lambda x_lambda; the best method of each column is in bold."""
     shapes = ["Ellipse", "Spiral", "Circle"]
     contrasts = ["$\\alpha = 1\\cdot 10^{-6}$", "$\\alpha = 5\\cdot 10^{-6}$", "$\\alpha = 1\\cdot10^{-5}$"]
-    quantities = [(psnr, "$\\widehat{\\mathbf{x}}$"), (psnr_conv, "$\\mathbf{H} * \\widehat{\\mathbf{x}}$")]
+    quantities = [(psnr, "$\\widehat{\\mathbf{x}}_{\\lambda}$"), (psnr_conv, "$\\mathbf{H}_{\\lambda}\\widehat{\\mathbf{x}}_{\\lambda}$")]
 
     def cells(p, method, i):
         """REXPACO or MD-REX row: whole image then support, best of the two methods in bold."""
@@ -189,15 +189,18 @@ def main(cfg):
     # Single table: reconstructions x and reconstructions convolved by the PSF
     print_psnr_table(psnr, psnr_conv,
                      "{\\bf Comparison of performances.} PSNR (whole image and support) averaged over parallactic "
-                     "angles for MD-REX and REXPACO, computed on the reconstructions $\\widehat{\\mathbf{x}}$ and on "
-                     "the reconstructions convolved by the PSF $\\mathbf{H} * \\widehat{\\mathbf{x}}$; the support is the set of "
+                     "angles for MD-REX and REXPACO, computed on the reconstructions $\\widehat{\\mathbf{x}}_{\\lambda}$ and on "
+                     "the reconstructions convolved by the PSF $\\mathbf{H}_{\\lambda}\\widehat{\\mathbf{x}}_{\\lambda}$; the support is the set of "
                      "pixels where the ground truth exceeds 4\\% of its maximum. " + mu_caption
                      + " The best method is in bold.")
 
     # Same table with a single couple (mu_smooth, mu_sparse) for all the geometries and contrasts, as REXPACO
-    fixed_dir = "musmooth1e7_musparse1e5"
-    with fits.open(ROOT / f"results/mdrex_results/{fixed_dir}/x_opt.fits") as hdul:
-        x_mdrex_fixed = hdul[0].data
+    # (5e6, 1e5): best compromise on the support taking the std over angles into account (runs per shape)
+    fixed_dir = "musmooth5e6_musparse1e5"
+    x_mdrex_fixed = np.zeros_like(x_gt_store)
+    for (s, shape) in enumerate(["medium_ellipse", "spiral", "circle"]):
+        with fits.open(ROOT / f"results/mdrex_results/{fixed_dir}_{shape}/x_opt.fits") as hdul:
+            x_mdrex_fixed[:, :, s] = hdul[0].data[:, :, s]
     psnr_fixed = compute_psnr(x_gt_store, x_rexpaco, x_mdrex_fixed)
     psnr_conv_fixed = compute_psnr(x_gt_conv, x_rexpaco_conv, convolve_stack(x_mdrex_fixed, psf))
     print_psnr_table(psnr_fixed, psnr_conv_fixed,
