@@ -227,12 +227,14 @@ class MDREX:
                 # Data term: backprop term by term into a detached leaf so that
                 # only one term's graph lives in memory at a time.
                 diff_leaf = diff.detach().requires_grad_(True)
-                with torch.no_grad():
-                    params = self.exomild.fit_params(diff_leaf, self.lbda)
-                n_terms = len(params)
+                # No torch.no_grad() on fit_params: the gradient also flows through the estimated means and
+                # covariances (dependence of m_hat and C_hat on x, as in the original scripts). The parameters are
+                # fitted term by term inside the loop, so that only one term's graph lives in memory at a time.
+                n_terms = len(self.exomild.all_terms)
                 phi = 0.0
                 grad_diff = torch.zeros_like(diff_leaf)
-                for term, p in zip(self.exomild.all_terms, params):
+                for term in self.exomild.all_terms:
+                    p = term.fit_params(diff_leaf, self.lbda)
                     ll = term.get_log_likelihood(diff_leaf, self.lbda, p)
                     phi_term = torch.sum(-ll) / n_terms
                     # Only d/d diff: .backward() would also compute (huge, unused)
@@ -242,8 +244,7 @@ class MDREX:
                     # objective value accumulated in float64: in float32, |f| ~ 1e7-1e8 has a resolution of ~1-8,
                     # coarser than the convergence test of VMLMB (ftol * |f|)
                     phi += torch.sum(-ll.detach(), dtype=torch.float64).item() / n_terms
-                    del ll, phi_term, g
-                del params
+                    del ll, phi_term, g, p
                 torch.cuda.empty_cache()
                 reg_sparse = mu_sparse * self.l2_l1_sparse_2d(x_tensor)
                 reg_smooth = mu_smooth * self.l2_l1_edge_preserving_2d(x_tensor)

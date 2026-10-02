@@ -3331,21 +3331,31 @@ class EngineSpatial(nn.Module):
         G = self.G
         fs = C_inv.shape[-1]
 
-        # Cholesky of C_inv (params are constants w.r.t. x): C_inv = L L^T
-        # => x^T C_inv x = ||L^T x||^2 and log|C_inv| = 2 * sum(log diag(L)).
+        # Cholesky of C_inv: C_inv = L L^T => x^T C_inv x = ||L^T x||^2 and log|C_inv| = 2 * sum(log diag(L)).
+        # The Cholesky factor is computed without graph (memory); the dependence of ll on C_inv (hence on x through
+        # the estimated covariance) is kept by an exact analytic gradient, see `surrogate` below.
+        C_inv = C_inv.view(bs, bsp, G, fs, fs)
+        mean = mean.view(bs, bsp, T, G, fs)
         with torch.no_grad():
-            C_inv = C_inv.detach().view(bs, bsp, G, fs, fs)
-            L, chol_info = torch.linalg.cholesky_ex(C_inv, upper=False)
+            P = C_inv.detach()
+            L, chol_info = torch.linalg.cholesky_ex(P, upper=False)
             # Fall back to identity for any non-positive-definite patch.
-            bad = (chol_info > 0).to(C_inv.dtype).view(bs, bsp, G, 1, 1)
-            eye = torch.eye(fs, device=C_inv.device, dtype=C_inv.dtype).view(1, 1, 1, fs, fs)
+            bad = (chol_info > 0).to(P.dtype).view(bs, bsp, G, 1, 1)
+            eye = torch.eye(fs, device=P.device, dtype=P.dtype).view(1, 1, 1, fs, fs)
             L = L * (1 - bad) + eye * bad
             Lt = L.transpose(-1, -2).contiguous()  # (bs, bsp, G, fs, fs)
             logdet = 2.0 * torch.log(torch.clamp(
                 torch.diagonal(L, dim1=-2, dim2=-1), min=1e-30
             )).sum(dim=-1)  # (bs, bsp, G)
-            del L, C_inv, eye, bad
-        mean = mean.view(bs, bsp, T, G, fs)
+            grad_P = None
+            if C_inv.requires_grad:
+                # d/dC_inv of sum_t ll_t, with ll_t = mean_G(-1/2 z_t^T C_inv z_t + 1/2 log|C_inv|), z_t = f_t - m:
+                #   (1/G) (-1/2 sum_t z_t z_t^T + T/2 C_inv^{-1}),  zero for the patches replaced by the identity
+                fx, _ = self.features_pipeline(xp, idx=idx, with_jacobian=False)
+                z = (fx.view(bs, bsp, T, G, fs) - mean.detach()).permute(0, 1, 3, 4, 2)  # (bs, bsp, G, fs, T)
+                grad_P = (-0.5 * (z @ z.transpose(-1, -2)) + 0.5 * T * torch.cholesky_inverse(L)) * (1 - bad) / G
+                del fx, z
+            del L, eye, bad
 
         def _ll_from_xp(xp_):
             fx, _ = self.features_pipeline(xp_, idx=idx, with_jacobian=False)
@@ -3361,6 +3371,12 @@ class EngineSpatial(nn.Module):
         # Checkpoint the whole chain: only xp is kept for backward, intermediates
         # are recomputed batch by batch during backward (bounded peak memory).
         ll = checkpoint(_ll_from_xp, xp, use_reentrant=False)
+
+        if grad_P is not None:
+            # value exactly 0 (C_inv - P = 0), gradient w.r.t. C_inv = grad_P: same ll, exact gradient through the
+            # covariance (spread evenly over the T frames of each patch, the sum over t is unchanged)
+            surrogate = ((C_inv - P) * grad_P).sum(dim=(-2, -1)).sum(dim=2)  # (bs, bsp)
+            ll = ll + (surrogate.view(bsp, 1) / T)
 
         return {"ll": ll}
     
