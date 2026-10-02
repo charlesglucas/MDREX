@@ -10,6 +10,7 @@ parser.add_argument("--mu-sparse", type=float, default=None, help="Regularizatio
 parser.add_argument("--flux", type=float, default=None)
 parser.add_argument("--shape", type=str, default=None)
 parser.add_argument("--out", type=str, default=None, help="Output NPZ path (overrides default naming)")
+parser.add_argument("--tag", type=str, default="", help="Suffix of the output folder, e.g. gradC -> grid_sure_<shape>_alpha<flux>_gradC")
 args, remaining = parser.parse_known_args()
 # Remove parsed args so Hydra doesn't complain.
 sys.argv = [sys.argv[0]] + remaining
@@ -19,6 +20,7 @@ MU_SPARSE = args.mu_sparse
 FLUX = args.flux
 SHAPE = args.shape
 OUTPUT_PATH = args.out
+TAG = args.tag
 
 # Configure GPU memory management
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
@@ -243,7 +245,7 @@ def main(cfg):
     if OUTPUT_PATH is not None:
         out_path = pathlib.Path(OUTPUT_PATH)
     else:
-        out_dir = ROOT / f"results/grids_111111111111/grid_sure_{shape}_alpha{flux_to_str(flux)}/"
+        out_dir = ROOT / f"results/grids_111111111111/grid_sure_{shape}_alpha{flux_to_str(flux)}{'_' + TAG if TAG else ''}/"
         out_dir.mkdir(exist_ok=True, parents=True)
         if MU_SMOOTH is not None and MU_SPARSE is not None:
             out_path = out_dir / f"musmooth{MU_SMOOTH}_musparse{MU_SPARSE}.npz"
