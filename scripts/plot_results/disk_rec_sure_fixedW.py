@@ -26,6 +26,7 @@ from utils.rotation import BatchRotationOperator
 #                    W_REF = "y" (the disk is removed before estimating the covariance), usable on real data
 # The MSE (reference) is always computed with the oracle metric W_gt.
 W_REF = "pilot"
+TAG = ""  # suffix of the results folder, e.g. "gradS" -> grid_sure_<shape>_alpha<flux>_gradS (figures suffixed too)
 
 
 def sci_colorbar(cbar, nbins=4, decimals=2):
@@ -129,7 +130,7 @@ def fixed_metric_terms(path, files, mu_smooth_vals, mu_sparse_vals, device, DE=N
     if w_ref == "pilot":
         # 1st pass: SURE with C^y, its minimizer mu_0 gives the pilot reconstruction
         DA_y, _, N = fixed_metric_terms(path, files, mu_smooth_vals, mu_sparse_vals, device, w_ref="y")
-        k0, j0 = np.unravel_index(np.argmin(DA_y - N + DE), DA_y.shape)
+        k0, j0 = np.unravel_index(np.argmin(np.where(DE == 0, np.inf, DA_y - N + DE)), DA_y.shape)  # DE = 0: missing couple
         f0 = [f for f, ms, mp in files if (ms, mp) == (mu_smooth_vals[k0], mu_sparse_vals[j0])][0]
         print(f"Pilot: mu_0 = ({mu_smooth_vals[k0]:.0e}, {mu_sparse_vals[j0]:.0e})")
 
@@ -168,7 +169,7 @@ def main(cfg):
     # Load results
     shape = "medium_ellipse"
     flux = "1em5"
-    path = Path(ROOT / f"results/grids_111111111111/grid_sure_{shape}_alpha{flux}")
+    path = ROOT / "results/grids_111111111111" / (f"grid_sure_{shape}_alpha{flux}" + (f"_{TAG}" if TAG else ""))
     # path = Path(ROOT / f"results/grids_100100100100/grid_sure_{shape}_alpha{flux}")
     pattern = re.compile(r"musmooth([0-9.]+)_musparse([0-9.]+)\.npz")
 
@@ -222,10 +223,13 @@ def main(cfg):
     labels_sparse = [f"$10^{{{np.log10(v):g}}}$" for v in mu_sparse_vals]
 
     # Find best parameters
-    idx_best = np.unravel_index(np.argmin(MSE), MSE.shape)
+    # missing couples (no result file, DE = 0): excluded from the minima and left blank on the grids
+    missing = DE == 0
+    MSE = np.where(missing, np.nan, MSE); SURE = np.where(missing, np.nan, SURE)
+    idx_best = np.unravel_index(np.nanargmin(MSE), MSE.shape)
     k_mse_best, j_mse_best = idx_best
     best_x_disk_mse = x_disk_store[k_mse_best, j_mse_best]
-    idx_best = np.unravel_index(np.argmin(SURE), SURE.shape)
+    idx_best = np.unravel_index(np.nanargmin(SURE), SURE.shape)
     k_sure_best, j_sure_best = idx_best
     best_x_disk_sure = x_disk_store[k_sure_best, j_sure_best]
     print(f"W_REF={W_REF}: argmin MSE  mu_smooth={mu_smooth_vals[k_mse_best]:.0e} mu_sparse={mu_sparse_vals[j_mse_best]:.0e}")
@@ -300,7 +304,7 @@ def main(cfg):
     ax2.set_aspect('equal', adjustable='box')
 
     fig.tight_layout()
-    fig.savefig(f"figures/grids_{shape}_{flux}_fixedC{W_REF}.pdf")
+    fig.savefig(f"figures/grids_{shape}_{flux}_fixedC{W_REF}{'_' + TAG if TAG else ''}.pdf")
     plt.show()
 
     if W_REF == "pilot":
@@ -322,7 +326,7 @@ def main(cfg):
                  markeredgewidth=2.5)
         ax3.set_aspect('equal', adjustable='box')
         fig_r.tight_layout()
-        fig_r.savefig(f"figures/grids_{shape}_{flux}_refinedSURE.pdf")
+        fig_r.savefig(f"figures/grids_{shape}_{flux}_refinedSURE{'_' + TAG if TAG else ''}.pdf")
         plt.show()
 
 
