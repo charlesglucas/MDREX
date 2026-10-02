@@ -13,6 +13,9 @@ parser.add_argument("--mu-sparse", type=float, nargs="+", required=True, help="V
 parser.add_argument("--overwrite", action="store_true", help="Recompute existing result files")
 parser.add_argument("--ftol", type=float, default=1e-8, help="Relative tolerance of VMLMB on the objective (default 1e-8); "
                     "results with another value are saved in results/realdata/<datares>-ftol<value>")
+parser.add_argument("--batch-size", type=str, default="128", help="Batch size (patches) of the ExoMILD engine, "
+                    "int or 'none' (no split, as in the old scripts); results with another value than 128 are saved "
+                    "in a folder suffixed -bs<value>")
 args, remaining = parser.parse_known_args()
 # Remove parsed args so Hydra doesn't complain.
 sys.argv = [sys.argv[0]] + remaining
@@ -25,6 +28,7 @@ MU_SMOOTHS = args.mu_smooth
 MU_SPARSES = args.mu_sparse
 OVERWRITE = args.overwrite
 FTOL = args.ftol
+BATCH_SIZE = None if args.batch_size.lower() == "none" else int(args.batch_size)
 if DATA is None:
     raise ValueError("Missing --data argument for real data path")
 
@@ -123,7 +127,7 @@ def main(cfg):
     # cfg_model.repeats = [1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0]
     cfg_model.repeats = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     cfg_model.use_dataparallel = False
-    cfg_model.batch_size = 128
+    cfg_model.batch_size = BATCH_SIZE
     cfg_model.n_channels = 2
     # ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/1_asdi/2024-11-09_20-10-01/banger_ms_bs16_lr5e-4_unetnormal_aug_111_100_100_100_seed5/ckpt/ckpt_40000.pt"
     ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/exomild_H2/ckpt/ckpt_40000.pt"
@@ -165,6 +169,8 @@ def main(cfg):
 
     # non-default ftol: separate folder, so as not to mix (or skip) results obtained with ftol=1e-8
     outdir = ROOT / "results" / "realdata" / (DATARES if FTOL == 1e-8 else f"{DATARES}-ftol{FTOL:g}")
+    if BATCH_SIZE != 128:  # e.g. RY_lup-2016-04-16-ftol0-bsNone
+        outdir = outdir.with_name(f"{outdir.name}-bs{BATCH_SIZE}")
     outdir.mkdir(parents=True, exist_ok=True)
 
     # Data saved once (not duplicated in every hyperparameter file)
