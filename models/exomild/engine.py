@@ -3208,7 +3208,9 @@ class EngineSpatial(nn.Module):
             num = tr_SS + tr2_S - 2 * tr_S2
             den = (T + 1) * (tr_SS - tr_S2)
             # Always recompute rho per batch (enables @batchify on fit_params)
-            rho = torch.clip(num / den, 0, 1)
+            # shrinkage coefficient treated as independent of x: not differentiated (the gradient still flows
+            # through the mean and the sample covariance S_hat)
+            rho = torch.clip(num / den, 0, 1).detach()
             rho = rho.view(bsp, G, 1, 1)
 
             # diag_flat = torch.einsum("bsgii->bsgi", S_hat)
