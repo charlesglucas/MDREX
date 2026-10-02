@@ -190,7 +190,7 @@ def main(cfg):
         mantissa, exp = f"{mu:.0e}".split("e")
         return f"{mantissa}e{int(exp)}"
 
-    outdir = Path("results") / f"distributions_5em6" / f"{shape}_musmooth{mu_to_str(MU_SMOOTH)}_musparse{mu_to_str(MU_SPARSE)}" + (f"_{TAG}" if TAG else "")
+    outdir = Path("results") / f"distributions_5em6" / (f"{shape}_musmooth{mu_to_str(MU_SMOOTH)}_musparse{mu_to_str(MU_SPARSE)}" + (f"_{TAG}" if TAG else ""))
     outdir.mkdir(parents=True, exist_ok=True)
     outfile = outdir / "x_opt.fits"
     fits.writeto(outfile, x_opt, overwrite=True)
