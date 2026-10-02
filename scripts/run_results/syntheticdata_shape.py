@@ -9,6 +9,7 @@ parser.add_argument("--mu-smooth", type=float, default=None, help="Regularizatio
 parser.add_argument("--mu-sparse", type=float, default=None, help="Regularization weight sparsity (overrides grid search)")
 parser.add_argument("--out", type=str, default=None, help="Output NPZ path (overrides default naming)")
 parser.add_argument("--shape", type=str, default="spiral", choices=["medium_ellipse", "spiral", "circle"], help="Geometry to reconstruct")
+parser.add_argument("--tag", type=str, default="", help="Suffix of the output folder, e.g. gradC")
 parser.add_argument("--ftol", type=float, default=1e-8, help="Relative tolerance of VMLMB on the objective (default 1e-8); "
                     "results with another value are saved in a folder suffixed _ftol<value>")
 args, remaining = parser.parse_known_args()
@@ -19,6 +20,7 @@ MU_SMOOTH = args.mu_smooth
 MU_SPARSE = args.mu_sparse
 SHAPE = args.shape
 FTOL = args.ftol
+TAG = args.tag
 OUTPUT_PATH = args.out
 
 # Configure GPU memory management
@@ -190,7 +192,7 @@ def main(cfg):
         mantissa, exp = f"{mu:.0e}".split("e")
         return f"{mantissa}e{int(exp)}"
 
-    outdir = Path("results") / "mdrex_results" / f"musmooth{mu_to_str(MU_SMOOTH)}_musparse{mu_to_str(MU_SPARSE)}_{SHAPE}" + ("" if FTOL == 1e-8 else f"_ftol{FTOL:g}")
+    outdir = Path("results") / "mdrex_results" / f"musmooth{mu_to_str(MU_SMOOTH)}_musparse{mu_to_str(MU_SPARSE)}_{SHAPE}" + ("" if FTOL == 1e-8 else f"_ftol{FTOL:g}") + (f"_{TAG}" if TAG else "")
     outdir.mkdir(parents=True, exist_ok=True)
     outfile = outdir / "x_opt.fits"
     fits.writeto(outfile, x_opt, overwrite=True)
