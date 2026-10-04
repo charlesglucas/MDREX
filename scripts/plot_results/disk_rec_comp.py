@@ -155,9 +155,12 @@ def main(cfg):
         x_rexpaco = hdul[0].data[:,:,:,251-128:251+128, 251-128:251+128]
 
     # Hyperparameters (mu_smooth, mu_sparse) adapted to each shape (SURE grids)
-    mdrex_dirs = {"medium_ellipse": "musmooth1e6_musparse1e6",
-                  "spiral": "musmooth5e6_musparse1e5_spiral",
-                  "circle": "musmooth5e6_musparse1e5_circle"}
+    # TAG = "gradS": reconstructions with the gradient through m_hat / C_hat (shrinkage not differentiated)
+    TAG = "gradS"
+    sfx = f"_{TAG}" if TAG else ""
+    mdrex_dirs = {"medium_ellipse": "musmooth1e6_musparse1e6" + ("_medium_ellipse" + sfx if TAG else ""),
+                  "spiral": "musmooth5e6_musparse1e5_spiral" + sfx,
+                  "circle": "musmooth5e6_musparse1e5_circle" + sfx}
     x_mdrex = np.zeros_like(x_gt_store)
     for (s, shape) in enumerate(["medium_ellipse", "spiral", "circle"]):
         path = ROOT / f"results/mdrex_results/{mdrex_dirs[shape]}/x_opt.fits"
@@ -199,7 +202,7 @@ def main(cfg):
     fixed_dir = "musmooth5e6_musparse1e5"
     x_mdrex_fixed = np.zeros_like(x_gt_store)
     for (s, shape) in enumerate(["medium_ellipse", "spiral", "circle"]):
-        with fits.open(ROOT / f"results/mdrex_results/{fixed_dir}_{shape}/x_opt.fits") as hdul:
+        with fits.open(ROOT / f"results/mdrex_results/{fixed_dir}_{shape}{sfx}/x_opt.fits") as hdul:
             x_mdrex_fixed[:, :, s] = hdul[0].data[:, :, s]
     psnr_fixed = compute_psnr(x_gt_store, x_rexpaco, x_mdrex_fixed)
     psnr_conv_fixed = compute_psnr(x_gt_conv, x_rexpaco_conv, convolve_stack(x_mdrex_fixed, psf))

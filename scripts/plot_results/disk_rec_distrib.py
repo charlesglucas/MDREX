@@ -45,6 +45,9 @@ def main(cfg):
             x_gt_store[d, a, :, :] = x_gt
 
     mdrex_dir = "musmooth5e6_musparse1e5"
+    TAG = "gradS"  # results with the gradient through m_hat / C_hat (folder and figure suffixed _gradS)
+    if TAG:
+        mdrex_dir += f"_{TAG}"
     path = ROOT / f"results/distributions_5em6/{shape}_{mdrex_dir}/x_opt.fits"
     with fits.open(path) as hdul:
         x_mdrex = hdul[0].data
