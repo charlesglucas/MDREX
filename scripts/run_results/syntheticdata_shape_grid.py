@@ -12,6 +12,7 @@ parser.add_argument("--mu-smooth", type=float, nargs="+", default=[1e6, 5e6, 1e7
 parser.add_argument("--mu-sparse", type=float, nargs="+", default=[5e4, 1e5, 5e5], help="Values of mu_sparse")
 parser.add_argument("--shape", type=str, default="spiral", choices=["medium_ellipse", "spiral", "circle"], help="Geometry to reconstruct")
 parser.add_argument("--angle", type=int, default=0, choices=list(range(0, 325, 36)), help="Position angle of the disk (degrees)")
+parser.add_argument("--tag", type=str, default="", help="Suffix of the output folder, e.g. gradS")
 args, remaining = parser.parse_known_args()
 # Remove parsed args so Hydra doesn't complain.
 sys.argv = [sys.argv[0]] + remaining
@@ -20,6 +21,7 @@ MU_SMOOTH_LIST = args.mu_smooth
 MU_SPARSE_LIST = args.mu_sparse
 SHAPE = args.shape
 ANGLE = args.angle
+TAG = args.tag
 
 # Configure GPU memory management
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
@@ -185,7 +187,7 @@ def main(cfg):
     datadisk = data[513-128:513+128, 513-128:513+128].astype(np.float32)
     fluxes = [1e-6, 5e-6, 1e-5]
 
-    outdir = ROOT / "results" / "grid_shape" / f"{SHAPE}_angle{ANGLE}"
+    outdir = ROOT / "results" / "grid_shape" / (f"{SHAPE}_angle{ANGLE}" + (f"_{TAG}" if TAG else ""))
     outdir.mkdir(parents=True, exist_ok=True)
     summary = []
     for mu_smooth in MU_SMOOTH_LIST:
