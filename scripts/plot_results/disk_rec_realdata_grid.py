@@ -318,7 +318,7 @@ def plot_grid(result, entries, e_smooth, e_sparse, rotation_deg, title):
 # ------------------------------------------------------------
 # Figure 2: chosen couple, x and PSF-convolved x in RGB (as in disk_rec_realdata.py)
 # ------------------------------------------------------------
-STRETCH = "linear"        # display stretch of the RGB figures: "linear", "sqrt", "log" or "asinh"
+STRETCH = "log"        # display stretch of the RGB figures: "linear", "sqrt", "log" or "asinh"
 LOG_RANGE = 3e1        # "log": dynamic range, values below vmax / LOG_RANGE are shown in black
 ASINH_WIDTH = 0.05     # "asinh": linear up to ASINH_WIDTH * vmax, logarithmic above (Lupton et al. 2004)
 PANEL_WIDTH = 4.4       # width (inches) of the saved RGB figures, identical for all the stars
