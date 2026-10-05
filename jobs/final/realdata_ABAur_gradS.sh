@@ -3,8 +3,8 @@
 # AB Aurigae, 2020-01-18, IRDIS K12 (lambda = 2.110 / 2.251 um -> coronagraph k1_k2), gradS (gradient through
 # m_hat / C_hat, shrinkage not differentiated), ftol 0. New target: small grid of couples,
 # mu_smooth 1e6 / 1e7 x mu_sparse 1e5 / 1e6 / 1e7, one job per mu_smooth (couples in sequence, existing ones skipped).
-# dxabs = 1e-3: very bright target (data ~8x and PSF ~3x the other targets), the default first step of VMLMB
-# (norm 1) made the statistics non-finite at the first iteration.
+# xscale = 1e-5: very bright target (data ~8x and PSF ~3x the other targets), gradient ~1e10: VMLMB works on
+# u = x / 1e-5 (better scaled; first step of norm 1 in u = 1e-5 in x). Non-finite trial steps are rejected.
 # output: results/realdata/AB_AURIGAE-2020-01-18-gradS-ftol0/
 PY=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/.venv/bin/python
 RUN=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/scripts/run_results/realdata_grid_split.py
@@ -15,5 +15,5 @@ for sm in 1e6 1e7; do
   oarsub -l "gpu=1,walltime=20:00:00" -p "cluster='$CL'" -n "realdata_gradS_AB_Aur_sm${sm}" \
     "CUDA_VISIBLE_DEVICES=0 $PY $RUN \
       --data 'AB_AURIGAE/2020-01-18/IRDIS/data/' --band 'k1_k2' --datares 'AB_AURIGAE-2020-01-18-gradS' \
-      --mu-smooth $sm --mu-sparse 1e5 1e6 1e7 --ftol 0 --dxabs 1e-3"
+      --mu-smooth $sm --mu-sparse 1e5 1e6 1e7 --ftol 0 --xscale 1e-5"
 done
