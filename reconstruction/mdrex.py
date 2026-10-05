@@ -207,7 +207,7 @@ class MDREX:
         self.to_patches = None
         self.to_params = None
 
-    def run_bfgs(self, x_disc_0, y, mu_sparse, mu_smooth, ftol=1.0e-8, xtol=1.0e-6, gtol=1.0e-5, dxabs=1.0):
+    def run_bfgs(self, x_disc_0, y, mu_sparse, mu_smooth, ftol=1.0e-8, xtol=1.0e-6, gtol=1.0e-5):
         """
         Run BFGS optimization for given regularization parameters and return the optimized solution, function value, gradient, and status.
         ftol: relative tolerance of VMLMB on the objective (|f - f_prev| <= ftol |f|). The objective is dominated by
@@ -215,8 +215,6 @@ class MDREX:
         use a smaller ftol (or 0, convergence then decided by gtol / xtol) if the solution depends on the run.
         xtol, gtol: relative tolerances of VMLMB on the variables and on the gradient (VMLMB defaults).
         The number of evaluations of the objective of the last call is stored in self.n_eval.
-        dxabs: norm of the first trial step from x_disc_0 (VMLMB default 1.0); for very bright targets, a step of
-        norm 1 gives a huge A x and non-finite statistics: use the typical norm of x (e.g. 1e-3).
         A non-finite objective or covariance during an evaluation returns f = +inf, so that the line search rejects
         the trial step instead of stopping the run.
         """
@@ -278,7 +276,7 @@ class MDREX:
                 print("[run_bfgs] non-finite objective or gradient, step rejected")
                 return np.inf, np.zeros_like(x_disc, dtype=np.float32)
             return fx, gx
-        xdisc_opt, fx, gx, status = optm.vmlmb(fg, x_disc_0, verb=1, lower=0, maxiter=100000, observer=None, ftol=ftol, xtol=xtol, gtol=gtol, dxabs=dxabs)
+        xdisc_opt, fx, gx, status = optm.vmlmb(fg, x_disc_0, verb=1, lower=0, maxiter=100000, observer=None, ftol=ftol, xtol=xtol, gtol=gtol)
         return xdisc_opt, fx, gx, status
 
     ## Data term
