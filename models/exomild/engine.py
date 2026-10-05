@@ -3234,10 +3234,13 @@ class EngineSpatial(nn.Module):
             # print(f"{rho_mean=}")
 
             # C_inv, info = torch.linalg.inv(C_hat)
-            if C_hat.isnan().any():
-                breakpoint()
-            if C_hat.isinf().any():
-                breakpoint()
+            # explicit error instead of breakpoint() (batch jobs): where the non-finite values come from
+            if not torch.isfinite(C_hat).all():
+                raise FloatingPointError(
+                    f"non-finite covariance in _params_gaussian: C_hat nan={int(C_hat.isnan().sum())} "
+                    f"inf={int(C_hat.isinf().sum())}; input x finite={bool(torch.isfinite(x).all())} "
+                    f"max|x|={x.abs().max().item():.3e}; S_hat finite={bool(torch.isfinite(S_hat).all())} "
+                    f"max|S_hat|={S_hat.abs().max().item():.3e}; rho finite={bool(torch.isfinite(rho).all())}")
             # torch.cuda.synchronize()
             try:
                 # C_inv = torch.linalg.inv(C_hat)
