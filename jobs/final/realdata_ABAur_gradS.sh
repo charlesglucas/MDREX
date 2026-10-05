@@ -5,7 +5,7 @@
 # Orders of magnitude different from the other targets: 512 frames (vs 64-88), PSF ~3x brighter, noise ~8x
 # -> data term several times stronger relative to the regularizations: grid shifted / widened toward larger mu,
 # mu_smooth 1e6 / 1e7 / 1e8 x mu_sparse 1e5 / 1e6 / 1e7 / 1e8, one job per mu_smooth (couples in sequence,
-# existing ones skipped). Non-finite trial steps of VMLMB are rejected by the line search (f = +inf).
+# existing ones skipped). Same optimization algorithm as for the other targets.
 # output: results/realdata/AB_AURIGAE-2020-01-18-gradS-ftol0/
 PY=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/.venv/bin/python
 RUN=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/scripts/run_results/realdata_grid_split.py

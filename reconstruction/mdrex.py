@@ -215,12 +215,10 @@ class MDREX:
         use a smaller ftol (or 0, convergence then decided by gtol / xtol) if the solution depends on the run.
         xtol, gtol: relative tolerances of VMLMB on the variables and on the gradient (VMLMB defaults).
         The number of evaluations of the objective of the last call is stored in self.n_eval.
-        A non-finite objective or covariance during an evaluation returns f = +inf, so that the line search rejects
-        the trial step instead of stopping the run.
         """
         # --- objective + gradient ---
         self.n_eval = 0
-        def fg_x(x_disc):
+        def fg(x_disc):
             self.n_eval += 1
             x_tensor = torch.tensor(x_disc, dtype=torch.float32, device=y.device, requires_grad=True)
             with torch.set_grad_enabled(True):
@@ -263,18 +261,6 @@ class MDREX:
             del loss, surrogate, grad_x, grad_diff, im, diff, diff_leaf, x_tensor
             gc.collect()
             torch.cuda.empty_cache()
-            return fx, gx
-        def fg(x_disc):
-            # non-finite trial point -> f = +inf: rejected by the line search (Armijo fails, step x 0.2)
-            try:
-                fx, gx = fg_x(x_disc)
-            except FloatingPointError as err:
-                print(f"[run_bfgs] non-finite evaluation, step rejected: {err}")
-                torch.cuda.empty_cache()
-                return np.inf, np.zeros_like(x_disc, dtype=np.float32)
-            if not (np.isfinite(fx) and np.all(np.isfinite(gx))):
-                print("[run_bfgs] non-finite objective or gradient, step rejected")
-                return np.inf, np.zeros_like(x_disc, dtype=np.float32)
             return fx, gx
         xdisc_opt, fx, gx, status = optm.vmlmb(fg, x_disc_0, verb=1, lower=0, maxiter=100000, observer=None, ftol=ftol, xtol=xtol, gtol=gtol)
         return xdisc_opt, fx, gx, status
