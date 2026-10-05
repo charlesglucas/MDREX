@@ -53,6 +53,7 @@ display_titles = {
     "HD_106906-2016-03-28-h2_h3": "HD 106906",
     "HD_106906-2016-03-28-k1_k2": "HD 106906",
     "AB_AURIGAE": "AB Aurigae",
+    "MWC_758": "MWC 758",
 }
 
 
