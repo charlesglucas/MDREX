@@ -15,8 +15,6 @@ parser.add_argument("--ftol", type=float, default=1e-8, help="Relative tolerance
                     "results with another value are saved in results/realdata/<datares>-ftol<value>")
 parser.add_argument("--dxabs", type=float, default=1.0, help="Norm of the first trial step of VMLMB from x = 0 "
                     "(default 1.0); smaller for very bright targets (e.g. 1e-3 for AB Aur)")
-parser.add_argument("--xscale", type=float, default=1.0, help="Scale of the variables of VMLMB, u = x / xscale "
-                    "(default 1.0); typical value of x for very bright targets (e.g. 1e-5 for AB Aur)")
 parser.add_argument("--batch-size", type=str, default="128", help="Batch size (patches) of the ExoMILD engine, "
                     "int or 'none' (no split, as in the old scripts); results with another value than 128 are saved "
                     "in a folder suffixed -bs<value>")
@@ -33,7 +31,6 @@ MU_SPARSES = args.mu_sparse
 OVERWRITE = args.overwrite
 FTOL = args.ftol
 DXABS = args.dxabs
-XSCALE = args.xscale
 BATCH_SIZE = None if args.batch_size.lower() == "none" else int(args.batch_size)
 if DATA is None:
     raise ValueError("Missing --data argument for real data path")
@@ -210,7 +207,7 @@ def main(cfg):
                 continue
             print(f"Running mu_smooth={mu_smooth:g}, mu_sparse={mu_sparse:g}")
             xdisc_0 = np.zeros((C, H, W))
-            (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_sparse, mu_smooth, ftol=FTOL, dxabs=DXABS, xscale=XSCALE)
+            (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_sparse, mu_smooth, ftol=FTOL, dxabs=DXABS)
             np.savez(
                 outfile,
                 x=xdisc_opt,
