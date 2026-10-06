@@ -8,6 +8,7 @@ from utils.rotation import BatchRotationOperator
 from models.exomild.exomild import ExoMILD
 import torch.nn as nn
 import gc
+import os
     
 class PatchesHandler:
     def __init__(self, patch_size=8, stride=8):
@@ -218,8 +219,12 @@ class MDREX:
         """
         # --- objective + gradient ---
         self.n_eval = 0
+        debug = bool(os.environ.get("MDREX_DEBUG"))  # diagnostic prints only, the computation is unchanged
         def fg(x_disc):
             self.n_eval += 1
+            if debug:
+                print(f"[fg {self.n_eval}] ||x||={np.linalg.norm(x_disc):.3e} max x={np.max(x_disc):.3e} "
+                      f"finite={bool(np.all(np.isfinite(x_disc)))}", flush=True)
             x_tensor = torch.tensor(x_disc, dtype=torch.float32, device=y.device, requires_grad=True)
             with torch.set_grad_enabled(True):
                 im = self.forward_model(x_tensor)
@@ -261,6 +266,9 @@ class MDREX:
             del loss, surrogate, grad_x, grad_diff, im, diff, diff_leaf, x_tensor
             gc.collect()
             torch.cuda.empty_cache()
+            if debug:
+                print(f"[fg {self.n_eval}] f={fx:.6e} ||g||={np.linalg.norm(gx):.3e} "
+                      f"finite g={bool(np.all(np.isfinite(gx)))}", flush=True)
             return fx, gx
         xdisc_opt, fx, gx, status = optm.vmlmb(fg, x_disc_0, verb=1, lower=0, maxiter=100000, observer=None, ftol=ftol, xtol=xtol, gtol=gtol)
         return xdisc_opt, fx, gx, status
