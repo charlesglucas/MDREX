@@ -10,6 +10,8 @@ parser.add_argument("--mu-sparse", type=float, default=None, help="Regularizatio
 parser.add_argument("--flux", type=float, default=None)
 parser.add_argument("--shape", type=str, default=None)
 parser.add_argument("--out", type=str, default=None, help="Output NPZ path (overrides default naming)")
+parser.add_argument("--angle", type=int, default=None, help="Parallactic angle of the disk in degrees (0, 36, ..., 324); "
+                    "default None = 0 degree and the original folder name; otherwise folder suffixed _angle<angle>")
 parser.add_argument("--tag", type=str, default="", help="Suffix of the output folder, e.g. gradC -> grid_sure_<shape>_alpha<flux>_gradC")
 args, remaining = parser.parse_known_args()
 # Remove parsed args so Hydra doesn't complain.
@@ -21,6 +23,7 @@ FLUX = args.flux
 SHAPE = args.shape
 OUTPUT_PATH = args.out
 TAG = args.tag
+ANGLE = args.angle
 
 # Configure GPU memory management
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
@@ -171,7 +174,7 @@ def main(cfg):
     flux = FLUX
     shape = SHAPE
     path_disk = ROOT / f"data/synthetic_disks/{shape}/"
-    hdul = fits.open(path_disk / f"hid_fake_disk_image_{shape}_0degrees.fits")
+    hdul = fits.open(path_disk / f"hid_fake_disk_image_{shape}_{0 if ANGLE is None else ANGLE}degrees.fits")
     data = hdul[0].data
 
     # Ensure the byte order is native
@@ -245,7 +248,7 @@ def main(cfg):
     if OUTPUT_PATH is not None:
         out_path = pathlib.Path(OUTPUT_PATH)
     else:
-        out_dir = ROOT / f"results/grids_111111111111/grid_sure_{shape}_alpha{flux_to_str(flux)}{'_' + TAG if TAG else ''}/"
+        out_dir = ROOT / f"results/grids_111111111111/grid_sure_{shape}_alpha{flux_to_str(flux)}{'' if ANGLE is None else f'_angle{ANGLE}'}{'_' + TAG if TAG else ''}/"
         out_dir.mkdir(exist_ok=True, parents=True)
         if MU_SMOOTH is not None and MU_SPARSE is not None:
             out_path = out_dir / f"musmooth{MU_SMOOTH}_musparse{MU_SPARSE}.npz"
