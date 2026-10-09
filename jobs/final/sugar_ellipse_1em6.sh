@@ -6,6 +6,6 @@
 # each = 2 reconstructions (warm started) + 2 CG solves (<= 20 Hessian-vector products each).
 # output: results/sugar/medium_ellipse_alpha1em6_angle0_gradS/trajectory.npz
 ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
-oarsub -l "gpu=1,walltime=48:00:00" -p "cluster='vercors14'" -n "sugar_ellipse_1em6" \
+oarsub -l "gpu=1,walltime=48:00:00" -p "cluster='vercors9'" -n "sugar_ellipse_1em6" \
   "CUDA_VISIBLE_DEVICES=0 $ROOT/.venv/bin/python $ROOT/scripts/run_results/syntheticdata_sugar.py \
     --flux 1e-6 --shape medium_ellipse --angle 0 --mu0 1e7 1e6 --maxfun 25"
