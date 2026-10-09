@@ -288,6 +288,17 @@ def main(cfg):
     ax1.tick_params(axis='both', which='major', labelsize=12)
     ax1.plot(j_mse_best, k_mse_best, "rx", markersize=12, markeredgewidth=2)
     ax1.plot(j_sure_best, k_sure_best, "m+", markersize=12, markeredgewidth=2)
+    # couple obtained by minimizing MC-SURE with MC-SUGAR (syntheticdata_sugar.py), if available: green cross,
+    # with the path of the quasi-Newton iterates (positions interpolated in log10(mu) on the decade grid)
+    sugar_file = ROOT / "results" / "sugar" / f"{shape}_alpha{flux}_angle0_{TAG or 'gradS'}" / "trajectory.npz"
+    if sugar_file.exists():
+        tr = np.load(sugar_file, allow_pickle=True)
+        to_j = lambda v: np.interp(np.log10(v), np.log10(mu_sparse_vals), np.arange(len(mu_sparse_vals)))
+        to_k = lambda v: np.interp(np.log10(v), np.log10(mu_smooth_vals), np.arange(len(mu_smooth_vals)))
+        ax1.plot(to_j(tr["mu_sparse"]), to_k(tr["mu_smooth"]), "-", color="limegreen", lw=1, alpha=0.8)
+        mu_s, mu_p = (tr["mu_opt"] if "mu_opt" in tr.files else (tr["mu_smooth"][-1], tr["mu_sparse"][-1]))
+        ax1.plot(to_j(mu_p), to_k(mu_s), "X", color="limegreen", markersize=13, markeredgecolor="k", markeredgewidth=1)
+        print(f"MC-SUGAR: mu = ({mu_s:.3e}, {mu_p:.3e}) after {len(tr['sure'])} evaluations")
     ax1.set_aspect('equal', adjustable='box')
 
     ax2 = fig.add_subplot(2, 1, 2)

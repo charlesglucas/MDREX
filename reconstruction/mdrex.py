@@ -208,6 +208,52 @@ class MDREX:
         self.to_patches = None
         self.to_params = None
 
+    def objective(self, x_disc, y, mu_sparse, mu_smooth):
+        """Objective f(x) = data term + mu_sparse R_sparse(x) + mu_smooth R_smooth(x) and its gradient (numpy float64 /
+        float32), exactly the function minimized by run_bfgs (also used by SUGAR for Hessian-vector products)."""
+        x_tensor = torch.tensor(x_disc, dtype=torch.float32, device=y.device, requires_grad=True)
+        with torch.set_grad_enabled(True):
+            im = self.forward_model(x_tensor)
+            diff = y - im
+            # Data term: backprop term by term into a detached leaf so that
+            # only one term's graph lives in memory at a time.
+            diff_leaf = diff.detach().requires_grad_(True)
+            # No torch.no_grad() on fit_params: the gradient also flows through the estimated means and
+            # covariances (dependence of m_hat and C_hat on x, as in the original scripts). The parameters are
+            # fitted term by term inside the loop, so that only one term's graph lives in memory at a time.
+            n_terms = len(self.exomild.all_terms)
+            phi = 0.0
+            grad_diff = torch.zeros_like(diff_leaf)
+            for term in self.exomild.all_terms:
+                p = term.fit_params(diff_leaf, self.lbda)
+                ll = term.get_log_likelihood(diff_leaf, self.lbda, p)
+                phi_term = torch.sum(-ll) / n_terms
+                # Only d/d diff: .backward() would also compute (huge, unused)
+                # gradients w.r.t. the ExoMILD parameters.
+                (g,) = torch.autograd.grad(phi_term, diff_leaf)
+                grad_diff += g
+                # objective value accumulated in float64: in float32, |f| ~ 1e7-1e8 has a resolution of ~1-8,
+                # coarser than the convergence test of VMLMB (ftol * |f|)
+                phi += torch.sum(-ll.detach(), dtype=torch.float64).item() / n_terms
+                del ll, phi_term, g, p
+            torch.cuda.empty_cache()
+            reg_sparse = mu_sparse * self.l2_l1_sparse_2d(x_tensor)
+            reg_smooth = mu_smooth * self.l2_l1_edge_preserving_2d(x_tensor)
+            # Chain rule through forward_model: d phi/dx = J^T (d phi/d diff)
+            surrogate = torch.sum(diff * grad_diff) + reg_sparse + reg_smooth
+            with torch.no_grad():
+                x64 = x_tensor.detach().double()
+                loss = (phi + mu_sparse * self.l2_l1_sparse_2d(x64).item()
+                        + mu_smooth * self.l2_l1_edge_preserving_2d(x64).item())
+                del x64
+        (grad_x,) = torch.autograd.grad(surrogate, x_tensor, retain_graph=False, create_graph=False, allow_unused=False)
+        fx = np.float64(loss)
+        gx = grad_x.detach().cpu().numpy().astype(np.float32)
+        del loss, surrogate, grad_x, grad_diff, im, diff, diff_leaf, x_tensor
+        gc.collect()
+        torch.cuda.empty_cache()
+        return fx, gx
+
     def run_bfgs(self, x_disc_0, y, mu_sparse, mu_smooth, ftol=1.0e-8, xtol=1.0e-6, gtol=1.0e-5):
         """
         Run BFGS optimization for given regularization parameters and return the optimized solution, function value, gradient, and status.
@@ -225,47 +271,7 @@ class MDREX:
             if debug:
                 print(f"[fg {self.n_eval}] ||x||={np.linalg.norm(x_disc):.3e} max x={np.max(x_disc):.3e} "
                       f"finite={bool(np.all(np.isfinite(x_disc)))}", flush=True)
-            x_tensor = torch.tensor(x_disc, dtype=torch.float32, device=y.device, requires_grad=True)
-            with torch.set_grad_enabled(True):
-                im = self.forward_model(x_tensor)
-                diff = y - im
-                # Data term: backprop term by term into a detached leaf so that
-                # only one term's graph lives in memory at a time.
-                diff_leaf = diff.detach().requires_grad_(True)
-                # No torch.no_grad() on fit_params: the gradient also flows through the estimated means and
-                # covariances (dependence of m_hat and C_hat on x, as in the original scripts). The parameters are
-                # fitted term by term inside the loop, so that only one term's graph lives in memory at a time.
-                n_terms = len(self.exomild.all_terms)
-                phi = 0.0
-                grad_diff = torch.zeros_like(diff_leaf)
-                for term in self.exomild.all_terms:
-                    p = term.fit_params(diff_leaf, self.lbda)
-                    ll = term.get_log_likelihood(diff_leaf, self.lbda, p)
-                    phi_term = torch.sum(-ll) / n_terms
-                    # Only d/d diff: .backward() would also compute (huge, unused)
-                    # gradients w.r.t. the ExoMILD parameters.
-                    (g,) = torch.autograd.grad(phi_term, diff_leaf)
-                    grad_diff += g
-                    # objective value accumulated in float64: in float32, |f| ~ 1e7-1e8 has a resolution of ~1-8,
-                    # coarser than the convergence test of VMLMB (ftol * |f|)
-                    phi += torch.sum(-ll.detach(), dtype=torch.float64).item() / n_terms
-                    del ll, phi_term, g, p
-                torch.cuda.empty_cache()
-                reg_sparse = mu_sparse * self.l2_l1_sparse_2d(x_tensor)
-                reg_smooth = mu_smooth * self.l2_l1_edge_preserving_2d(x_tensor)
-                # Chain rule through forward_model: d phi/dx = J^T (d phi/d diff)
-                surrogate = torch.sum(diff * grad_diff) + reg_sparse + reg_smooth
-                with torch.no_grad():
-                    x64 = x_tensor.detach().double()
-                    loss = (phi + mu_sparse * self.l2_l1_sparse_2d(x64).item()
-                            + mu_smooth * self.l2_l1_edge_preserving_2d(x64).item())
-                    del x64
-            (grad_x,) = torch.autograd.grad(surrogate, x_tensor, retain_graph=False, create_graph=False, allow_unused=False)
-            fx = np.float64(loss)
-            gx = grad_x.detach().cpu().numpy().astype(np.float32)
-            del loss, surrogate, grad_x, grad_diff, im, diff, diff_leaf, x_tensor
-            gc.collect()
-            torch.cuda.empty_cache()
+            fx, gx = self.objective(x_disc, y, mu_sparse, mu_smooth)
             if debug:
                 print(f"[fg {self.n_eval}] f={fx:.6e} ||g||={np.linalg.norm(gx):.3e} "
                       f"finite g={bool(np.all(np.isfinite(gx)))}", flush=True)
