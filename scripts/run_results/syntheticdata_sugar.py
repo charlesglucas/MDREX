@@ -12,6 +12,7 @@ parser.add_argument("--mu0", type=float, nargs=2, default=[1e7, 1e6], help="init
 parser.add_argument("--maxfun", type=int, default=25, help="maximum number of MC-SURE evaluations")
 parser.add_argument("--cg-maxiter", type=int, default=20)
 parser.add_argument("--cg-rtol", type=float, default=1e-2)
+parser.add_argument("--hvp-step", type=float, default=1e-2, help="relative step of the finite-difference Hessian-vector products")
 parser.add_argument("--seed", type=int, default=42, help="seed of the Monte Carlo probe delta (fixed)")
 parser.add_argument("--tag", type=str, default="gradS")
 args, remaining = parser.parse_known_args()
@@ -186,7 +187,7 @@ def main(cfg):
     sys.path.insert(0, str(ROOT / "scripts/plot_results"))
     import disk_rec_sure_fixedW as M
     from scipy.optimize import minimize
-    from reconstruction.sugar import sugar_gradient
+    from reconstruction.sugar import sugar_gradient, hvp_symmetry_test
 
     fm, to_patches, centered = M.load_forward_model(device)
     with torch.no_grad():
@@ -246,16 +247,20 @@ def main(cfg):
     def sure_and_sugar(theta):   # theta = log10(mu_smooth, mu_sparse)
         mu_smooth, mu_sparse = 10.0 ** theta
         print(f"\n=== evaluation {len(hist) + 1}: mu_smooth={mu_smooth:.4e} mu_sparse={mu_sparse:.4e}", flush=True)
-        x, fx, gx, st = mdrex.run_bfgs(state["x"], y, mu_sparse, mu_smooth)            # warm start
-        x_eps, _, _, st_eps = mdrex.run_bfgs(state["x_eps"], y_eps, mu_sparse, mu_smooth)
+        # each mu: reconstructions from x = 0 (as for the grids), so that MC-SURE is a deterministic function of mu
+        x, fx, gx, st = mdrex.run_bfgs(np.zeros((C, H, W)), y, mu_sparse, mu_smooth)
+        x_eps, _, _, st_eps = mdrex.run_bfgs(np.zeros((C, H, W)), y_eps, mu_sparse, mu_smooth)
         state["x"], state["x_eps"] = x, x_eps
         D, gD = D_and_grad(x)
         div = divergence(x, x_eps)
         sure = D - N + 2 * div
         grad_F = lambda z: mdrex.objective(z, y, mu_sparse, mu_smooth)[1]
         grad_F_eps = lambda z: mdrex.objective(z, y_eps, mu_sparse, mu_smooth)[1]
+        if not hist:   # quality of the finite-difference Hessian-vector products, once, at the first point
+            for t in hvp_symmetry_test(grad_F, x, x > 0):
+                print(f"[HVP test] rel_step {t['rel_step']:.0e}: asymmetry {t['asym']:.3e}, v^T H v {t['vHv']:.3e}", flush=True)
         g_mu, info = sugar_gradient(grad_F, grad_F_eps, x, x_eps, gD, g_delta, reg_grads,
-                                    cg_maxiter=args.cg_maxiter, cg_rtol=args.cg_rtol, verbose=True)
+                                    cg_maxiter=args.cg_maxiter, cg_rtol=args.cg_rtol, verbose=True, hvp_step=args.hvp_step)
         g_theta = g_mu * np.array([mu_smooth, mu_sparse]) * np.log(10)               # d SURE / d log10(mu)
         mse, psnr, psnr_supp = quality(x)
         rec = dict(mu_smooth=mu_smooth, mu_sparse=mu_sparse, sure=sure, data_term=D, div=div, grad_mu=g_mu,

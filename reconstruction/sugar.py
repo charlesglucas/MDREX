@@ -67,14 +67,14 @@ def hessian_vector_product(grad_F, x, v, rel_step=1e-3):
 
 
 def sugar_gradient(grad_F, grad_F_eps, x_hat, x_hat_eps, grad_D, g_delta, reg_grads, free_tol=0.0,
-                   cg_maxiter=30, cg_rtol=1e-3, verbose=False):
+                   cg_maxiter=30, cg_rtol=1e-3, verbose=False, hvp_step=1e-3):
     """d SURE / d mu_i, i = (smooth, sparse). grad_F(x) / grad_F_eps(x): gradients of F at y and y + xi delta (current
     mu); reg_grads(x) -> (grad R_smooth(x), grad R_sparse(x)); free variables: x > free_tol * max(x)."""
     free = x_hat > free_tol * x_hat.max()
     free_eps = x_hat_eps > free_tol * x_hat_eps.max()
-    u, it_u, res_u = conjugate_gradient(lambda v: hessian_vector_product(grad_F, x_hat, v), grad_D - g_delta, free,
+    u, it_u, res_u = conjugate_gradient(lambda v: hessian_vector_product(grad_F, x_hat, v, hvp_step), grad_D - g_delta, free,
                                         cg_maxiter, cg_rtol, verbose)
-    w, it_w, res_w = conjugate_gradient(lambda v: hessian_vector_product(grad_F_eps, x_hat_eps, v), g_delta, free_eps,
+    w, it_w, res_w = conjugate_gradient(lambda v: hessian_vector_product(grad_F_eps, x_hat_eps, v, hvp_step), g_delta, free_eps,
                                         cg_maxiter, cg_rtol, verbose)
     R = reg_grads(x_hat)
     R_eps = reg_grads(x_hat_eps)
@@ -83,3 +83,18 @@ def sugar_gradient(grad_F, grad_F_eps, x_hat, x_hat_eps, grad_D, g_delta, reg_gr
     info = dict(cg_iter_u=it_u, cg_res_u=res_u, cg_iter_w=it_w, cg_res_w=res_w,
                 n_free=int(free.sum()), n_free_eps=int(free_eps.sum()))
     return grad, info
+
+
+def hvp_symmetry_test(grad_F, x, free, rel_steps=(1e-4, 1e-3, 1e-2, 1e-1), seed=0):
+    """Quality of the finite-difference Hessian-vector products: for random v, w on the free variables,
+    |v^T H w - w^T H v| / max(|v^T H w|, |w^T H v|) should be << 1 (H symmetric); also returns v^T H v > 0 ?"""
+    rng = np.random.default_rng(seed)
+    v = np.where(free, rng.standard_normal(x.shape), 0.0)
+    w = np.where(free, rng.standard_normal(x.shape), 0.0)
+    out = []
+    for h in rel_steps:
+        Hv = hessian_vector_product(grad_F, x, v, h)
+        Hw = hessian_vector_product(grad_F, x, w, h)
+        a, b = float(np.dot(v.ravel(), Hw.ravel())), float(np.dot(w.ravel(), Hv.ravel()))
+        out.append(dict(rel_step=h, asym=abs(a - b) / max(abs(a), abs(b), 1e-300), vHv=float(np.dot(v.ravel(), Hv.ravel()))))
+    return out
