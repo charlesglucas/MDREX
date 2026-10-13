@@ -25,8 +25,15 @@ from utils.rotation import BatchRotationOperator
 #   W_REF = "pilot": C_inv estimated on y - A x_hat(mu_0), where mu_0 minimizes the SURE computed with
 #                    W_REF = "y" (the disk is removed before estimating the covariance), usable on real data
 # The MSE (reference) is always computed with the oracle metric W_gt.
-W_REF = "pilot"
-TAG = ""  # suffix of the results folder, e.g. "gradS" -> grid_sure_<shape>_alpha<flux>_gradS (figures suffixed too)
+W_REF = os.environ.get("W_REF", "y")
+TAG = os.environ.get("TAG", "gradS")  # suffix of the results folder, e.g. "gradS" -> grid_sure_<shape>_alpha<flux>_gradS (figures suffixed too)
+SHAPE = os.environ.get("SHAPE", "medium_ellipse")
+FLUX = os.environ.get("FLUX", "1em5")
+# Iterated refined MC-SURE (with W_REF = "y"): C_inv re-estimated on y - A x_hat(mu_k), mu_{k+1} = argmin of the SURE
+# with this metric, starting from mu_0 = argmin MC-SURE(C^y), until mu_{k+1} = mu_k. Adds a third row to the figure
+# (refined MC-SURE at the fixed point) and its minimum (green cross) on the three panels.
+REFINED = True
+SHOW_SUGAR = False  # MC-SUGAR couple / trajectory on the MSE panel (results/sugar)
 
 
 def sci_colorbar(cbar, nbins=4, decimals=2):
@@ -162,13 +169,47 @@ def fixed_metric_terms(path, files, mu_smooth_vals, mu_sparse_vals, device, DE=N
     return DA, MSE, y.numel()
 
 
+@torch.no_grad()
+def refined_sure_iterated(path, files, mu_smooth_vals, mu_sparse_vals, DE, SURE_y, device, max_iter=10):
+    """Iterated refined MC-SURE: starting from mu_0 = argmin SURE_y, the metric is re-estimated on the residual
+    y - A x_hat(mu_k) and mu_{k+1} = argmin(D_k - N + 2 div), until mu_{k+1} = mu_k. Returns the SURE grid at the
+    fixed point and the path [mu_0, mu_1, ...] (indices (k, j)). Cached in the results folder."""
+    cache = path / "sure_refined_iterated.npz"
+    if cache.exists():
+        c = np.load(cache)
+        if list(c["mu_smooth"]) == mu_smooth_vals and list(c["mu_sparse"]) == mu_sparse_vals:
+            print(f"Loading cached iterated refined MC-SURE from {cache}")
+            return c["sure"], [tuple(p) for p in c["path"]]
+    forward_model, to_patches, centered = load_forward_model(device)
+    y = torch.tensor(np.load(path / "data.npz")["y"], device=device)
+    N = y.numel()
+    X = {(mu_smooth_vals.index(ms), mu_sparse_vals.index(mp)): f for f, ms, mp in files}
+    load = lambda f: torch.tensor(np.load(f)["x"], dtype=torch.float32, device=device)
+    path_mu = [np.unravel_index(np.nanargmin(SURE_y), SURE_y.shape)]
+    for it in range(max_iter):
+        C_inv = shrinkage_cov_inv(centered(to_patches(y - forward_model(load(X[path_mu[-1]])))))
+        DA = np.full(SURE_y.shape, np.nan)
+        for (k, j), f in X.items():
+            DA[k, j] = mahalanobis(centered(to_patches(y - forward_model(load(f)))), C_inv)
+        SURE = np.where(DE == 0, np.nan, DA - N + DE)
+        path_mu.append(np.unravel_index(np.nanargmin(SURE), SURE.shape))
+        print(f"refined MC-SURE iteration {it + 1}: pilot ({mu_smooth_vals[path_mu[-2][0]]:.0e}, "
+              f"{mu_sparse_vals[path_mu[-2][1]]:.0e}) -> ({mu_smooth_vals[path_mu[-1][0]]:.0e}, "
+              f"{mu_sparse_vals[path_mu[-1][1]]:.0e})", flush=True)
+        if tuple(path_mu[-1]) == tuple(path_mu[-2]):
+            break
+    path_mu = [tuple(int(i) for i in p) for p in path_mu]
+    np.savez(cache, sure=SURE, path=np.array(path_mu), mu_smooth=mu_smooth_vals, mu_sparse=mu_sparse_vals)
+    return SURE, path_mu
+
+
 @hydra.main(config_path="../../conf", config_name="config")
 def main(cfg):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Load results
-    shape = "medium_ellipse"
-    flux = "1em5"
+    shape = SHAPE
+    flux = FLUX
     path = ROOT / "results/grids_111111111111" / (f"grid_sure_{shape}_alpha{flux}" + (f"_{TAG}" if TAG else ""))
     # path = Path(ROOT / f"results/grids_100100100100/grid_sure_{shape}_alpha{flux}")
     pattern = re.compile(r"musmooth([0-9.]+)_musparse([0-9.]+)\.npz")
@@ -234,6 +275,11 @@ def main(cfg):
     best_x_disk_sure = x_disk_store[k_sure_best, j_sure_best]
     print(f"W_REF={W_REF}: argmin MSE  mu_smooth={mu_smooth_vals[k_mse_best]:.0e} mu_sparse={mu_sparse_vals[j_mse_best]:.0e}")
     print(f"W_REF={W_REF}: argmin SURE mu_smooth={mu_smooth_vals[k_sure_best]:.0e} mu_sparse={mu_sparse_vals[j_sure_best]:.0e}")
+    if REFINED:
+        SURE_ref, path_ref = refined_sure_iterated(path, files, mu_smooth_vals, mu_sparse_vals, DE, SURE, device)
+        k_ref_best, j_ref_best = path_ref[-1]
+        print(f"refined MC-SURE (fixed point after {len(path_ref) - 1} iterations): argmin mu_smooth="
+              f"{mu_smooth_vals[k_ref_best]:.0e} mu_sparse={mu_sparse_vals[j_ref_best]:.0e}")
 
     # SURE is defined up to a constant and its variations are small compared to its level:
     # display SURE - min(SURE) (+1 for the log scale)
@@ -276,46 +322,41 @@ def main(cfg):
     plt.show()
 
     s1, s2 = MSE.shape
-    fig = plt.figure(figsize=(5, 8))
-    ax1 = fig.add_subplot(2, 1, 1)
-    im1 = ax1.imshow(MSE, cmap="RdBu_r")
-    ax1.set_title(r"$\mathrm{MSE}$", fontsize=18)
-    cbar1 = fig.colorbar(im1, ax=ax1, shrink=1)
-    sci_colorbar(cbar1)
-    ax1.set_xticks(np.arange(s2)); ax1.set_xticklabels(labels_sparse, fontsize=12)
-    ax1.set_yticks(np.arange(s1)); ax1.set_yticklabels(labels_smooth, fontsize=12)
-    ax1.set_ylabel(r"$\mu_{\rm smooth}$", fontsize=14); ax1.set_xlabel(r"$\mu_{\rm sparse}$", fontsize=14)
-    ax1.tick_params(axis='both', which='major', labelsize=12)
-    ax1.plot(j_mse_best, k_mse_best, "rx", markersize=12, markeredgewidth=2)
-    ax1.plot(j_sure_best, k_sure_best, "m+", markersize=12, markeredgewidth=2)
-    # couple obtained by minimizing MC-SURE with MC-SUGAR (syntheticdata_sugar.py), if available: green cross,
-    # with the path of the quasi-Newton iterates (positions interpolated in log10(mu) on the decade grid)
-    sugar_file = ROOT / "results" / "sugar" / f"{shape}_alpha{flux}_angle0_{TAG or 'gradS'}" / "trajectory.npz"
-    if sugar_file.exists():
-        tr = np.load(sugar_file, allow_pickle=True)
-        to_j = lambda v: np.interp(np.log10(v), np.log10(mu_sparse_vals), np.arange(len(mu_sparse_vals)))
-        to_k = lambda v: np.interp(np.log10(v), np.log10(mu_smooth_vals), np.arange(len(mu_smooth_vals)))
-        ax1.plot(to_j(tr["mu_sparse"]), to_k(tr["mu_smooth"]), "-", color="limegreen", lw=1, alpha=0.8)
-        mu_s, mu_p = (tr["mu_opt"] if "mu_opt" in tr.files else (tr["mu_smooth"][-1], tr["mu_sparse"][-1]))
-        ax1.plot(to_j(mu_p), to_k(mu_s), "X", color="limegreen", markersize=13, markeredgecolor="k", markeredgewidth=1)
-        print(f"MC-SUGAR: mu = ({mu_s:.3e}, {mu_p:.3e}) after {len(tr['sure'])} evaluations")
-    ax1.set_aspect('equal', adjustable='box')
-
-    ax2 = fig.add_subplot(2, 1, 2)
-    im2 = ax2.imshow(SURE_disp, cmap="RdBu_r")
-    ax2.set_title(r"$\mathrm{MC-SURE}$", fontsize=18)
-    cbar2 = fig.colorbar(im2, ax=ax2, shrink=1)
-    sci_colorbar(cbar2)
-    ax2.set_xticks(np.arange(s2)); ax2.set_xticklabels(labels_sparse, fontsize=12)
-    ax2.set_yticks(np.arange(s1)); ax2.set_yticklabels(labels_smooth, fontsize=12)
-    ax2.set_ylabel(r"$\mu_{\rm smooth}$", fontsize=14); ax2.set_xlabel(r"$\mu_{\rm sparse}$", fontsize=14)
-    ax2.tick_params(axis='both', which='major', labelsize=12)
-    ax2.plot(j_mse_best, k_mse_best, "rx", markersize=12, markeredgewidth=2)
-    ax2.plot(j_sure_best, k_sure_best, "m+", markersize=12, markeredgewidth=2)
-    ax2.set_aspect('equal', adjustable='box')
+    panels = [(MSE, r"$\mathrm{MSE}$"), (SURE_disp, r"$\mathrm{MC-SURE}$")]
+    if REFINED:
+        panels.append((SURE_ref, r"$\mathrm{Refined\ MC-SURE}$"))
+    fig = plt.figure(figsize=(5, 4 * len(panels)))
+    for p, (G, title) in enumerate(panels):
+        ax = fig.add_subplot(len(panels), 1, p + 1)
+        im = ax.imshow(G, cmap="RdBu_r")
+        ax.set_title(title, fontsize=18)
+        cbar = fig.colorbar(im, ax=ax, shrink=1)
+        sci_colorbar(cbar)
+        ax.set_xticks(np.arange(s2)); ax.set_xticklabels(labels_sparse, fontsize=12)
+        ax.set_yticks(np.arange(s1)); ax.set_yticklabels(labels_smooth, fontsize=12)
+        ax.set_ylabel(r"$\mu_{\rm smooth}$", fontsize=14); ax.set_xlabel(r"$\mu_{\rm sparse}$", fontsize=14)
+        ax.tick_params(axis='both', which='major', labelsize=12)
+        # minima: MSE (red x), MC-SURE with C^y (purple +), refined MC-SURE (green x)
+        ax.plot(j_mse_best, k_mse_best, "rx", markersize=12, markeredgewidth=2)
+        ax.plot(j_sure_best, k_sure_best, "m+", markersize=12, markeredgewidth=2)
+        if REFINED:
+            ax.plot(j_ref_best, k_ref_best, "x", color="limegreen", markersize=12, markeredgewidth=2.5)
+        if p == 0 and SHOW_SUGAR:
+            # couple obtained by minimizing MC-SURE with MC-SUGAR (syntheticdata_sugar.py), if available: green cross,
+            # with the path of the quasi-Newton iterates (positions interpolated in log10(mu) on the decade grid)
+            sugar_file = ROOT / "results" / "sugar" / f"{shape}_alpha{flux}_angle0_{TAG or 'gradS'}" / "trajectory.npz"
+            if sugar_file.exists():
+                tr = np.load(sugar_file, allow_pickle=True)
+                to_j = lambda v: np.interp(np.log10(v), np.log10(mu_sparse_vals), np.arange(len(mu_sparse_vals)))
+                to_k = lambda v: np.interp(np.log10(v), np.log10(mu_smooth_vals), np.arange(len(mu_smooth_vals)))
+                ax.plot(to_j(tr["mu_sparse"]), to_k(tr["mu_smooth"]), "-", color="limegreen", lw=1, alpha=0.8)
+                mu_s, mu_p = (tr["mu_opt"] if "mu_opt" in tr.files else (tr["mu_smooth"][-1], tr["mu_sparse"][-1]))
+                ax.plot(to_j(mu_p), to_k(mu_s), "X", color="limegreen", markersize=13, markeredgecolor="k", markeredgewidth=1)
+                print(f"MC-SUGAR: mu = ({mu_s:.3e}, {mu_p:.3e}) after {len(tr['sure'])} evaluations")
+        ax.set_aspect('equal', adjustable='box')
 
     fig.tight_layout()
-    fig.savefig(f"figures/grids_{shape}_{flux}_fixedC{W_REF}{'_' + TAG if TAG else ''}.pdf")
+    fig.savefig(f"figures/grids_{shape}_{flux}_fixedC{W_REF}{'_refined' if REFINED else ''}{'_' + TAG if TAG else ''}.pdf")
     plt.show()
 
     if W_REF == "pilot":

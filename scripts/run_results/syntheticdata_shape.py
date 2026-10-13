@@ -12,6 +12,8 @@ parser.add_argument("--shape", type=str, default="spiral", choices=["medium_elli
 parser.add_argument("--tag", type=str, default="", help="Suffix of the output folder, e.g. gradC")
 parser.add_argument("--ftol", type=float, default=1e-8, help="Relative tolerance of VMLMB on the objective (default 1e-8); "
                     "results with another value are saved in a folder suffixed _ftol<value>")
+parser.add_argument("--flux", type=float, default=None, choices=[1e-6, 5e-6, 1e-5], help="Only this contrast (default: the 3 "
+                    "contrasts); results saved in a folder suffixed _alpha<1em6|5em6|1em5>, other contrasts left at zero")
 args, remaining = parser.parse_known_args()
 # Remove parsed args so Hydra doesn't complain.
 sys.argv = [sys.argv[0]] + remaining
@@ -22,6 +24,7 @@ SHAPE = args.shape
 FTOL = args.ftol
 TAG = args.tag
 OUTPUT_PATH = args.out
+FLUX = args.flux
 
 # Configure GPU memory management
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
@@ -180,6 +183,8 @@ def main(cfg):
                 data = data.byteswap().view(data.dtype.newbyteorder('='))
             datadisk = data[513-128:513+128, 513-128:513+128]
             for (f, flux) in enumerate([1e-6, 5e-6, 1e-5]):
+                if FLUX is not None and flux != FLUX:
+                    continue
                 with torch.no_grad():
                     xdisc = np.zeros((C, H, W))
                     x_gt = flux*torch.tensor(datadisk, dtype=torch.float32, device=device) 
@@ -192,7 +197,8 @@ def main(cfg):
         mantissa, exp = f"{mu:.0e}".split("e")
         return f"{mantissa}e{int(exp)}"
 
-    outdir = Path("results") / "mdrex_results" / (f"musmooth{mu_to_str(MU_SMOOTH)}_musparse{mu_to_str(MU_SPARSE)}_{SHAPE}" + ("" if FTOL == 1e-8 else f"_ftol{FTOL:g}") + (f"_{TAG}" if TAG else ""))
+    outdir = Path("results") / "mdrex_results" / (f"musmooth{mu_to_str(MU_SMOOTH)}_musparse{mu_to_str(MU_SPARSE)}_{SHAPE}" + ("" if FLUX is None else "_alpha" + f"{FLUX:.0e}".replace("e-0", "em"))
+                                         + ("" if FTOL == 1e-8 else f"_ftol{FTOL:g}") + (f"_{TAG}" if TAG else ""))
     outdir.mkdir(parents=True, exist_ok=True)
     outfile = outdir / "x_opt.fits"
     fits.writeto(outfile, x_opt, overwrite=True)
