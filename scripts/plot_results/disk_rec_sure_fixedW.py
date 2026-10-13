@@ -29,10 +29,12 @@ W_REF = os.environ.get("W_REF", "y")
 TAG = os.environ.get("TAG", "gradS")  # suffix of the results folder, e.g. "gradS" -> grid_sure_<shape>_alpha<flux>_gradS (figures suffixed too)
 SHAPE = os.environ.get("SHAPE", "medium_ellipse")
 FLUX = os.environ.get("FLUX", "1em5")
-# Iterated refined MC-SURE (with W_REF = "y"): C_inv re-estimated on y - A x_hat(mu_k), mu_{k+1} = argmin of the SURE
-# with this metric, starting from mu_0 = argmin MC-SURE(C^y), until mu_{k+1} = mu_k. Adds a third row to the figure
-# (refined MC-SURE at the fixed point) and its minimum (green cross) on the three panels.
+# Refined MC-SURE (with W_REF = "y"): C_inv re-estimated on y - A x_hat(mu_k), mu_{k+1} = argmin of the SURE
+# with this metric, starting from mu_0 = argmin MC-SURE(C^y); REFINED_ITER = 1: one step (paper), larger: iterated
+# until mu_{k+1} = mu_k (at most REFINED_ITER steps). Adds a third row to the figure (refined MC-SURE) and its
+# minimum (green cross) on the three panels.
 REFINED = True
+REFINED_ITER = int(os.environ.get("REFINED_ITER", "1"))
 SHOW_SUGAR = False  # MC-SUGAR couple / trajectory on the MSE panel (results/sugar)
 
 
@@ -170,11 +172,11 @@ def fixed_metric_terms(path, files, mu_smooth_vals, mu_sparse_vals, device, DE=N
 
 
 @torch.no_grad()
-def refined_sure_iterated(path, files, mu_smooth_vals, mu_sparse_vals, DE, SURE_y, device, max_iter=10):
+def refined_sure_iterated(path, files, mu_smooth_vals, mu_sparse_vals, DE, SURE_y, device, max_iter=1):
     """Iterated refined MC-SURE: starting from mu_0 = argmin SURE_y, the metric is re-estimated on the residual
     y - A x_hat(mu_k) and mu_{k+1} = argmin(D_k - N + 2 div), until mu_{k+1} = mu_k. Returns the SURE grid at the
     fixed point and the path [mu_0, mu_1, ...] (indices (k, j)). Cached in the results folder."""
-    cache = path / "sure_refined_iterated.npz"
+    cache = path / ("sure_refined.npz" if max_iter == 1 else f"sure_refined_iterated{max_iter}.npz")
     if cache.exists():
         c = np.load(cache)
         if list(c["mu_smooth"]) == mu_smooth_vals and list(c["mu_sparse"]) == mu_sparse_vals:
@@ -276,9 +278,10 @@ def main(cfg):
     print(f"W_REF={W_REF}: argmin MSE  mu_smooth={mu_smooth_vals[k_mse_best]:.0e} mu_sparse={mu_sparse_vals[j_mse_best]:.0e}")
     print(f"W_REF={W_REF}: argmin SURE mu_smooth={mu_smooth_vals[k_sure_best]:.0e} mu_sparse={mu_sparse_vals[j_sure_best]:.0e}")
     if REFINED:
-        SURE_ref, path_ref = refined_sure_iterated(path, files, mu_smooth_vals, mu_sparse_vals, DE, SURE, device)
+        SURE_ref, path_ref = refined_sure_iterated(path, files, mu_smooth_vals, mu_sparse_vals, DE, SURE, device,
+                                                  max_iter=REFINED_ITER)
         k_ref_best, j_ref_best = path_ref[-1]
-        print(f"refined MC-SURE (fixed point after {len(path_ref) - 1} iterations): argmin mu_smooth="
+        print(f"refined MC-SURE ({len(path_ref) - 1} iteration(s)): argmin mu_smooth="
               f"{mu_smooth_vals[k_ref_best]:.0e} mu_sparse={mu_sparse_vals[j_ref_best]:.0e}")
 
     # SURE is defined up to a constant and its variations are small compared to its level:
@@ -356,7 +359,7 @@ def main(cfg):
         ax.set_aspect('equal', adjustable='box')
 
     fig.tight_layout()
-    fig.savefig(f"figures/grids_{shape}_{flux}_fixedC{W_REF}{'_refined' if REFINED else ''}{'_' + TAG if TAG else ''}.pdf")
+    fig.savefig(f"figures/grids_{shape}_{flux}_fixedC{W_REF}{('_refined' if REFINED_ITER == 1 else f'_refined{REFINED_ITER}') if REFINED else ''}{'_' + TAG if TAG else ''}.pdf")
     plt.show()
 
     if W_REF == "pilot":
