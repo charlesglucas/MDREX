@@ -7,13 +7,13 @@
 #   mu_sparse 3e4 / 1e5 / 3e5 / 1e6 / 3e6 / 1e7 / 3e7   (same for the 3 shapes)
 # (5e6 and 1e4, computed before, are not used by the figures / selection)
 # One job per (shape, alpha) = 9 jobs, the couples in sequence; couples already computed are skipped
-# (the script can be relaunched to complete). Jobs on vercors18.
+# (the script can be relaunched to complete). Jobs spread alternately over vercors14 and vercors9.
 # Usage: bash table1_sure_gradS.sh [shape ...]   (default: medium_ellipse spiral circle)
 # output: results/grids_111111111111/grid_sure_<shape>_alpha<1em6|5em6|1em5>_angle<angle>_gradS/musmooth<mu>_musparse<mu>.npz
 ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
 PY=$ROOT/.venv/bin/python
 RUN=$ROOT/scripts/run_results/syntheticdata_sure_gpu.py
-CLUSTERS=(vercors18)
+CLUSTERS=(vercors14 vercors9)
 SHAPES=("${@:-medium_ellipse spiral circle}")
 n=0
 for shape in ${SHAPES[@]}; do

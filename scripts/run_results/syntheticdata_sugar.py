@@ -4,6 +4,9 @@ import argparse
 
 # MC-SURE minimized over (mu_smooth, mu_sparse) with its MC-SUGAR gradient (reconstruction/sugar.py), quasi-Newton
 # (L-BFGS-B) on log10(mu). Same synthetic data as syntheticdata_sure_gpu.py (nuisance HIP 72192 + disk at one angle).
+# --refined: refined MC-SURE (as on the grids, one iteration): metric re-estimated on the residual y - A x_hat(mu_pilot),
+# mu_pilot = couple found by MC-SUGAR with the metric C^y (results/sugar/<...>_<tag>/trajectory.npz, mu_opt), start at
+# mu_pilot; output folder suffixed _refined.
 parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument("--flux", type=float, required=True)
 parser.add_argument("--shape", type=str, required=True)
@@ -15,6 +18,9 @@ parser.add_argument("--cg-rtol", type=float, default=1e-2)
 parser.add_argument("--hvp-step", type=float, default=1e-2, help="relative step of the finite-difference Hessian-vector products")
 parser.add_argument("--seed", type=int, default=42, help="seed of the Monte Carlo probe delta (fixed)")
 parser.add_argument("--tag", type=str, default="gradS")
+parser.add_argument("--refined", action="store_true", help="refined MC-SURE (metric from the residual of the C^y MC-SUGAR couple)")
+parser.add_argument("--bounds", type=float, nargs=4, default=[4, 10, 3, 9],
+                    help="bounds of log10(mu_smooth) (2 values) and log10(mu_sparse) (2 values)")
 args, remaining = parser.parse_known_args()
 sys.argv = [sys.argv[0]] + remaining
 FLUX, SHAPE, ANGLE, TAG = args.flux, args.shape, args.angle, args.tag
@@ -240,6 +246,17 @@ def main(cfg):
         m, e = f"{f:.0e}".split("e")
         return f"{m}em{abs(int(e))}"
     out_dir = ROOT / "results" / "sugar" / f"{shape}_alpha{flux_to_str(flux)}_angle{ANGLE}_{TAG}"
+    theta0 = np.log10(np.array(args.mu0, dtype=float))
+    if args.refined:
+        # pilot: couple of the MC-SUGAR minimization with the metric C^y; the metric of the refined MC-SURE is the
+        # inverse shrinkage covariance of the residual of its reconstruction (from x = 0), fixed during the minimization
+        mu_pilot = np.load(out_dir / "trajectory.npz", allow_pickle=True)["mu_opt"]
+        print(f"Refined MC-SURE: pilot mu = ({mu_pilot[0]:.4e}, {mu_pilot[1]:.4e})", flush=True)
+        x_pilot, _, _, _ = mdrex.run_bfgs(np.zeros((C, H, W)), y, mu_pilot[1], mu_pilot[0])
+        with torch.no_grad():
+            C_inv_y = M.shrinkage_cov_inv(centered(to_patches(y - fm(torch.tensor(x_pilot, dtype=torch.float32, device=device)))))
+        theta0 = np.log10(mu_pilot)
+        out_dir = out_dir.with_name(out_dir.name + "_refined")
     out_dir.mkdir(parents=True, exist_ok=True)
     state = {"x": np.zeros((C, H, W)), "x_eps": np.zeros((C, H, W))}
     hist = []
@@ -271,8 +288,9 @@ def main(cfg):
         np.savez(out_dir / "trajectory.npz", **{k: np.array([h[k] for h in hist]) for k in hist[0]}, x_last=x)
         return sure, g_theta
 
-    theta0 = np.log10(np.array(args.mu0, dtype=float))
-    res = minimize(sure_and_sugar, theta0, jac=True, method="L-BFGS-B", bounds=[(4, 10), (3, 9)],
+    b = args.bounds
+    theta0 = np.clip(theta0, [b[0], b[2]], [b[1], b[3]])
+    res = minimize(sure_and_sugar, theta0, jac=True, method="L-BFGS-B", bounds=[(b[0], b[1]), (b[2], b[3])],
                    options=dict(maxfun=args.maxfun, maxiter=args.maxfun))
     print("\nL-BFGS-B:", res.message, " theta =", res.x, " mu =", 10.0 ** res.x, flush=True)
     np.savez(out_dir / "trajectory.npz", **{k: np.array([h[k] for h in hist]) for k in hist[0]}, x_last=state["x"],

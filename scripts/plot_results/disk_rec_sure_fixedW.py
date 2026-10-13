@@ -35,7 +35,7 @@ FLUX = os.environ.get("FLUX", "1em5")
 # minimum (green cross) on the three panels.
 REFINED = True
 REFINED_ITER = int(os.environ.get("REFINED_ITER", "1"))
-SHOW_SUGAR = False
+SHOW_SUGAR = True  # MC-SUGAR couples (results/sugar) on the MC-SURE and refined MC-SURE panels (orange X)
 # Couples displayed / used for the minima (comma-separated lists, e.g. "1e6,3e6,1e7"); default: all the couples of the folder.
 # Angle-0 grids of Table 1: square 7 x 7 grid with a regular half-decade step
 #   GRID_SMOOTH=1e6,3e6,1e7,3e7,1e8,3e8,1e9 GRID_SPARSE=3e4,1e5,3e5,1e6,3e6,1e7,3e7
@@ -352,23 +352,25 @@ def main(cfg):
         ax.set_yticks(np.arange(s1)); ax.set_yticklabels(labels_smooth, fontsize=12)
         ax.set_ylabel(r"$\mu_{\rm smooth}$", fontsize=14); ax.set_xlabel(r"$\mu_{\rm sparse}$", fontsize=14)
         ax.tick_params(axis='both', which='major', labelsize=12)
-        # minima: MSE (red x), MC-SURE with C^y (purple +), refined MC-SURE (green x)
+        # minima: MSE (red x), MC-SURE with C^y (purple +), refined MC-SURE (green circle)
         ax.plot(j_mse_best, k_mse_best, "rx", markersize=12, markeredgewidth=2)
         ax.plot(j_sure_best, k_sure_best, "m+", markersize=12, markeredgewidth=2)
         if REFINED:
-            ax.plot(j_ref_best, k_ref_best, "x", color="limegreen", markersize=12, markeredgewidth=2.5)
-        if p == 0 and SHOW_SUGAR:
-            # couple obtained by minimizing MC-SURE with MC-SUGAR (syntheticdata_sugar.py), if available: green cross,
-            # with the path of the quasi-Newton iterates (positions interpolated in log10(mu) on the decade grid)
-            sugar_file = ROOT / "results" / "sugar" / f"{shape}_alpha{flux}_angle0_{TAG or 'gradS'}" / "trajectory.npz"
-            if sugar_file.exists():
-                tr = np.load(sugar_file, allow_pickle=True)
+            ax.plot(j_ref_best, k_ref_best, "o", markersize=13, markerfacecolor="none", markeredgecolor="limegreen",
+                    markeredgewidth=2.5)
+        # couples obtained by minimizing MC-SURE with MC-SUGAR (syntheticdata_sugar.py), if available, positions
+        # interpolated in log10(mu) on the grid: MC-SURE (C^y) panel, and refined MC-SURE panel (--refined)
+        sugar_dir = {1: "", 2: "_refined"}.get(p) if SHOW_SUGAR else None
+        sugar_file = ROOT / "results" / "sugar" / f"{shape}_alpha{flux}_angle0_gradS{sugar_dir}" / "trajectory.npz" \
+            if sugar_dir is not None else None
+        if sugar_file is not None and sugar_file.exists():
+            tr = np.load(sugar_file, allow_pickle=True)
+            if "mu_opt" in tr.files:
                 to_j = lambda v: np.interp(np.log10(v), np.log10(mu_sparse_vals), np.arange(len(mu_sparse_vals)))
                 to_k = lambda v: np.interp(np.log10(v), np.log10(mu_smooth_vals), np.arange(len(mu_smooth_vals)))
-                ax.plot(to_j(tr["mu_sparse"]), to_k(tr["mu_smooth"]), "-", color="limegreen", lw=1, alpha=0.8)
-                mu_s, mu_p = (tr["mu_opt"] if "mu_opt" in tr.files else (tr["mu_smooth"][-1], tr["mu_sparse"][-1]))
-                ax.plot(to_j(mu_p), to_k(mu_s), "X", color="limegreen", markersize=13, markeredgecolor="k", markeredgewidth=1)
-                print(f"MC-SUGAR: mu = ({mu_s:.3e}, {mu_p:.3e}) after {len(tr['sure'])} evaluations")
+                mu_s, mu_p = tr["mu_opt"]
+                ax.plot(to_j(mu_p), to_k(mu_s), "X", color="orange", markersize=12, markeredgecolor="k", markeredgewidth=1)
+                print(f"MC-SUGAR{sugar_dir}: mu = ({mu_s:.3e}, {mu_p:.3e}) after {len(tr['sure'])} evaluations")
         ax.set_aspect('equal', adjustable='box')
 
     fig.tight_layout()
