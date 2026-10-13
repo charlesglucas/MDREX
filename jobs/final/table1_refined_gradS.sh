@@ -19,7 +19,7 @@ for job in medium_ellipse:1e-6:3e7:1e6 medium_ellipse:5e-6:5e6:1e6 medium_ellips
   IFS=: read shape flux sm sp <<< "$job"
   tag=$(echo $flux | sed 's/e-/em/')
   [ -e "$ROOT/results/mdrex_results/musmooth${sm}_musparse${sp}_${shape}_alpha${tag}_gradS/x_opt.fits" ] && { echo "done: $job"; continue; }
-  CL=${CLUSTERS[$((n % 2))]}; n=$((n + 1))
+  CL=${CLUSTERS[$((n % ${#CLUSTERS[@]}))]}; n=$((n + 1))
   oarsub -l "gpu=1,walltime=10:00:00" -p "cluster='$CL'" -n "t1ref_${shape}_a${tag}_sm${sm}_sp${sp}" \
     "cd $ROOT && CUDA_VISIBLE_DEVICES=0 $PY $RUN --mu-smooth $sm --mu-sparse $sp --shape $shape --flux $flux --tag gradS"
 done
