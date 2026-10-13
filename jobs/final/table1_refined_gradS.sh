@@ -6,11 +6,11 @@
 # pilot = argmin MC-SURE(C^y)), see disk_rec_sure_fixedW.py; hyperparameters selected at angle 0, reused for the
 # 10 parallactic angles.
 # output: results/mdrex_results/musmooth<mu>_musparse<mu>_<shape>_alpha<1em6|5em6|1em5>_gradS/x_opt.fits
-# Jobs spread alternately over vercors14 and vercors9.
+# Jobs on vercors18.
 ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
 PY=$ROOT/.venv/bin/python
 RUN=$ROOT/scripts/run_results/syntheticdata_shape.py
-CLUSTERS=(vercors14 vercors9)
+CLUSTERS=(vercors18)
 n=0
 #     shape:flux:mu_smooth:mu_sparse
 for job in medium_ellipse:1e-6:3e7:1e6 medium_ellipse:5e-6:5e6:1e6 medium_ellipse:1e-5:3e6:1e6 \
