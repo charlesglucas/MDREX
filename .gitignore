@@ -46,3 +46,7 @@ venv/
 .idea/
 *.swp
 *~
+
+# Hydra run outputs (rewritten at each run)
+.hydra/
+**/.hydra/
