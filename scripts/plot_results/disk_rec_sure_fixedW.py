@@ -35,7 +35,12 @@ FLUX = os.environ.get("FLUX", "1em5")
 # minimum (green cross) on the three panels.
 REFINED = True
 REFINED_ITER = int(os.environ.get("REFINED_ITER", "1"))
-SHOW_SUGAR = False  # MC-SUGAR couple / trajectory on the MSE panel (results/sugar)
+SHOW_SUGAR = False
+# Couples displayed / used for the minima (comma-separated lists, e.g. "1e6,3e6,1e7"); default: all the couples of the folder.
+# Angle-0 grids of Table 1: square 7 x 7 grid with a regular half-decade step
+#   GRID_SMOOTH=1e6,3e6,1e7,3e7,1e8,3e8,1e9 GRID_SPARSE=3e4,1e5,3e5,1e6,3e6,1e7,3e7
+GRID_SMOOTH = [float(v) for v in os.environ["GRID_SMOOTH"].split(",")] if os.environ.get("GRID_SMOOTH") else None
+GRID_SPARSE = [float(v) for v in os.environ["GRID_SPARSE"].split(",")] if os.environ.get("GRID_SPARSE") else None  # MC-SUGAR couple / trajectory on the MSE panel (results/sugar)
 
 
 def sci_colorbar(cbar, nbins=4, decimals=2):
@@ -232,6 +237,8 @@ def main(cfg):
         if m:
             ms = float(m.group(1))   # extract mu_smooth
             mp = float(m.group(2))   # extract mu_sparse
+            if (GRID_SMOOTH and ms not in GRID_SMOOTH) or (GRID_SPARSE and mp not in GRID_SPARSE):
+                continue
             files.append((f, ms, mp))
             mu_smooth_list.append(ms)
             mu_sparse_list.append(mp)
