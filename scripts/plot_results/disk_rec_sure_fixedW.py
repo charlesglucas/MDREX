@@ -45,6 +45,9 @@ def sci_colorbar(cbar, nbins=4, decimals=2):
     vmin, vmax = cbar.mappable.get_clim()
     e = int(np.floor(np.log10(max(abs(vmin), abs(vmax)))))
     cbar.locator = MaxNLocator(nbins=nbins, steps=[1, 2, 2.5, 5, 10])
+    ticks = [t for t in cbar.locator.tick_values(vmin, vmax) if vmin <= t <= vmax]
+    while len({f"{t / 10**e:.{decimals}f}" for t in ticks}) < len(ticks):  # more decimals if two ticks look the same
+        decimals += 1
     cbar.formatter = FuncFormatter(lambda v, pos: f"{v / 10**e:.{decimals}f}".replace("-", "\u2212"))
     cbar.update_ticks()
     cbar.ax.text(0.0, 1.02, rf"$\times 10^{{{e}}}$", transform=cbar.ax.transAxes, ha="left", va="bottom", fontsize=12)
@@ -262,8 +265,11 @@ def main(cfg):
     SURE = DA - N + DE
 
     # Tick labels from the actual grid values: rows (axis 0, y) = mu_smooth, columns (axis 1, x) = mu_sparse
-    labels_smooth = [f"$10^{{{np.log10(v):g}}}$" for v in mu_smooth_vals]
-    labels_sparse = [f"$10^{{{np.log10(v):g}}}$" for v in mu_sparse_vals]
+    def mu_label(v):  # 1e7 -> 10^7, 3e7 -> 3·10^7
+        m, e = f"{v:.0e}".split("e")
+        return f"$10^{{{int(e)}}}$" if m == "1" else f"${m}\\cdot 10^{{{int(e)}}}$"
+    labels_smooth = [mu_label(v) for v in mu_smooth_vals]
+    labels_sparse = [mu_label(v) for v in mu_sparse_vals]
 
     # Find best parameters
     # missing couples (no result file, DE = 0): excluded from the minima and left blank on the grids
@@ -325,17 +331,17 @@ def main(cfg):
     plt.show()
 
     s1, s2 = MSE.shape
-    panels = [(MSE, r"$\mathrm{MSE}$"), (SURE_disp, r"$\mathrm{MC-SURE}$")]
+    panels = [(MSE, r"MSE"), (SURE_disp, r"MC-SURE")]
     if REFINED:
-        panels.append((SURE_ref, r"$\mathrm{Refined\ MC-SURE}$"))
+        panels.append((SURE_ref, r"Refined MC-SURE"))
     fig = plt.figure(figsize=(5, 4 * len(panels)))
     for p, (G, title) in enumerate(panels):
         ax = fig.add_subplot(len(panels), 1, p + 1)
         im = ax.imshow(G, cmap="RdBu_r")
-        ax.set_title(title, fontsize=18)
+        ax.set_title(title, fontsize=18 if len(title) < 10 else 15, pad=12)
         cbar = fig.colorbar(im, ax=ax, shrink=1)
         sci_colorbar(cbar)
-        ax.set_xticks(np.arange(s2)); ax.set_xticklabels(labels_sparse, fontsize=12)
+        ax.set_xticks(np.arange(s2)); ax.set_xticklabels(labels_sparse, fontsize=12, rotation=45, ha="right", rotation_mode="anchor")
         ax.set_yticks(np.arange(s1)); ax.set_yticklabels(labels_smooth, fontsize=12)
         ax.set_ylabel(r"$\mu_{\rm smooth}$", fontsize=14); ax.set_xlabel(r"$\mu_{\rm sparse}$", fontsize=14)
         ax.tick_params(axis='both', which='major', labelsize=12)
