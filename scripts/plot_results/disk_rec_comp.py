@@ -163,7 +163,7 @@ def main(cfg):
     sfx = f"_{TAG}" if TAG else ""
     MU_SELECTED = {"medium_ellipse": ["3e7_1e6", "3e6_1e6", "3e6_1e6"],
                    "spiral":         ["1e8_1e6", "3e7_3e5", "1e7_3e5"],
-                   "circle":         ["3e8_3e5", "1e6_1e6", "3e6_1e6"]}
+                   "circle":         ["3e8_3e5", "1e6_1e6", "1e6_1e6"]}
     flux_tags = ["1em6", "5em6", "1em5"]
     x_mdrex = np.zeros_like(x_gt_store)
     for (s, shape) in enumerate(["medium_ellipse", "spiral", "circle"]):
