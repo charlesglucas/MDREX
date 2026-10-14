@@ -154,18 +154,27 @@ def main(cfg):
     with fits.open(path) as hdul:
         x_rexpaco = hdul[0].data[:,:,:,251-128:251+128, 251-128:251+128]
 
-    # Hyperparameters (mu_smooth, mu_sparse) adapted to each shape (SURE grids)
-    # TAG = "gradS": reconstructions with the gradient through m_hat / C_hat (shrinkage not differentiated)
+    # Hyperparameters (mu_smooth, mu_sparse) of MD-REX for each shape and contrast (rows: alpha = 1e-6, 5e-6, 1e-5):
+    # selected by refined MC-SURE (one re-estimation of the covariance) at angle 0 on the square 7 x 7 grids
+    # (disk_rec_sure_fixedW.py), and reused for the 10 parallactic angles. Results of syntheticdata_shape.py --flux
+    # (results/mdrex_results/musmooth<mu>_musparse<mu>_<shape>_alpha<flux>_gradS) or, if absent, of the run with the
+    # 3 contrasts (results/mdrex_results/musmooth<mu>_musparse<mu>_<shape>_gradS).
     TAG = "gradS"
     sfx = f"_{TAG}" if TAG else ""
-    mdrex_dirs = {"medium_ellipse": "musmooth1e6_musparse1e6" + ("_medium_ellipse" + sfx if TAG else ""),
-                  "spiral": "musmooth5e6_musparse1e5_spiral" + sfx,
-                  "circle": "musmooth5e6_musparse1e5_circle" + sfx}
+    MU_SELECTED = {"medium_ellipse": ["3e7_1e6", "3e6_1e6", "3e6_1e6"],
+                   "spiral":         ["1e8_1e6", "3e7_3e5", "1e7_3e5"],
+                   "circle":         ["3e8_3e5", "1e6_1e6", "3e6_1e6"]}
+    flux_tags = ["1em6", "5em6", "1em5"]
     x_mdrex = np.zeros_like(x_gt_store)
     for (s, shape) in enumerate(["medium_ellipse", "spiral", "circle"]):
-        path = ROOT / f"results/mdrex_results/{mdrex_dirs[shape]}/x_opt.fits"
-        with fits.open(path) as hdul:
-            x_mdrex[:, :, s] = hdul[0].data[:, :, s]
+        for f, mu in enumerate(MU_SELECTED[shape]):
+            sm, sp = mu.split("_")
+            path = ROOT / f"results/mdrex_results/musmooth{sm}_musparse{sp}_{shape}_alpha{flux_tags[f]}{sfx}/x_opt.fits"
+            if not path.exists():
+                path = ROOT / f"results/mdrex_results/musmooth{sm}_musparse{sp}_{shape}{sfx}/x_opt.fits"
+            print(f"MD-REX {shape} alpha {flux_tags[f]}: {path.parent.name}")
+            with fits.open(path) as hdul:
+                x_mdrex[f, :, s] = hdul[0].data[f, :, s]
 
     # ======================================================================
     # 3. PSF CONVOLUTION of the ground truth and of the reconstructions
@@ -181,21 +190,20 @@ def main(cfg):
     # PSNR on the disks x and on the disks convolved by the PSF (support: convolved ground truth > threshold)
     psnr = compute_psnr(x_gt_store, x_rexpaco, x_mdrex)
     psnr_conv = compute_psnr(x_gt_conv, x_rexpaco_conv, x_mdrex_conv)
-    def mu_latex(mdrex_dir):  # "musmooth1e7_musparse5e5" -> "(10^7, 5 \cdot 10^5)"
-        vals = []
-        for m, e in re.findall(r"mu(?:smooth|sparse)([0-9]+)e([0-9]+)", mdrex_dir):
-            vals.append(f"10^{{{e}}}" if m == "1" else f"{m}\\cdot 10^{{{e}}}")
-        return f"({vals[0]}, {vals[1]})"
     names = {"medium_ellipse": "ellipse", "spiral": "spiral", "circle": "circle"}
-    mus = [f"$\\boldsymbol{{\\mu}} = {mu_latex(d)}$ for the {names[s]}" for s, d in mdrex_dirs.items()]
-    mu_caption = "MD-REX uses " + ", ".join(mus[:-1]) + " and " + mus[-1] + "."
+    def mu_tex(v):  # "3e7" -> "3\\cdot 10^{7}"
+        m, e = v.split("e")
+        return f"10^{{{e}}}" if m == "1" else f"{m}\\cdot 10^{{{e}}}"
     # Single table: reconstructions x and reconstructions convolved by the PSF
     print_psnr_table(psnr, psnr_conv,
                      "{\\bf Comparison of performances.} PSNR (whole image and support) averaged over parallactic "
                      "angles for MD-REX and REXPACO, computed on the reconstructions $\\widehat{\\mathbf{x}}_{\\lambda}$ and on "
                      "the reconstructions convolved by the PSF $\\mathbf{H}_{\\lambda}\\widehat{\\mathbf{x}}_{\\lambda}$; the support is the set of "
-                     "pixels where the ground truth exceeds 4\\% of its maximum. " + mu_caption
-                     + " The best method is in bold.")
+                     "pixels where the ground truth exceeds 4\\% of its maximum. The hyperparameters of MD-REX are selected by "
+                     "refined MC-SURE at the first parallactic angle for each geometry and contrast, and kept for the other angles. "
+                     "The best method is in bold.")
+    for shape, mus in MU_SELECTED.items():
+        print(f"% {names[shape]}: " + ", ".join(f"({mu_tex(m.split('_')[0])}, {mu_tex(m.split('_')[1])})" for m in mus))
 
     # Same table with a single couple (mu_smooth, mu_sparse) for all the geometries and contrasts, as REXPACO
     # (5e6, 1e5): best compromise on the support taking the std over angles into account (runs per shape)
