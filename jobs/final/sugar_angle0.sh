@@ -10,12 +10,12 @@
 # mu_sparse in [3e4, 3e7], up to 25 MC-SURE evaluations (2 reconstructions from x = 0 + 2 CG solves each).
 # A step already done (trajectory.npz with mu_opt) is skipped.
 # Usage: bash sugar_angle0.sh [shape ...]   (default: spiral circle; the ellipse is in sugar_3alpha.sh / sugar_refined.sh)
-# Jobs spread alternately over vercors14 and vercors9.
+# Jobs on vercors9.
 ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
 PY=$ROOT/.venv/bin/python
 RUN=$ROOT/scripts/run_results/syntheticdata_sugar.py
 OPTS="--angle 0 --bounds 6 9 4.4771 7.4771 --maxfun 25 --hvp-step 1e-2"
-CLUSTERS=(vercors14 vercors9)
+CLUSTERS=(vercors9)
 SHAPES=("${@:-spiral circle}")
 done_step() {  # done_step <folder>: trajectory.npz with mu_opt
   [ -e "$1/trajectory.npz" ] && $PY -c "import numpy as np, sys; sys.exit(0 if 'mu_opt' in np.load('$1/trajectory.npz').files else 1)"
