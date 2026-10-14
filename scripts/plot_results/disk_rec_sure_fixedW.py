@@ -374,17 +374,21 @@ def main(cfg):
         if is_psnr:
             ax.plot(j_psnr_best, k_psnr_best, "*", color="k", markersize=15, markeredgecolor="w", markeredgewidth=1)
         # couples obtained by minimizing MC-SURE with MC-SUGAR (syntheticdata_sugar.py), if available, positions
-        # interpolated in log10(mu) on the grid: MC-SURE (C^y) panel, and refined MC-SURE panel (--refined)
-        sugar_dir = {1: "", 2: "_refined"}.get(p) if SHOW_SUGAR else None
-        sugar_file = ROOT / "results" / "sugar" / f"{shape}_alpha{flux}_angle0_gradS{sugar_dir}" / "trajectory.npz" \
-            if sugar_dir is not None else None
-        if sugar_file is not None and sugar_file.exists():
+        # interpolated in log10(mu) on the grid, on all the panels: MC-SUGAR with C^y (orange X), refined MC-SUGAR
+        # (orange diamond)
+        for sugar_dir, marker in (("", "X"), ("_refined", "D")) if SHOW_SUGAR else ():
+            sugar_file = ROOT / "results" / "sugar" / f"{shape}_alpha{flux}_angle0_gradS{sugar_dir}" / "trajectory.npz"
+            if not sugar_file.exists():
+                continue
             tr = np.load(sugar_file, allow_pickle=True)
-            if "mu_opt" in tr.files:
-                to_j = lambda v: np.interp(np.log10(v), np.log10(mu_sparse_vals), np.arange(len(mu_sparse_vals)))
-                to_k = lambda v: np.interp(np.log10(v), np.log10(mu_smooth_vals), np.arange(len(mu_smooth_vals)))
-                mu_s, mu_p = tr["mu_opt"]
-                ax.plot(to_j(mu_p), to_k(mu_s), "X", color="orange", markersize=12, markeredgecolor="k", markeredgewidth=1)
+            if "mu_opt" not in tr.files:
+                continue
+            to_j = lambda v: np.interp(np.log10(v), np.log10(mu_sparse_vals), np.arange(len(mu_sparse_vals)))
+            to_k = lambda v: np.interp(np.log10(v), np.log10(mu_smooth_vals), np.arange(len(mu_smooth_vals)))
+            mu_s, mu_p = tr["mu_opt"]
+            ax.plot(to_j(mu_p), to_k(mu_s), marker, color="orange", markersize=12 if marker == "X" else 9,
+                    markeredgecolor="k", markeredgewidth=1)
+            if p == 0:
                 print(f"MC-SUGAR{sugar_dir}: mu = ({mu_s:.3e}, {mu_p:.3e}) after {len(tr['sure'])} evaluations")
         ax.set_aspect('equal', adjustable='box')
 
