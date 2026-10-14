@@ -35,6 +35,7 @@ FLUX = os.environ.get("FLUX", "1em5")
 # minimum (green cross) on the three panels.
 REFINED = True
 REFINED_ITER = int(os.environ.get("REFINED_ITER", "1"))
+SHOW_PSNR = os.environ.get("SHOW_PSNR", "0") == "1"  # extra row: PSNR (whole image) of x_hat, best PSNR = black star
 SHOW_SUGAR = True  # MC-SUGAR couples (results/sugar) on the MC-SURE and refined MC-SURE panels (orange X)
 # Couples displayed / used for the minima (comma-separated lists, e.g. "1e6,3e6,1e7"); default: all the couples of the folder.
 # Angle-0 grids of Table 1: square 7 x 7 grid with a regular half-decade step
@@ -341,13 +342,25 @@ def main(cfg):
     panels = [(MSE, r"MSE"), (SURE_disp, r"MC-SURE")]
     if REFINED:
         panels.append((SURE_ref, r"Refined MC-SURE"))
+    if SHOW_PSNR:
+        g = x_gt.mean(axis=0)
+        PSNR = -20 * np.log10(np.linalg.norm((x_disk_store.mean(axis=2) - g).reshape(s1, s2, -1), axis=-1) / np.linalg.norm(g))
+        PSNR = np.where(missing, np.nan, PSNR)
+        k_psnr_best, j_psnr_best = np.unravel_index(np.nanargmax(PSNR), PSNR.shape)
+        print(f"argmax PSNR mu_smooth={mu_smooth_vals[k_psnr_best]:.0e} mu_sparse={mu_sparse_vals[j_psnr_best]:.0e} "
+              f"({PSNR[k_psnr_best, j_psnr_best]:.2f} dB)")
+        panels.append((PSNR, r"PSNR (dB)"))
     fig = plt.figure(figsize=(5, 4 * len(panels)))
     for p, (G, title) in enumerate(panels):
         ax = fig.add_subplot(len(panels), 1, p + 1)
-        im = ax.imshow(G, cmap="RdBu_r")
+        is_psnr = title.startswith("PSNR")
+        im = ax.imshow(G, cmap="viridis" if is_psnr else "RdBu_r")
         ax.set_title(title, fontsize=18 if len(title) < 10 else 15, pad=12)
         cbar = fig.colorbar(im, ax=ax, shrink=1)
-        sci_colorbar(cbar)
+        if is_psnr:
+            cbar.ax.tick_params(labelsize=12)
+        else:
+            sci_colorbar(cbar)
         ax.set_xticks(np.arange(s2)); ax.set_xticklabels(labels_sparse, fontsize=12, rotation=45, ha="right", rotation_mode="anchor")
         ax.set_yticks(np.arange(s1)); ax.set_yticklabels(labels_smooth, fontsize=12)
         ax.set_ylabel(r"$\mu_{\rm smooth}$", fontsize=14); ax.set_xlabel(r"$\mu_{\rm sparse}$", fontsize=14)
@@ -358,6 +371,8 @@ def main(cfg):
         if REFINED:
             ax.plot(j_ref_best, k_ref_best, "o", markersize=13, markerfacecolor="none", markeredgecolor="limegreen",
                     markeredgewidth=2.5)
+        if is_psnr:
+            ax.plot(j_psnr_best, k_psnr_best, "*", color="k", markersize=15, markeredgecolor="w", markeredgewidth=1)
         # couples obtained by minimizing MC-SURE with MC-SUGAR (syntheticdata_sugar.py), if available, positions
         # interpolated in log10(mu) on the grid: MC-SURE (C^y) panel, and refined MC-SURE panel (--refined)
         sugar_dir = {1: "", 2: "_refined"}.get(p) if SHOW_SUGAR else None
@@ -374,7 +389,7 @@ def main(cfg):
         ax.set_aspect('equal', adjustable='box')
 
     fig.tight_layout()
-    fig.savefig(f"figures/grids_{shape}_{flux}_fixedC{W_REF}{('_refined' if REFINED_ITER == 1 else f'_refined{REFINED_ITER}') if REFINED else ''}{'_' + TAG if TAG else ''}.pdf")
+    fig.savefig(f"figures/grids_{shape}_{flux}_fixedC{W_REF}{('_refined' if REFINED_ITER == 1 else f'_refined{REFINED_ITER}') if REFINED else ''}{'_' + TAG if TAG else ''}{'_psnr' if SHOW_PSNR else ''}.pdf")
     plt.show()
 
     if W_REF == "pilot":
