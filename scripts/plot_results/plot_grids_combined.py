@@ -15,7 +15,7 @@ from matplotlib.patches import FancyBboxPatch
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SHAPE = sys.argv[1] if len(sys.argv) > 1 else "medium_ellipse"
 TAG = sys.argv[2] if len(sys.argv) > 2 else "angle0_gradS"
-FLUXES = [("1em6", r"$\alpha = 10^{-6}$"), ("5em6", r"$\alpha = 5\cdot 10^{-6}$"), ("1em5", r"$\alpha = 10^{-5}$")]
+FLUXES = [("1em6", r"$\alpha = 1\cdot 10^{-6}$"), ("5em6", r"$\alpha = 5\cdot 10^{-6}$"), ("1em5", r"$\alpha = 1\cdot 10^{-5}$")]
 ROWS = [("mse", "MSE", {"sure", "sugar", "ref", "ref_sugar"}),
         ("sure", "MC-SURE", {"sure", "sugar"}),
         ("sure_ref", "Refined MC-SURE", {"ref", "ref_sugar"})]
