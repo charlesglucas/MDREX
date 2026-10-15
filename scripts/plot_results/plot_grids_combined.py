@@ -10,6 +10,7 @@ import sys, pathlib
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator, FuncFormatter
+from matplotlib.patches import FancyBboxPatch
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SHAPE = sys.argv[1] if len(sys.argv) > 1 else "medium_ellipse"
@@ -18,7 +19,14 @@ FLUXES = [("1em6", r"$\alpha = 10^{-6}$"), ("5em6", r"$\alpha = 5\cdot 10^{-6}$"
 ROWS = [("mse", "MSE", {"sure", "sugar", "ref", "ref_sugar"}),
         ("sure", "MC-SURE", {"sure", "sugar"}),
         ("sure_ref", "Refined MC-SURE", {"ref", "ref_sugar"})]
-BOX = dict(boxstyle="round,pad=0.35", facecolor="0.85", edgecolor="0.5")
+BOX = dict(boxstyle="round,pad=0,rounding_size=0.02", facecolor="0.85", edgecolor="0.5", clip_on=False)
+
+
+def label_box(ax, rect, text, rotation=0):
+    """Grey rounded box of fixed size rect = (x, y, w, h) in axes fraction, with the text centered."""
+    x, y, w, h = rect
+    ax.add_patch(FancyBboxPatch((x, y), w, h, transform=ax.transAxes, **BOX))
+    ax.text(x + w / 2, y + h / 2, text, transform=ax.transAxes, rotation=rotation, ha="center", va="center", fontsize=13)
 
 
 def mu_label(v):  # 1e7 -> 10^7, 3e7 -> 3·10^7
@@ -48,7 +56,8 @@ def sugar_mu(flux, refined):
     return tr["mu_opt"] if "mu_opt" in tr.files else None
 
 
-fig, axs = plt.subplots(3, 3, figsize=(10, 8.4), constrained_layout=True)
+fig, axs = plt.subplots(3, 3, figsize=(10, 8.2))
+fig.subplots_adjust(left=0.14, right=0.92, bottom=0.11, top=0.94, wspace=0.42, hspace=0.16)
 for c, (flux, alpha_label) in enumerate(FLUXES):
     d = np.load(ROOT / "figures" / f"grid_data_{SHAPE}_{flux}_{TAG}.npz")
     ms, mp = list(d["mu_smooth"]), list(d["mu_sparse"])
@@ -58,7 +67,8 @@ for c, (flux, alpha_label) in enumerate(FLUXES):
     for r, (key, title, shown) in enumerate(ROWS):
         ax = axs[r, c]
         im = ax.imshow(d[key], cmap="RdBu_r")
-        sci_colorbar(fig.colorbar(im, ax=ax, shrink=0.9, pad=0.02, aspect=15))
+        # colorbar with the height of the image, slightly spaced (the axes box fits the image: aspect equal)
+        sci_colorbar(fig.colorbar(im, cax=ax.inset_axes([1.05, 0.0, 0.06, 1.0])))
         ax.set_xticks(np.arange(len(mp))); ax.set_yticks(np.arange(len(ms)))
         if r == len(ROWS) - 1:
             ax.set_xticklabels([mu_label(v) for v in mp], fontsize=10, rotation=45, ha="right", rotation_mode="anchor")
@@ -68,13 +78,11 @@ for c, (flux, alpha_label) in enumerate(FLUXES):
         if c == 0:
             ax.set_yticklabels([mu_label(v) for v in ms], fontsize=10)
             ax.set_ylabel(r"$\mu_{\rm smooth}$", fontsize=12)
-            ax.annotate(title, xy=(-0.55, 0.5), xycoords="axes fraction", rotation=90, ha="center", va="center",
-                        fontsize=14, bbox=BOX)
+            label_box(ax, (-0.62, 0.04, 0.12, 0.92), title, rotation=90)
         else:
             ax.set_yticklabels([])
         if r == 0:
-            ax.annotate(alpha_label, xy=(0.5, 1.12), xycoords="axes fraction", ha="center", va="center", fontsize=14,
-                        bbox=BOX)
+            label_box(ax, (0.04, 1.05, 0.92, 0.13), alpha_label)
         ax.plot(d["i_mse"][1], d["i_mse"][0], "rx", markersize=11, markeredgewidth=2)
         if "sure" in shown:
             ax.plot(d["i_sure"][1], d["i_sure"][0], "m+", markersize=11, markeredgewidth=2)
@@ -86,7 +94,6 @@ for c, (flux, alpha_label) in enumerate(FLUXES):
         if "ref_sugar" in shown and sug_ref is not None:
             ax.plot(to_j(sug_ref[1]), to_k(sug_ref[0]), "D", color="orange", markersize=8, markeredgecolor="k",
                     markeredgewidth=1)
-fig.get_layout_engine().set(h_pad=0.02, w_pad=0.02, hspace=0.0, wspace=0.0)
 out = ROOT / "figures" / f"grids_{SHAPE}_combined_{TAG}.pdf"
 fig.savefig(out)
 print(out)
