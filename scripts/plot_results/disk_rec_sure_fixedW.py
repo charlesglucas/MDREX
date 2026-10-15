@@ -366,19 +366,25 @@ def main(cfg):
         ax.set_yticks(np.arange(s1)); ax.set_yticklabels(labels_smooth, fontsize=12)
         ax.set_ylabel(r"$\mu_{\rm smooth}$", fontsize=14); ax.set_xlabel(r"$\mu_{\rm sparse}$", fontsize=14)
         ax.tick_params(axis='both', which='major', labelsize=12)
-        # minima: MSE (red x), MC-SURE with C^y (purple +), refined MC-SURE (green circle)
+        # markers: MSE minimum (red x), MC-SURE minimum with C^y (purple +), MC-SUGAR with C^y (orange X),
+        # refined MC-SURE minimum (green circle), refined MC-SUGAR (orange diamond). MSE panel: the 5 markers;
+        # MC-SURE panel: MSE, MC-SURE, MC-SUGAR; refined MC-SURE panel: MSE, refined MC-SURE, refined MC-SUGAR;
+        # PSNR panel (and SUGAR_ALL_PANELS=1): all + best PSNR (black star)
+        shown = {0: {"sure", "sugar", "ref", "ref_sugar"}, 1: {"sure", "sugar"}, 2: {"ref", "ref_sugar"}}.get(p)
+        if shown is None or SUGAR_ALL_PANELS:
+            shown = {"sure", "sugar", "ref", "ref_sugar"}
         ax.plot(j_mse_best, k_mse_best, "rx", markersize=12, markeredgewidth=2)
-        ax.plot(j_sure_best, k_sure_best, "m+", markersize=12, markeredgewidth=2)
-        if REFINED:
+        if "sure" in shown:
+            ax.plot(j_sure_best, k_sure_best, "m+", markersize=12, markeredgewidth=2)
+        if REFINED and "ref" in shown:
             ax.plot(j_ref_best, k_ref_best, "o", markersize=13, markerfacecolor="none", markeredgecolor="limegreen",
                     markeredgewidth=2.5)
         if is_psnr:
             ax.plot(j_psnr_best, k_psnr_best, "*", color="k", markersize=15, markeredgecolor="w", markeredgewidth=1)
-        # couples obtained by minimizing MC-SURE with MC-SUGAR (syntheticdata_sugar.py), if available, positions
-        # interpolated in log10(mu) on the grid: MC-SUGAR with C^y (orange X) on the MC-SURE panel, refined MC-SUGAR
-        # (orange diamond) on the refined MC-SURE panel; on all the panels with SUGAR_ALL_PANELS=1
-        for sugar_dir, marker, panel in (("", "X", 1), ("_refined", "D", 2)) if SHOW_SUGAR else ():
-            if not SUGAR_ALL_PANELS and p != panel:
+        # couples obtained by minimizing MC-SURE with MC-SUGAR (syntheticdata_sugar.py), if the minimization has
+        # finished (mu_opt), positions interpolated in log10(mu) on the grid
+        for sugar_dir, marker, key in (("", "X", "sugar"), ("_refined", "D", "ref_sugar")) if SHOW_SUGAR else ():
+            if key not in shown:
                 continue
             sugar_file = ROOT / "results" / "sugar" / f"{shape}_alpha{flux}_angle0_gradS{sugar_dir}" / "trajectory.npz"
             if not sugar_file.exists():
@@ -391,7 +397,7 @@ def main(cfg):
             mu_s, mu_p = tr["mu_opt"]
             ax.plot(to_j(mu_p), to_k(mu_s), marker, color="orange", markersize=12 if marker == "X" else 9,
                     markeredgecolor="k", markeredgewidth=1)
-            if p == panel:
+            if p == 0:
                 print(f"MC-SUGAR{sugar_dir}: mu = ({mu_s:.3e}, {mu_p:.3e}) after {len(tr['sure'])} evaluations")
         ax.set_aspect('equal', adjustable='box')
 
