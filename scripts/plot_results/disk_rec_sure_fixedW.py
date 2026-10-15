@@ -340,6 +340,14 @@ def main(cfg):
     plt.show()
 
     s1, s2 = MSE.shape
+    # grids and minima saved for the combined figure (plot_grids_combined.py)
+    g_ = x_gt.mean(axis=0)
+    PSNR_all = np.where(missing, np.nan, -20 * np.log10(
+        np.linalg.norm((x_disk_store.mean(axis=2) - g_).reshape(s1, s2, -1), axis=-1) / np.linalg.norm(g_)))
+    np.savez(f"figures/grid_data_{shape}_{flux}{'_' + TAG if TAG else ''}.npz", mse=MSE, sure=SURE_disp,
+             sure_ref=SURE_ref if REFINED else np.full_like(MSE, np.nan), psnr=PSNR_all,
+             mu_smooth=mu_smooth_vals, mu_sparse=mu_sparse_vals, i_mse=(k_mse_best, j_mse_best),
+             i_sure=(k_sure_best, j_sure_best), i_ref=(k_ref_best, j_ref_best) if REFINED else (-1, -1))
     panels = [(MSE, r"MSE"), (SURE_disp, r"MC-SURE")]
     if REFINED:
         panels.append((SURE_ref, r"Refined MC-SURE"))
