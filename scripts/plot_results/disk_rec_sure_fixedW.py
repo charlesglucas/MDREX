@@ -36,6 +36,7 @@ FLUX = os.environ.get("FLUX", "1em5")
 REFINED = True
 REFINED_ITER = int(os.environ.get("REFINED_ITER", "1"))
 SHOW_PSNR = os.environ.get("SHOW_PSNR", "0") == "1"  # extra row: PSNR (whole image) of x_hat, best PSNR = black star
+SUGAR_ALL_PANELS = os.environ.get("SUGAR_ALL_PANELS", "0") == "1"
 SHOW_SUGAR = True  # MC-SUGAR couples (results/sugar) on the MC-SURE and refined MC-SURE panels (orange X)
 # Couples displayed / used for the minima (comma-separated lists, e.g. "1e6,3e6,1e7"); default: all the couples of the folder.
 # Angle-0 grids of Table 1: square 7 x 7 grid with a regular half-decade step
@@ -374,9 +375,11 @@ def main(cfg):
         if is_psnr:
             ax.plot(j_psnr_best, k_psnr_best, "*", color="k", markersize=15, markeredgecolor="w", markeredgewidth=1)
         # couples obtained by minimizing MC-SURE with MC-SUGAR (syntheticdata_sugar.py), if available, positions
-        # interpolated in log10(mu) on the grid, on all the panels: MC-SUGAR with C^y (orange X), refined MC-SUGAR
-        # (orange diamond)
-        for sugar_dir, marker in (("", "X"), ("_refined", "D")) if SHOW_SUGAR else ():
+        # interpolated in log10(mu) on the grid: MC-SUGAR with C^y (orange X) on the MC-SURE panel, refined MC-SUGAR
+        # (orange diamond) on the refined MC-SURE panel; on all the panels with SUGAR_ALL_PANELS=1
+        for sugar_dir, marker, panel in (("", "X", 1), ("_refined", "D", 2)) if SHOW_SUGAR else ():
+            if not SUGAR_ALL_PANELS and p != panel:
+                continue
             sugar_file = ROOT / "results" / "sugar" / f"{shape}_alpha{flux}_angle0_gradS{sugar_dir}" / "trajectory.npz"
             if not sugar_file.exists():
                 continue
@@ -388,7 +391,7 @@ def main(cfg):
             mu_s, mu_p = tr["mu_opt"]
             ax.plot(to_j(mu_p), to_k(mu_s), marker, color="orange", markersize=12 if marker == "X" else 9,
                     markeredgecolor="k", markeredgewidth=1)
-            if p == 0:
+            if p == panel:
                 print(f"MC-SUGAR{sugar_dir}: mu = ({mu_s:.3e}, {mu_p:.3e}) after {len(tr['sure'])} evaluations")
         ax.set_aspect('equal', adjustable='box')
 
