@@ -298,9 +298,12 @@ def main(cfg):
     lower, upper = np.array([b[0], b[2]]), np.array([b[1], b[3]])
     theta0 = np.clip(theta0, lower, upper)
     # VMLMB (same quasi-Newton method with bounds as for the reconstructions); its first step is limited to
-    # dxabs = 1 in log10(mu), i.e. one decade
+    # dxabs = 1 in log10(mu), i.e. one decade. A line-search instance of its own is required: the default `lnsrch`
+    # argument of optm.vmlmb is a single LineSearch object shared by all the calls, so that the reconstructions run
+    # inside sure_and_sugar (run_bfgs -> optm.vmlmb) would overwrite the state of the outer line search (initial value,
+    # step), which then never converges and keeps evaluating the same point.
     theta, fth, gth, status = optm.vmlmb(sure_and_sugar, theta0, lower=lower, upper=upper, maxeval=args.maxfun,
-                                         verb=1, throwerrors=False)
+                                         lnsrch=optm.LineSearch(), verb=1, throwerrors=False)
     message = optm.reason(status)
     print("\nVMLMB:", message, " theta =", theta, " mu =", 10.0 ** theta, flush=True)
     np.savez(out_dir / "trajectory.npz", **{k: np.array([h[k] for h in hist]) for k in hist[0]}, x_last=state["x"],
