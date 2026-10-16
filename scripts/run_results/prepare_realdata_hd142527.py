@@ -31,15 +31,20 @@ with fits.open(src / f"{stem}_half-center_im.fits", memmap=True) as hdul:
     C, T, H, W = cube.shape
     rot = fits.getdata(src / "rotnth.fits").reshape(-1).astype(np.float64)
     assert rot.size == T, (rot.size, T)
-    nb = T // args.bin
+    # bins never straddle a gap of the sequence: jump of the parallactic angle > 1 deg (two sequences of 704 frames,
+    # 8.4 deg gap after frame 703); within each sequence, consecutive bins of args.bin frames (remainder dropped)
+    cuts = [0] + list(np.where(np.abs(np.diff(rot)) > 1.0)[0] + 1) + [T]
+    bins = [(i, i + args.bin) for a, b in zip(cuts[:-1], cuts[1:]) for i in range(a, b - args.bin + 1, args.bin)]
+    print(f"sequences {list(zip(cuts[:-1], cuts[1:]))}, {len(bins)} bins of {args.bin} frames", flush=True)
+    nb = len(bins)
     out = np.zeros((C, nb, H, W), dtype=np.float32)
-    for b in range(nb):
-        frame = np.asarray(cube[:, b * args.bin:(b + 1) * args.bin], dtype=np.float64).mean(axis=1)   # (C, H, W)
+    for b, (i0, i1) in enumerate(bins):
+        frame = np.asarray(cube[:, i0:i1], dtype=np.float64).mean(axis=1)   # (C, H, W)
         for c in range(C):
             out[c, b] = np.fft.ifft2(fourier_shift(np.fft.fft2(frame[c]), (args.shift, args.shift))).real
         if b % 20 == 0:
             print(f"bin {b + 1}/{nb}", flush=True)
-rot_b = rot[:nb * args.bin].reshape(nb, args.bin).mean(axis=1)
+rot_b = np.array([rot[i0:i1].mean() for i0, i1 in bins])
 header["HISTORY"] = f"MD-REX: frames averaged by bins of {args.bin} ({T} -> {nb} frames), shifted by {args.shift} px"
 fits.writeto(dst / f"{stem}_bin{args.bin}-reduced_master_cube.fits", out, header, overwrite=True)
 fits.writeto(dst / f"{stem}_bin{args.bin}-parallactic_rotation.fits", rot_b.astype(np.float32), overwrite=True)
