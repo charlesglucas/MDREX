@@ -29,7 +29,7 @@ def derotate(img, angle_deg, center=(126.5, 126.5)):
 def main(cfg):
 
     # Load ground truth
-    shape = "circle"   # "medium_ellipse" or "circle"
+    shape = os.environ.get("SHAPE", "circle")   # "medium_ellipse", "spiral" or "circle"
     flux = 5e-6
     suffix = "5em6"
     x_gt_store = np.zeros((6, 10, 256, 256), dtype=np.float32)
@@ -44,7 +44,7 @@ def main(cfg):
             x_gt = flux*data[513-128:513+128, 513-128:513+128]
             x_gt_store[d, a, :, :] = x_gt
 
-    mdrex_dir = "musmooth5e6_musparse1e5"
+    mdrex_dir = os.environ.get("MU", "musmooth5e6_musparse1e5")   # e.g. musmooth1e6_musparse1e6 for the ellipse
     TAG = "gradS"  # results with the gradient through m_hat / C_hat (folder and figure suffixed _gradS)
     if TAG:
         mdrex_dir += f"_{TAG}"
@@ -168,9 +168,22 @@ def main(cfg):
     for c in range(3):
         axs[0, c].set_title(titles[c])
 
+    ticks = {"medium_ellipse": [0, 0.05, 0.10, 0.15], "spiral": [0, 0.05, 0.10, 0.15], "circle": [0, 0.1, 0.2, 0.3]}[shape]
     for i in range(2):
         axs[i, 0].set_ylabel(row_labels[i])
-        fig.colorbar(ims[i, 2], ax=axs[i, :], location='right', pad=0.02, shrink=0.9)
+        cb = fig.colorbar(ims[i, 2], ax=axs[i, :], location='right', pad=0.02, shrink=0.9, ticks=ticks)
+        cb.ax.set_yticklabels([f"{t:.2f}" for t in ticks])
+
+    # name of the geometry in a grey box on the left (same style as the grid figures)
+    from matplotlib.patches import FancyBboxPatch
+    p0, p1 = axs[0, 0].get_position(), axs[1, 0].get_position()
+    W, H = fig.get_size_inches()
+    bx, bw = p0.x0 - 0.075, 0.032
+    fig.patches.append(FancyBboxPatch((bx, p1.y0 + 0.01), bw, p0.y1 - p1.y0 - 0.02, transform=fig.transFigure,
+                                      boxstyle="round,pad=0,rounding_size=0.006", mutation_aspect=W / H,
+                                      facecolor="0.85", edgecolor="0.5", clip_on=False))
+    fig.text(bx + bw / 2, (p1.y0 + p0.y1) / 2, {"medium_ellipse": "Ellipse", "spiral": "Spiral", "circle": "Circle"}[shape],
+             rotation=90, ha="center", va="center", fontsize=13)
 
     plt.savefig(
         f"figures/distrib_{shape}_{suffix}_{mdrex_dir}.pdf",
