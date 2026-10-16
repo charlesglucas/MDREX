@@ -271,7 +271,17 @@ class MDREX:
             if debug:
                 print(f"[fg {self.n_eval}] ||x||={np.linalg.norm(x_disc):.3e} max x={np.max(x_disc):.3e} "
                       f"finite={bool(np.all(np.isfinite(x_disc)))}", flush=True)
-            fx, gx = self.objective(x_disc, y, mu_sparse, mu_smooth)
+            # non-finite objective (trial step of the line search outside the domain where the covariances are
+            # defined): +inf, so that the Armijo test fails and the line search of VMLMB backtracks (step x 0.2);
+            # with NaN the comparisons are false and the next step is NaN. Unchanged whenever the objective is finite.
+            try:
+                fx, gx = self.objective(x_disc, y, mu_sparse, mu_smooth)
+            except FloatingPointError as err:
+                print(f"[fg {self.n_eval}] {err} -> f = +inf", flush=True)
+                fx, gx = np.inf, np.zeros_like(x_disc, dtype=np.float32)
+            if not np.isfinite(fx):
+                print(f"[fg {self.n_eval}] non-finite objective ({fx}) -> f = +inf", flush=True)
+                fx = np.inf
             if debug:
                 print(f"[fg {self.n_eval}] f={fx:.6e} ||g||={np.linalg.norm(gx):.3e} "
                       f"finite g={bool(np.all(np.isfinite(gx)))}", flush=True)
