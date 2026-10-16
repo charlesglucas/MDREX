@@ -3,7 +3,7 @@ import sys, pathlib, os
 import argparse
 
 # MC-SURE minimized over (mu_smooth, mu_sparse) with its MC-SUGAR gradient (reconstruction/sugar.py), quasi-Newton
-# (L-BFGS-B) on log10(mu). Same synthetic data as syntheticdata_sure_gpu.py (nuisance HIP 72192 + disk at one angle).
+# with bounds (VMLMB, utils/optm.py, as for the reconstructions) on log10(mu). Same synthetic data as syntheticdata_sure_gpu.py (nuisance HIP 72192 + disk at one angle).
 # --refined: refined MC-SURE (as on the grids, one iteration): metric re-estimated on the residual y - A x_hat(mu_pilot),
 # mu_pilot = couple found by MC-SUGAR with the metric C^y (results/sugar/<...>_<tag>/trajectory.npz, mu_opt), start at
 # mu_pilot; output folder suffixed _refined.
@@ -195,7 +195,6 @@ def main(cfg):
     # ------------------------------------------------------------
     sys.path.insert(0, str(ROOT / "scripts/plot_results"))
     import disk_rec_sure_fixedW as M
-    from scipy.optimize import minimize
     from reconstruction.sugar import sugar_gradient, hvp_symmetry_test
 
     fm, to_patches, centered = M.load_forward_model(device)
@@ -296,12 +295,17 @@ def main(cfg):
         return sure * state["scale"], g_theta * state["scale"]
 
     b = args.bounds
-    theta0 = np.clip(theta0, [b[0], b[2]], [b[1], b[3]])
-    res = minimize(sure_and_sugar, theta0, jac=True, method="L-BFGS-B", bounds=[(b[0], b[1]), (b[2], b[3])],
-                   options=dict(maxfun=args.maxfun, maxiter=args.maxfun))
-    print("\nL-BFGS-B:", res.message, " theta =", res.x, " mu =", 10.0 ** res.x, flush=True)
+    lower, upper = np.array([b[0], b[2]]), np.array([b[1], b[3]])
+    theta0 = np.clip(theta0, lower, upper)
+    # VMLMB (same quasi-Newton method with bounds as for the reconstructions); its first step is limited to
+    # dxabs = 1 in log10(mu), i.e. one decade
+    theta, fth, gth, status = optm.vmlmb(sure_and_sugar, theta0, lower=lower, upper=upper, maxeval=args.maxfun,
+                                         verb=1, throwerrors=False)
+    message = optm.reason(status)
+    print("\nVMLMB:", message, " theta =", theta, " mu =", 10.0 ** theta, flush=True)
     np.savez(out_dir / "trajectory.npz", **{k: np.array([h[k] for h in hist]) for k in hist[0]}, x_last=state["x"],
-             mu_opt=10.0 ** res.x, success=res.success, message=str(res.message))
+             mu_opt=10.0 ** theta, success=status in (optm.FTEST_SATISFIED, optm.GTEST_SATISFIED, optm.XTEST_SATISFIED),
+             message=str(message), optimizer="vmlmb")
 
 
 if __name__ == "__main__":
