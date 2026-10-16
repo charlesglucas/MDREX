@@ -12,14 +12,14 @@
 # Usage: bash sugar_angle0.sh [shape ...]   (default: spiral circle; the ellipse is in sugar_3alpha.sh / sugar_refined.sh)
 #        NORM=1 bash sugar_angle0.sh medium_ellipse spiral circle   -> MC-SURE normalized by the norm of MC-SUGAR at the
 #        first evaluation (--normalize), results in results/sugar/<shape>_alpha<..>_angle0_gradSnorm[_refined]
-# Jobs on vercors14.
+# Jobs spread alternately over vercors14 and vercors9 (MC-SUGAR and its refined step on the same cluster).
 ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
 PY=$ROOT/.venv/bin/python
 RUN=$ROOT/scripts/run_results/syntheticdata_sugar.py
 TAG=gradS; [ "${NORM:-0}" = 1 ] && TAG=gradSnorm
 OPTS="--angle 0 --bounds 6 9 4.4771 7.4771 --maxfun 25 --hvp-step 1e-2 --tag $TAG"
 [ "${NORM:-0}" = 1 ] && OPTS="$OPTS --normalize"
-CLUSTERS=(vercors14)
+CLUSTERS=(vercors14 vercors9)
 SHAPES=("${@:-spiral circle}")
 done_step() {  # done_step <folder>: trajectory.npz with mu_opt
   [ -e "$1/trajectory.npz" ] && $PY -c "import numpy as np, sys; sys.exit(0 if 'mu_opt' in np.load('$1/trajectory.npz').files else 1)"
