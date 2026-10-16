@@ -16,8 +16,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 SHAPE = sys.argv[1] if len(sys.argv) > 1 else "medium_ellipse"
 TAG = sys.argv[2] if len(sys.argv) > 2 else "angle0_gradS"
 SUGAR_TAG = sys.argv[3] if len(sys.argv) > 3 else "gradS"   # results/sugar/<shape>_alpha<flux>_angle0_<SUGAR_TAG>[_refined]
-# MODE "all": grid minima and SUGAR pairs; MODE "sugar" (paper, Fig. 5): MSE minimum (red x), MC-SUGAR (magenta +) and
-# refined MC-SUGAR (green triangle) only: the three on the MSE row, MSE + MC-SUGAR on the MC-SURE row, MSE + refined
+# MODE "all": grid minima and SUGAR pairs; MODE "sugar" (paper, Fig. 5): MSE minimum (red x), MC-SUGAR (orange triangle)
+# and refined MC-SUGAR (green diamond) only: the three on the MSE row, MSE + MC-SUGAR on the MC-SURE row, MSE + refined
 # MC-SUGAR on the refined MC-SURE row
 MODE = sys.argv[4] if len(sys.argv) > 4 else "all"
 FLUXES = [("1em6", r"$\alpha = 1\cdot 10^{-6}$"), ("5em6", r"$\alpha = 5\cdot 10^{-6}$"), ("1em5", r"$\alpha = 1\cdot 10^{-5}$")]
@@ -89,13 +89,15 @@ for c, (flux, alpha_label) in enumerate(FLUXES):
         if r == 0:
             label_box(ax, (0.04, 1.05, 0.92, 0.13), alpha_label)
         if MODE == "sugar":
+            # MSE minimum: x; MC-SUGAR: triangle; refined MC-SUGAR: diamond (similar visual sizes, white edges)
             shown = {"sugar", "ref_sugar"} if r == 0 else ({"sugar"} if r == 1 else {"ref_sugar"})
-            ax.plot(d["i_mse"][1], d["i_mse"][0], "x", color="red", markersize=12, markeredgewidth=2.5)
+            ax.plot(d["i_mse"][1], d["i_mse"][0], "x", color="#e41a1c", markersize=10, markeredgewidth=2.5)
             if "sugar" in shown and sug is not None:
-                ax.plot(to_j(sug[1]), to_k(sug[0]), "+", color="magenta", markersize=14, markeredgewidth=3)
+                ax.plot(to_j(sug[1]), to_k(sug[0]), "^", color="#ff7f00", markersize=9.5, markeredgecolor="w",
+                        markeredgewidth=1.2)
             if "ref_sugar" in shown and sug_ref is not None:
-                ax.plot(to_j(sug_ref[1]), to_k(sug_ref[0]), "^", color="limegreen", markersize=10, markeredgecolor="k",
-                        markeredgewidth=1)
+                ax.plot(to_j(sug_ref[1]), to_k(sug_ref[0]), "D", color="#4daf4a", markersize=8, markeredgecolor="w",
+                        markeredgewidth=1.2)
             continue
         ax.plot(d["i_mse"][1], d["i_mse"][0], "rx", markersize=11, markeredgewidth=2)
         if "sure" in shown:

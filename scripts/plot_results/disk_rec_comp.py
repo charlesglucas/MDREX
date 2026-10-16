@@ -207,6 +207,9 @@ def main(cfg):
 
     # Same table with a single couple (mu_smooth, mu_sparse) for all the geometries and contrasts, as REXPACO
     # (5e6, 1e5): best compromise on the support taking the std over angles into account (runs per shape)
+    def mu_latex(mdrex_dir):  # "musmooth1e7_musparse5e5" -> "(10^7, 5 \\cdot 10^5)"
+        vals = [mu_tex(f"{m}e{e}") for m, e in re.findall(r"mu(?:smooth|sparse)([0-9]+)e([0-9]+)", mdrex_dir)]
+        return f"({vals[0]}, {vals[1]})"
     fixed_dir = "musmooth5e6_musparse1e5"
     x_mdrex_fixed = np.zeros_like(x_gt_store)
     for (s, shape) in enumerate(["medium_ellipse", "spiral", "circle"]):
@@ -333,7 +336,8 @@ def main(cfg):
                 offset0.set_position((0.5, 1.02))
 
                 plt.savefig(
-                    f"figures/comp{tag}_{shape_id}_{suffix}_{mdrex_dirs[shape_id]}{mean_tag}.pdf",
+                    f"figures/comp{tag}_{shape_id}_{suffix}_musmooth{MU_SELECTED[shape_id][f].replace('_', '_musparse')}"
+                    f"_refinedSURE{sfx}{mean_tag}.pdf",
                     dpi=300,
                     bbox_inches='tight',
                     bbox_extra_artists=[cbar0.ax.yaxis.get_offset_text(),
