@@ -92,7 +92,8 @@ def compact(blocks, out):
     plt.close(fig)
 
 
-compact([(r"$\widehat{\mathbf{x}}_{\lambda}$", "medium_ellipse", False),
-         (r"$\mathbf{H}_{\lambda}\widehat{\mathbf{x}}_{\lambda}$", "medium_ellipse", True)], "comp_compact_medium_ellipse.pdf")
+compact([(r"$\langle\widehat{\mathbf{x}}_{\lambda}\rangle_{\lambda}$", "medium_ellipse", False),
+         (r"$\langle\mathbf{H}_{\lambda}\widehat{\mathbf{x}}_{\lambda}\rangle_{\lambda}$", "medium_ellipse", True)],
+        "comp_compact_medium_ellipse.pdf")
 compact([("Spiral", "spiral", False), ("Circle", "circle", False)], "comp_compact_spiral_circle.pdf")
 compact([("Spiral", "spiral", True), ("Circle", "circle", True)], "comp_compact_conv_spiral_circle.pdf")
