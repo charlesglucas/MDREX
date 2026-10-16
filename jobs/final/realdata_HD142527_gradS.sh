@@ -4,7 +4,7 @@
 # of DIT 0.84 s (two sequences of 704 frames, 65 deg of field rotation), gradS, ftol 0.
 #   1. preparation (CPU): frames shifted by +0.5 px (star from the half-pixel centre 511.5 to pixel 512 as in the Data
 #      Center cubes), layout of the other targets -> data/real_data/DISKS_IRDIS_CHARLES/HD_142527/2016-03-26/data/
-#      (skipped if already done)
+#      (skipped if already done; the cube is renamed only once complete), same queue as the GPU jobs
 #   2. grid of couples mu_smooth 1e6 / 1e7 / 1e8 x mu_sparse 1e5 / 1e6 / 1e7, ONE GPU job PER COUPLE (1408 frames:
 #      about 16 times the cost of a target with ~90 frames), batch of 16 patches for the ExoMILD engine (memory), started
 #      when the preparation has finished (oarsub -a) -> results/realdata/HD_142527-2016-03-26-gradS-ftol0/
@@ -16,7 +16,7 @@ DATA=HD_142527/2016-03-26/data
 CLUSTERS=(vercors14 vercors9)
 dep=""
 if ! ls $ROOT/data/real_data/DISKS_IRDIS_CHARLES/$DATA/*reduced_master_cube*.fits >/dev/null 2>&1; then
-  out=$(oarsub -l "nodes=1,walltime=4:00:00" -n "prep_HD142527" \
+  out=$(oarsub -l "gpu=1,walltime=4:00:00" -p "cluster='vercors14'" -n "prep_HD142527" \
     "cd $ROOT && $PY $ROOT/scripts/run_results/prepare_realdata_hd142527.py")
   echo "$out"
   id=$(echo "$out" | grep -o "OAR_JOB_ID=[0-9]*" | cut -d= -f2)

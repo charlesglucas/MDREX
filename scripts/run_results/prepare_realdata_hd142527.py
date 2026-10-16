@@ -33,7 +33,9 @@ with fits.open(src / f"{stem}_half-center_im.fits", memmap=True) as hdul:
         if k in src_header:
             header[k] = src_header[k]
     header["HISTORY"] = f"MD-REX: all frames, shifted by {args.shift} px (star at pixel 512)"
-    out = fits.StreamingHDU(str(dst / f"{stem}-reduced_master_cube.fits"), header)
+    # written under a temporary name (not matched by load_folder), renamed once complete
+    tmp = dst / "cube_in_progress.fits"
+    out = fits.StreamingHDU(str(tmp), header)
     for c in range(C):   # FITS order: channel-major, then frames
         for t in range(T):
             frame = np.asarray(cube[c, t], dtype=np.float64)
@@ -42,6 +44,7 @@ with fits.open(src / f"{stem}_half-center_im.fits", memmap=True) as hdul:
             if t % 200 == 0:
                 print(f"channel {c}, frame {t + 1}/{T}", flush=True)
     out.close()
+    tmp.rename(dst / f"{stem}-reduced_master_cube.fits")
 rot = fits.getdata(src / "rotnth.fits").reshape(-1).astype(np.float32)
 assert rot.size == T, (rot.size, T)
 fits.writeto(dst / f"{stem}-parallactic_rotation.fits", rot, overwrite=True)
