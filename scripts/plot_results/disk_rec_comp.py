@@ -54,7 +54,13 @@ def convolve_stack(x, psf):
     return F.conv2d(x_t, weight=psf, padding="same").reshape(shape).numpy()
 
 
-def derotate(img, angle_deg, center=(126.5, 126.5)):
+# rotation centre of the synthetic disks in the [513-128:513+128] crops: the star, pixel (128, 128), for the disks
+# centred by make_centered_disks.py (default); (126.5, 126.5) for the original disks (DISKS=orig), rotated about the
+# centre (511.5, 511.5) of the 1024 x 1024 images
+DISK_CENTER = (126.5, 126.5) if os.environ.get("DISKS", "centered") == "orig" else (128.0, 128.0)
+
+
+def derotate(img, angle_deg, center=DISK_CENTER):
     """Rotate a disk back by its angle (bicubic), as in disk_rec_distrib.py: the synthetic disks rotate
     around pixel (126.5, 126.5) of the 256x256 crop."""
     t = np.deg2rad(angle_deg)
