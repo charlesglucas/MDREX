@@ -260,6 +260,9 @@ def main(cfg):
         (select(x_gt_store), select(x_rexpaco), select(x_mdrex), ""),
         (select(x_gt_conv), select(x_rexpaco_conv), select(x_mdrex_conv), "_conv"),
     ]
+    # arrays of the comparison figures (flux, shape, H, W), for the compact figures (plot_comp_compact.py)
+    np.savez(f"figures/comp_data_refinedSURE{sfx}{mean_tag}.npz", gt=datasets[0][0], rex=datasets[0][1], md=datasets[0][2],
+             gt_conv=datasets[1][0], rex_conv=datasets[1][1], md_conv=datasets[1][2], fluxes=fluxes)
     for (gt_all, rex_all, md_all, tag) in datasets:
         for s, shape_id in enumerate(shape_ids):
             for f, (flux, suffix) in enumerate(zip(fluxes, suffixes)):
