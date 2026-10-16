@@ -10,11 +10,15 @@
 # mu_sparse in [3e4, 3e7], up to 25 MC-SURE evaluations (2 reconstructions from x = 0 + 2 CG solves each).
 # A step already done (trajectory.npz with mu_opt) is skipped.
 # Usage: bash sugar_angle0.sh [shape ...]   (default: spiral circle; the ellipse is in sugar_3alpha.sh / sugar_refined.sh)
+#        NORM=1 bash sugar_angle0.sh medium_ellipse spiral circle   -> MC-SURE normalized by the norm of MC-SUGAR at the
+#        first evaluation (--normalize), results in results/sugar/<shape>_alpha<..>_angle0_gradSnorm[_refined]
 # Jobs on vercors9.
 ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
 PY=$ROOT/.venv/bin/python
 RUN=$ROOT/scripts/run_results/syntheticdata_sugar.py
-OPTS="--angle 0 --bounds 6 9 4.4771 7.4771 --maxfun 25 --hvp-step 1e-2"
+TAG=gradS; [ "${NORM:-0}" = 1 ] && TAG=gradSnorm
+OPTS="--angle 0 --bounds 6 9 4.4771 7.4771 --maxfun 25 --hvp-step 1e-2 --tag $TAG"
+[ "${NORM:-0}" = 1 ] && OPTS="$OPTS --normalize"
 CLUSTERS=(vercors9)
 SHAPES=("${@:-spiral circle}")
 done_step() {  # done_step <folder>: trajectory.npz with mu_opt
@@ -24,11 +28,11 @@ n=0
 for shape in ${SHAPES[@]}; do
   for flux in 1e-6 5e-6 1e-5; do
     tag=$(echo $flux | sed 's/e-/em/')
-    dir=$ROOT/results/sugar/${shape}_alpha${tag}_angle0_gradS
+    dir=$ROOT/results/sugar/${shape}_alpha${tag}_angle0_${TAG}
     CL=${CLUSTERS[$((n % ${#CLUSTERS[@]}))]}; n=$((n + 1))
     dep=""
     if ! done_step $dir; then
-      out=$(oarsub -l "gpu=1,walltime=48:00:00" -p "cluster='$CL'" -n "sugar_${shape}_${tag}" \
+      out=$(oarsub -l "gpu=1,walltime=48:00:00" -p "cluster='$CL'" -n "sugar_${TAG}_${shape}_${tag}" \
         "cd $ROOT && CUDA_VISIBLE_DEVICES=0 $PY $RUN --flux $flux --shape $shape --mu0 1e7 1e6 $OPTS")
       echo "$out"
       id=$(echo "$out" | grep -o "OAR_JOB_ID=[0-9]*" | cut -d= -f2)
@@ -36,7 +40,7 @@ for shape in ${SHAPES[@]}; do
       dep="-a $id"
     fi
     if ! done_step ${dir}_refined; then
-      oarsub $dep -l "gpu=1,walltime=48:00:00" -p "cluster='$CL'" -n "sugar_refined_${shape}_${tag}" \
+      oarsub $dep -l "gpu=1,walltime=48:00:00" -p "cluster='$CL'" -n "sugar_refined_${TAG}_${shape}_${tag}" \
         "cd $ROOT && CUDA_VISIBLE_DEVICES=0 $PY $RUN --flux $flux --shape $shape --refined $OPTS"
     fi
   done

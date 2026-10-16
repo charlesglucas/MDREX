@@ -18,6 +18,9 @@ parser.add_argument("--cg-rtol", type=float, default=1e-2)
 parser.add_argument("--hvp-step", type=float, default=1e-2, help="relative step of the finite-difference Hessian-vector products")
 parser.add_argument("--seed", type=int, default=42, help="seed of the Monte Carlo probe delta (fixed)")
 parser.add_argument("--tag", type=str, default="gradS")
+parser.add_argument("--normalize", action="store_true",
+                    help="MC-SURE and MC-SUGAR divided by the norm of MC-SUGAR (d/dlog10 mu) at the first evaluation, so that the "
+                         "first L-BFGS-B step (identity initial metric) is about one decade instead of jumping to the bounds")
 parser.add_argument("--refined", action="store_true", help="refined MC-SURE (metric from the residual of the C^y MC-SUGAR couple)")
 parser.add_argument("--bounds", type=float, nargs=4, default=[4, 10, 3, 9],
                     help="bounds of log10(mu_smooth) (2 values) and log10(mu_sparse) (2 values)")
@@ -258,7 +261,7 @@ def main(cfg):
         theta0 = np.log10(mu_pilot)
         out_dir = out_dir.with_name(out_dir.name + "_refined")
     out_dir.mkdir(parents=True, exist_ok=True)
-    state = {"x": np.zeros((C, H, W)), "x_eps": np.zeros((C, H, W))}
+    state = {"x": np.zeros((C, H, W)), "x_eps": np.zeros((C, H, W)), "scale": 1.0}
     hist = []
 
     def sure_and_sugar(theta):   # theta = log10(mu_smooth, mu_sparse)
@@ -282,11 +285,15 @@ def main(cfg):
         mse, psnr, psnr_supp = quality(x)
         rec = dict(mu_smooth=mu_smooth, mu_sparse=mu_sparse, sure=sure, data_term=D, div=div, grad_mu=g_mu,
                    grad_theta=g_theta, mse=mse, psnr=psnr, psnr_supp=psnr_supp, status=str(st), status_eps=str(st_eps), **info)
+        if args.normalize and not hist:   # scale fixed at the first evaluation (same function for all the iterations)
+            state["scale"] = 1.0 / max(np.linalg.norm(g_theta), 1e-300)
+            print(f"[normalize] MC-SURE and MC-SUGAR scaled by {state['scale']:.3e}", flush=True)
+        rec["scale"] = state["scale"]
         hist.append(rec)
         print(f"[MC-SURE] {sure:.6e}  [MC-SUGAR d/dlog10mu] {g_theta}  [MSE] {mse:.4e}  [PSNR] {psnr:.2f} / {psnr_supp:.2f}  "
               f"[CG] {info}", flush=True)
         np.savez(out_dir / "trajectory.npz", **{k: np.array([h[k] for h in hist]) for k in hist[0]}, x_last=x)
-        return sure, g_theta
+        return sure * state["scale"], g_theta * state["scale"]
 
     b = args.bounds
     theta0 = np.clip(theta0, [b[0], b[2]], [b[1], b[3]])

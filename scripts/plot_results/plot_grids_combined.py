@@ -15,6 +15,7 @@ from matplotlib.patches import FancyBboxPatch
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SHAPE = sys.argv[1] if len(sys.argv) > 1 else "medium_ellipse"
 TAG = sys.argv[2] if len(sys.argv) > 2 else "angle0_gradS"
+SUGAR_TAG = sys.argv[3] if len(sys.argv) > 3 else "gradS"   # results/sugar/<shape>_alpha<flux>_angle0_<SUGAR_TAG>[_refined]
 FLUXES = [("1em6", r"$\alpha = 1\cdot 10^{-6}$"), ("5em6", r"$\alpha = 5\cdot 10^{-6}$"), ("1em5", r"$\alpha = 1\cdot 10^{-5}$")]
 ROWS = [("mse", "MSE", {"sure", "sugar", "ref", "ref_sugar"}),
         ("sure", "MC-SURE", {"sure", "sugar"}),
@@ -49,7 +50,7 @@ def sci_colorbar(cbar, nbins=4, decimals=2):
 
 
 def sugar_mu(flux, refined):
-    f = ROOT / "results" / "sugar" / f"{SHAPE}_alpha{flux}_angle0_gradS{'_refined' if refined else ''}" / "trajectory.npz"
+    f = ROOT / "results" / "sugar" / f"{SHAPE}_alpha{flux}_angle0_{SUGAR_TAG}{'_refined' if refined else ''}" / "trajectory.npz"
     if not f.exists():
         return None
     tr = np.load(f, allow_pickle=True)
@@ -94,6 +95,6 @@ for c, (flux, alpha_label) in enumerate(FLUXES):
         if "ref_sugar" in shown and sug_ref is not None:
             ax.plot(to_j(sug_ref[1]), to_k(sug_ref[0]), "D", color="orange", markersize=8, markeredgecolor="k",
                     markeredgewidth=1)
-out = ROOT / "figures" / f"grids_{SHAPE}_combined_{TAG}.pdf"
+out = ROOT / "figures" / f"grids_{SHAPE}_combined_{TAG}{'' if SUGAR_TAG == 'gradS' else '_' + SUGAR_TAG}.pdf"
 fig.savefig(out)
 print(out)
