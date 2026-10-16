@@ -15,13 +15,7 @@ from scipy.ndimage import affine_transform
 import astropy.io.fits as fits
 
 
-# rotation centre of the synthetic disks in the [513-128:513+128] crops: the star, pixel (128, 128), for the disks
-# centred by make_centered_disks.py (default); (126.5, 126.5) for the original disks (DISKS=orig), rotated about the
-# centre (511.5, 511.5) of the 1024 x 1024 images
-DISK_CENTER = (126.5, 126.5) if os.environ.get("DISKS", "centered") == "orig" else (128.0, 128.0)
-
-
-def derotate(img, angle_deg, center=DISK_CENTER):
+def derotate(img, angle_deg, center=(126.5, 126.5)):
     """Rotate a disk back by its angle (bicubic). The synthetic disks rotate around pixel
     (511.5, 511.5) of the 1024x1024 images, i.e. (126.5, 126.5) in the [513-128:513+128] crop
     (checked on the ground truths: exact at 180 deg)."""

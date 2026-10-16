@@ -14,7 +14,6 @@ ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
 PY=$ROOT/.venv/bin/python
 RUN=$ROOT/scripts/run_results/syntheticdata_sure_gpu.py
 CLUSTERS=(vercors14 vercors9)
-TAG=${TAG:-gradS}   # TAG=gradSc: disks centred on the star (make_centered_disks.py)
 SHAPES=("${@:-medium_ellipse spiral circle}")
 n=0
 for shape in ${SHAPES[@]}; do
@@ -22,13 +21,13 @@ for shape in ${SHAPES[@]}; do
   for flux in 1e-6 5e-6 1e-5; do
     tag=$(echo $flux | sed 's/e-/em/')
     for angle in 0; do
-      dir=$ROOT/results/grids_111111111111/grid_sure_${shape}_alpha${tag}_angle${angle}_${TAG}
+      dir=$ROOT/results/grids_111111111111/grid_sure_${shape}_alpha${tag}_angle${angle}_gradS
       cmd=""
       for sm in 1e6 3e6 1e7 3e7 1e8 3e8 1e9; do
         for sp in $SPS; do
           f=$dir/musmooth$(awk "BEGIN{printf \"%.1f\", $sm}")_musparse$(awk "BEGIN{printf \"%.1f\", $sp}").npz
           [ -e "$f" ] && continue
-          cmd="$cmd CUDA_VISIBLE_DEVICES=0 $PY $RUN --mu-smooth $sm --mu-sparse $sp --flux $flux --shape $shape --angle $angle --tag $TAG;"
+          cmd="$cmd CUDA_VISIBLE_DEVICES=0 $PY $RUN --mu-smooth $sm --mu-sparse $sp --flux $flux --shape $shape --angle $angle --tag gradS;"
         done
       done
       [ -z "$cmd" ] && { echo "complete: $dir"; continue; }
