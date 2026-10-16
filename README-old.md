@@ -199,6 +199,8 @@ rsync -rv --ignore-existing grenoble.g5k:/srv/storage/thoth1@storage4.grenoble.g
 
 rsync -rv --ignore-existing grenoble.g5k:/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/DiscDSM/OAR.dsm_train.3136898.stdout /Users/charleslucas/Documents/Science/astronomy/DiscDSM/
 
+rsync -rv grenoble.g5k:/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO/results/sugar /Users/charleslucas/Documents/Science/astronomy/MDREX-main/results
+
 ## noeud grid5000
 
 oarsub -l nodes=1,walltime=10:00 "~/ssh_nodes/start_ssh.sh"
