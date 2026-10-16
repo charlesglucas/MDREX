@@ -4,15 +4,21 @@
 The raw cube has T = 1408 frames of DIT 0.84 s (11.8 GB): consecutive frames are averaged by bins of --bin frames
 (parallactic angles averaged too), which keeps the field rotation (65 deg) and reduces the number of frames for MD-REX
 (1408 / 8 = 176). The cube is read with memmap, bin by bin.
-Usage: python prepare_realdata_hd142527.py [--bin 8]"""
+Centering: the cube is "half-center" (star between 4 pixels, at (511.5, 511.5)), whereas the IRDIS Data Center cubes
+("center_im") and MD-REX (rotation centre at pixel 128 of the central 256 x 256 crop taken by load_folder, i.e. pixel
+512 of the 1024 x 1024 frame) put the star at the centre of pixel (512, 512): every frame is shifted by --shift pixels
+along both axes by Fourier interpolation (default +0.5).
+Usage: python prepare_realdata_hd142527.py [--bin 8] [--shift 0.5]"""
 import argparse
 import pathlib
 import numpy as np
 from astropy.io import fits
+from scipy.ndimage import fourier_shift
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 parser = argparse.ArgumentParser()
 parser.add_argument("--bin", type=int, default=8, help="number of consecutive frames averaged")
+parser.add_argument("--shift", type=float, default=0.5, help="shift (pixels, both axes) moving the star to pixel (512, 512)")
 args = parser.parse_args()
 
 src = ROOT / "data/real_data/DISKS_IRDIS_CHARLES/HD 142527/2016-03-26"
@@ -28,11 +34,13 @@ with fits.open(src / f"{stem}_half-center_im.fits", memmap=True) as hdul:
     nb = T // args.bin
     out = np.zeros((C, nb, H, W), dtype=np.float32)
     for b in range(nb):
-        out[:, b] = np.asarray(cube[:, b * args.bin:(b + 1) * args.bin], dtype=np.float64).mean(axis=1)
+        frame = np.asarray(cube[:, b * args.bin:(b + 1) * args.bin], dtype=np.float64).mean(axis=1)   # (C, H, W)
+        for c in range(C):
+            out[c, b] = np.fft.ifft2(fourier_shift(np.fft.fft2(frame[c]), (args.shift, args.shift))).real
         if b % 20 == 0:
             print(f"bin {b + 1}/{nb}", flush=True)
 rot_b = rot[:nb * args.bin].reshape(nb, args.bin).mean(axis=1)
-header["HISTORY"] = f"MD-REX: frames averaged by bins of {args.bin} ({T} -> {nb} frames)"
+header["HISTORY"] = f"MD-REX: frames averaged by bins of {args.bin} ({T} -> {nb} frames), shifted by {args.shift} px"
 fits.writeto(dst / f"{stem}_bin{args.bin}-reduced_master_cube.fits", out, header, overwrite=True)
 fits.writeto(dst / f"{stem}_bin{args.bin}-parallactic_rotation.fits", rot_b.astype(np.float32), overwrite=True)
 fits.writeto(dst / f"{stem}-psf_master_cube.fits",

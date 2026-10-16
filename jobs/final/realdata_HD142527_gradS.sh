@@ -2,7 +2,8 @@
 
 # HD 142527 (HIP 78092), 2016-03-26, IRDIS K12 (lambda = 2.110 / 2.251 um -> coronagraph k1_k2), 1408 frames of
 # DIT 0.84 s, 65 deg of field rotation, gradS, ftol 0.
-#   1. preparation (CPU): frames averaged by bins of 8 (1408 -> 176 frames), layout of the other targets
+#   1. preparation (CPU): frames averaged by bins of 8 (1408 -> 176 frames), shifted by +0.5 px (star from the
+#      half-pixel centre 511.5 to pixel 512 as in the Data Center cubes), layout of the other targets
 #      -> data/real_data/DISKS_IRDIS_CHARLES/HD_142527/2016-03-26-bin8/data/   (skipped if already done)
 #   2. grid of couples mu_smooth 1e6 / 1e7 / 1e8 x mu_sparse 1e5 / 1e6 / 1e7, one GPU job per mu_smooth (couples in
 #      sequence, existing ones skipped), started when the preparation has finished (oarsub -a)
