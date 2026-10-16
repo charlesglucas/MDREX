@@ -16,6 +16,10 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 SHAPE = sys.argv[1] if len(sys.argv) > 1 else "medium_ellipse"
 TAG = sys.argv[2] if len(sys.argv) > 2 else "angle0_gradS"
 SUGAR_TAG = sys.argv[3] if len(sys.argv) > 3 else "gradS"   # results/sugar/<shape>_alpha<flux>_angle0_<SUGAR_TAG>[_refined]
+# MODE "all": grid minima and SUGAR pairs; MODE "sugar" (paper, Fig. 5): MSE minimum (red x), MC-SUGAR (magenta +) and
+# refined MC-SUGAR (green triangle) only: the three on the MSE row, MSE + MC-SUGAR on the MC-SURE row, MSE + refined
+# MC-SUGAR on the refined MC-SURE row
+MODE = sys.argv[4] if len(sys.argv) > 4 else "all"
 FLUXES = [("1em6", r"$\alpha = 1\cdot 10^{-6}$"), ("5em6", r"$\alpha = 5\cdot 10^{-6}$"), ("1em5", r"$\alpha = 1\cdot 10^{-5}$")]
 ROWS = [("mse", "MSE", {"sure", "sugar", "ref", "ref_sugar"}),
         ("sure", "MC-SURE", {"sure", "sugar"}),
@@ -84,6 +88,15 @@ for c, (flux, alpha_label) in enumerate(FLUXES):
             ax.set_yticklabels([])
         if r == 0:
             label_box(ax, (0.04, 1.05, 0.92, 0.13), alpha_label)
+        if MODE == "sugar":
+            shown = {"sugar", "ref_sugar"} if r == 0 else ({"sugar"} if r == 1 else {"ref_sugar"})
+            ax.plot(d["i_mse"][1], d["i_mse"][0], "x", color="red", markersize=12, markeredgewidth=2.5)
+            if "sugar" in shown and sug is not None:
+                ax.plot(to_j(sug[1]), to_k(sug[0]), "+", color="magenta", markersize=14, markeredgewidth=3)
+            if "ref_sugar" in shown and sug_ref is not None:
+                ax.plot(to_j(sug_ref[1]), to_k(sug_ref[0]), "^", color="limegreen", markersize=10, markeredgecolor="k",
+                        markeredgewidth=1)
+            continue
         ax.plot(d["i_mse"][1], d["i_mse"][0], "rx", markersize=11, markeredgewidth=2)
         if "sure" in shown:
             ax.plot(d["i_sure"][1], d["i_sure"][0], "m+", markersize=11, markeredgewidth=2)
@@ -95,6 +108,6 @@ for c, (flux, alpha_label) in enumerate(FLUXES):
         if "ref_sugar" in shown and sug_ref is not None:
             ax.plot(to_j(sug_ref[1]), to_k(sug_ref[0]), "D", color="orange", markersize=8, markeredgecolor="k",
                     markeredgewidth=1)
-out = ROOT / "figures" / f"grids_{SHAPE}_combined_{TAG}{'' if SUGAR_TAG == 'gradS' else '_' + SUGAR_TAG}.pdf"
+out = ROOT / "figures" / f"grids_{SHAPE}_combined_{TAG}{'' if SUGAR_TAG == 'gradS' else '_' + SUGAR_TAG}{'' if MODE == 'all' else '_' + MODE}.pdf"
 fig.savefig(out)
 print(out)
