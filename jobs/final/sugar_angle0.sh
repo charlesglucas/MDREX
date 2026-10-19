@@ -13,12 +13,17 @@
 #        NORM=1 bash sugar_angle0.sh medium_ellipse spiral circle   -> MC-SURE normalized by the norm of MC-SUGAR at the
 #        first evaluation (--normalize), results in results/sugar/<shape>_alpha<..>_angle0_gradSnorm[_refined]
 #        NORM=1 MAXFUN=60 bash sugar_angle0.sh ...   -> up to 60 evaluations, results in ..._angle0_gradSnorm60[_refined]
+#        NORM=1 MAXFUN=60 STOP=tol bash sugar_angle0.sh ... -> stopping criteria matched to the precision of MC-SURE /
+#        MC-SUGAR (the limit of 60 evaluations is only a safeguard), results in ..._angle0_gradSnorm60tol[_refined]
 # Jobs spread alternately over vercors14 and vercors9 (MC-SUGAR and its refined step on the same cluster).
 ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
 PY=$ROOT/.venv/bin/python
 RUN=$ROOT/scripts/run_results/syntheticdata_sugar.py
 MAXFUN=${MAXFUN:-25}   # maximum number of MC-SURE evaluations per minimization; MAXFUN != 25 -> tag suffixed with it
 TAG=gradS; [ "${NORM:-0}" = 1 ] && TAG=gradSnorm; [ "$MAXFUN" != 25 ] && TAG=${TAG}${MAXFUN}
+# stopping criteria of VMLMB (syntheticdata_sugar.py defaults): ftol 1e-6 on MC-SURE, 0.01 decade on log10(mu),
+# 1e-2 on the projected gradient relative to its initial norm; STOP=tol -> tag suffixed with "tol"
+[ "${STOP:-}" = tol ] && TAG=${TAG}tol
 OPTS="--angle 0 --bounds 6 9 4.4771 7.4771 --maxfun $MAXFUN --hvp-step 1e-2 --tag $TAG"
 [ "${NORM:-0}" = 1 ] && OPTS="$OPTS --normalize"
 CLUSTERS=(vercors14 vercors9)

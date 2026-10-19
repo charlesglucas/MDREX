@@ -18,6 +18,14 @@ parser.add_argument("--cg-rtol", type=float, default=1e-2)
 parser.add_argument("--hvp-step", type=float, default=1e-2, help="relative step of the finite-difference Hessian-vector products")
 parser.add_argument("--seed", type=int, default=42, help="seed of the Monte Carlo probe delta (fixed)")
 parser.add_argument("--tag", type=str, default="gradS")
+parser.add_argument("--ftol", type=float, default=1e-6,
+                    help="relative tolerance on MC-SURE (VMLMB): about the reproducibility of MC-SURE at a given mu "
+                         "(3-8 for |SURE| ~ 4e6, the reconstructions being stopped at ftol = 1e-8)")
+parser.add_argument("--xtol", type=float, default=0.01,
+                    help="absolute tolerance on the step in log10(mu) (VMLMB): 0.01 decade, i.e. 2%% on mu")
+parser.add_argument("--gtol", type=float, default=1e-2,
+                    help="tolerance on the projected gradient relative to its initial norm (VMLMB): about the "
+                         "variability of MC-SUGAR at a given mu (1-2%%)")
 parser.add_argument("--normalize", action="store_true",
                     help="MC-SURE and MC-SUGAR divided by the norm of MC-SUGAR (d/dlog10 mu) at the first evaluation, so that the "
                          "first L-BFGS-B step (identity initial metric) is about one decade instead of jumping to the bounds")
@@ -303,7 +311,8 @@ def main(cfg):
     # inside sure_and_sugar (run_bfgs -> optm.vmlmb) would overwrite the state of the outer line search (initial value,
     # step), which then never converges and keeps evaluating the same point.
     theta, fth, gth, status = optm.vmlmb(sure_and_sugar, theta0, lower=lower, upper=upper, maxeval=args.maxfun,
-                                         lnsrch=optm.LineSearch(), verb=1, throwerrors=False)
+                                         lnsrch=optm.LineSearch(), ftol=args.ftol, xtol=(args.xtol, 0.0),
+                                         gtol=(0.0, args.gtol), verb=1, throwerrors=False)
     message = optm.reason(status)
     print("\nVMLMB:", message, " theta =", theta, " mu =", 10.0 ** theta, flush=True)
     np.savez(out_dir / "trajectory.npz", **{k: np.array([h[k] for h in hist]) for k in hist[0]}, x_last=state["x"],
