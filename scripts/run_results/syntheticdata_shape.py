@@ -193,8 +193,9 @@ def main(cfg):
                     (xdisc, fx, gx, status) = mdrex.run_bfgs(xdisc, data, MU_SPARSE, MU_SMOOTH, ftol=FTOL)
                     x_opt[f, a, s, :, :] = np.mean(xdisc, axis=0)
        
-    def mu_to_str(mu):  # 1e6 -> "1e6", 5e5 -> "5e5" (int(log10) would map 5e5 to "1e5")
-        mantissa, exp = f"{mu:.0e}".split("e")
+    def mu_to_str(mu):  # 1e6 -> "1e6", 5e5 -> "5e5", 4.14e7 -> "4.14e7" (3 significant digits)
+        mantissa, exp = f"{mu:.2e}".split("e")
+        mantissa = mantissa.rstrip("0").rstrip(".")
         return f"{mantissa}e{int(exp)}"
 
     outdir = Path("results") / "mdrex_results" / (f"musmooth{mu_to_str(MU_SMOOTH)}_musparse{mu_to_str(MU_SPARSE)}_{SHAPE}" + ("" if FLUX is None else "_alpha" + f"{FLUX:.0e}".replace("e-0", "em"))
