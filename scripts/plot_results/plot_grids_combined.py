@@ -24,6 +24,10 @@ FLUXES = [("1em6", r"$\alpha = 1\cdot 10^{-6}$"), ("5em6", r"$\alpha = 5\cdot 10
 ROWS = [("mse", "MSE", {"sure", "sugar", "ref", "ref_sugar"}),
         ("sure", "MC-SURE", {"sure", "sugar"}),
         ("sure_ref", "Refined MC-SURE", {"ref", "ref_sugar"})]
+# PSNR_ROW=1: extra row with the PSNR (whole image) of the reconstructions, all the markers and the best PSNR (black star)
+import os
+if os.environ.get("PSNR_ROW", "0") == "1":
+    ROWS.append(("psnr", "PSNR (dB)", {"sure", "sugar", "ref", "ref_sugar"}))
 BOX = dict(boxstyle="round,pad=0,rounding_size=0.02", facecolor="0.85", edgecolor="0.5", clip_on=False)
 
 
@@ -61,8 +65,9 @@ def sugar_mu(flux, refined):
     return tr["mu_opt"] if "mu_opt" in tr.files else None
 
 
-fig, axs = plt.subplots(3, 3, figsize=(10, 8.2))
-fig.subplots_adjust(left=0.14, right=0.92, bottom=0.11, top=0.94, wspace=0.42, hspace=0.16)
+nr = len(ROWS)
+fig, axs = plt.subplots(nr, 3, figsize=(10, 8.2 * nr / 3))
+fig.subplots_adjust(left=0.14, right=0.92, bottom=0.11 * 3 / nr, top=1 - 0.06 * 3 / nr, wspace=0.42, hspace=0.16)
 for c, (flux, alpha_label) in enumerate(FLUXES):
     d = np.load(ROOT / "figures" / f"grid_data_{SHAPE}_{flux}_{TAG}.npz")
     ms, mp = list(d["mu_smooth"]), list(d["mu_sparse"])
@@ -71,9 +76,15 @@ for c, (flux, alpha_label) in enumerate(FLUXES):
     sug, sug_ref = sugar_mu(flux, False), sugar_mu(flux, True)
     for r, (key, title, shown) in enumerate(ROWS):
         ax = axs[r, c]
-        im = ax.imshow(d[key], cmap="RdBu_r")
+        im = ax.imshow(d[key], cmap="viridis" if key == "psnr" else "RdBu_r")
         # colorbar with the height of the image, slightly spaced (the axes box fits the image: aspect equal)
-        sci_colorbar(fig.colorbar(im, cax=ax.inset_axes([1.05, 0.0, 0.06, 1.0])))
+        cbar = fig.colorbar(im, cax=ax.inset_axes([1.05, 0.0, 0.06, 1.0]))
+        if key == "psnr":
+            cbar.ax.tick_params(labelsize=9)
+            kb, jb = np.unravel_index(np.nanargmax(d["psnr"]), d["psnr"].shape)
+            ax.plot(jb, kb, "*", color="k", markersize=14, markeredgecolor="w", markeredgewidth=1)
+        else:
+            sci_colorbar(cbar)
         ax.set_xticks(np.arange(len(mp))); ax.set_yticks(np.arange(len(ms)))
         if r == len(ROWS) - 1:
             ax.set_xticklabels([mu_label(v) for v in mp], fontsize=10, rotation=45, ha="right", rotation_mode="anchor")
@@ -90,7 +101,7 @@ for c, (flux, alpha_label) in enumerate(FLUXES):
             label_box(ax, (0.04, 1.05, 0.92, 0.13), alpha_label)
         if MODE == "sugar":
             # MSE minimum: x; MC-SUGAR: triangle; refined MC-SUGAR: diamond (similar visual sizes, white edges)
-            shown = {"sugar", "ref_sugar"} if r == 0 else ({"sugar"} if r == 1 else {"ref_sugar"})
+            shown = {"sugar", "ref_sugar"} if r in (0, 3) else ({"sugar"} if r == 1 else {"ref_sugar"})
             ax.plot(d["i_mse"][1], d["i_mse"][0], "x", color="#e41a1c", markersize=10, markeredgewidth=2.5)
             if "sugar" in shown and sug is not None:
                 ax.plot(to_j(sug[1]), to_k(sug[0]), "^", color="#ff7f00", markersize=9.5, markeredgecolor="w",
@@ -110,6 +121,7 @@ for c, (flux, alpha_label) in enumerate(FLUXES):
         if "ref_sugar" in shown and sug_ref is not None:
             ax.plot(to_j(sug_ref[1]), to_k(sug_ref[0]), "D", color="orange", markersize=8, markeredgecolor="k",
                     markeredgewidth=1)
-out = ROOT / "figures" / f"grids_{SHAPE}_combined_{TAG}{'' if SUGAR_TAG == 'gradS' else '_' + SUGAR_TAG}{'' if MODE == 'all' else '_' + MODE}.pdf"
+out = ROOT / "figures" / (f"grids_{SHAPE}_combined_{TAG}{'' if SUGAR_TAG == 'gradS' else '_' + SUGAR_TAG}"
+                          f"{'' if MODE == 'all' else '_' + MODE}{'_psnr' if nr == 4 else ''}.pdf")
 fig.savefig(out)
 print(out)
