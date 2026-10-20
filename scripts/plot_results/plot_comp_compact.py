@@ -1,7 +1,7 @@
 """Compact comparison figures REXPACO / MD-REX: the ground truth appears once on the left of each block, all the images
 are divided by the contrast alpha (common colour scale "x alpha"), the contrasts are given in grey boxes on top of the
 columns. Each block: row 1 = ground truth + reconstructions (REXPACO, MD-REX) for the 3 contrasts, row 2 = relative
-errors |x_hat - x| / alpha. Data from disk_rec_comp.py (figures/comp_data_refinedSURE_gradS_mean.npz).
+errors |x_hat - x| / alpha. Data from disk_rec_comp.py (figures/comp_data_refinedSUGAR_gradS_mean.npz).
 Figures:
   figures/comp_compact_medium_ellipse.pdf : ellipse, blocks x_hat and H x_hat (paper, Sect. 3)
   figures/comp_compact_spiral_circle.pdf  : spiral and circle, x_hat (appendix)
@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-D = np.load(ROOT / "figures" / "comp_data_refinedSURE_gradS_mean.npz")
+D = np.load(ROOT / "figures" / "comp_data_refinedSUGAR_gradS_mean.npz")
 FLUXES = list(D["fluxes"])
 ALPHA_LABELS = [r"$\alpha = 1\cdot 10^{-6}$", r"$\alpha = 5\cdot 10^{-6}$", r"$\alpha = 1\cdot 10^{-5}$"]
 SHAPES = {"medium_ellipse": 0, "spiral": 1, "circle": 2}

@@ -155,15 +155,15 @@ def main(cfg):
         x_rexpaco = hdul[0].data[:,:,:,251-128:251+128, 251-128:251+128]
 
     # Hyperparameters (mu_smooth, mu_sparse) of MD-REX for each shape and contrast (rows: alpha = 1e-6, 5e-6, 1e-5):
-    # selected by refined MC-SURE (one re-estimation of the covariance) at angle 0 on the square 7 x 7 grids
-    # (disk_rec_sure_fixedW.py), and reused for the 10 parallactic angles. Results of syntheticdata_shape.py --flux
+    # found by refined MC-SUGAR (VMLMB, stopping criteria matched to the precision of MC-SURE; results/sugar/
+    # <shape>_alpha<flux>_angle0_gradSnorm60tol_refined, rounded to 3 significant digits) at angle 0, and reused for the 10 parallactic angles. Results of syntheticdata_shape.py --flux
     # (results/mdrex_results/musmooth<mu>_musparse<mu>_<shape>_alpha<flux>_gradS) or, if absent, of the run with the
     # 3 contrasts (results/mdrex_results/musmooth<mu>_musparse<mu>_<shape>_gradS).
     TAG = "gradS"
     sfx = f"_{TAG}" if TAG else ""
-    MU_SELECTED = {"medium_ellipse": ["3e7_1e6", "3e6_1e6", "3e6_1e6"],
-                   "spiral":         ["1e8_1e6", "3e7_3e5", "1e7_3e5"],
-                   "circle":         ["3e8_3e5", "1e6_1e6", "1e6_1e6"]}
+    MU_SELECTED = {"medium_ellipse": ["1.36e7_1.49e6", "3.89e6_1.4e6", "2.67e6_1.28e6"],
+                   "spiral":         ["1.15e7_1.39e6", "1.02e7_5.39e5", "9.32e6_6.15e5"],
+                   "circle":         ["1.08e7_1.6e6", "3.7e6_7.82e5", "3.46e6_8.97e5"]}
     flux_tags = ["1em6", "5em6", "1em5"]
     x_mdrex = np.zeros_like(x_gt_store)
     for (s, shape) in enumerate(["medium_ellipse", "spiral", "circle"]):
@@ -200,7 +200,7 @@ def main(cfg):
                      "angles for MD-REX and REXPACO, computed on the reconstructions $\\widehat{\\mathbf{x}}_{\\lambda}$ and on "
                      "the reconstructions convolved by the PSF $\\mathbf{H}_{\\lambda}\\widehat{\\mathbf{x}}_{\\lambda}$; the support is the set of "
                      "pixels where the ground truth exceeds 4\\% of its maximum. The hyperparameters of MD-REX are selected by "
-                     "refined MC-SURE at the first parallactic angle for each geometry and contrast, and kept for the other angles. "
+                     "refined MC-SUGAR at the first parallactic angle for each geometry and contrast, and kept for the other angles. "
                      "The best method is in bold.")
     for shape, mus in MU_SELECTED.items():
         print(f"% {names[shape]}: " + ", ".join(f"({mu_tex(m.split('_')[0])}, {mu_tex(m.split('_')[1])})" for m in mus))
@@ -261,7 +261,7 @@ def main(cfg):
         (select(x_gt_conv), select(x_rexpaco_conv), select(x_mdrex_conv), "_conv"),
     ]
     # arrays of the comparison figures (flux, shape, H, W), for the compact figures (plot_comp_compact.py)
-    np.savez(f"figures/comp_data_refinedSURE{sfx}{mean_tag}.npz", gt=datasets[0][0], rex=datasets[0][1], md=datasets[0][2],
+    np.savez(f"figures/comp_data_refinedSUGAR{sfx}{mean_tag}.npz", gt=datasets[0][0], rex=datasets[0][1], md=datasets[0][2],
              gt_conv=datasets[1][0], rex_conv=datasets[1][1], md_conv=datasets[1][2], fluxes=fluxes)
     for (gt_all, rex_all, md_all, tag) in datasets:
         for s, shape_id in enumerate(shape_ids):
@@ -340,7 +340,7 @@ def main(cfg):
 
                 plt.savefig(
                     f"figures/comp{tag}_{shape_id}_{suffix}_musmooth{MU_SELECTED[shape_id][f].replace('_', '_musparse')}"
-                    f"_refinedSURE{sfx}{mean_tag}.pdf",
+                    f"_refinedSUGAR{sfx}{mean_tag}.pdf",
                     dpi=300,
                     bbox_inches='tight',
                     bbox_extra_artists=[cbar0.ax.yaxis.get_offset_text(),
