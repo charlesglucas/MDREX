@@ -30,6 +30,10 @@ parser.add_argument("--normalize", action="store_true",
                     help="MC-SURE and MC-SUGAR divided by the norm of MC-SUGAR (d/dlog10 mu) at the first evaluation, so that the "
                          "first L-BFGS-B step (identity initial metric) is about one decade instead of jumping to the bounds")
 parser.add_argument("--refined", action="store_true", help="refined MC-SURE (metric from the residual of the C^y MC-SUGAR couple)")
+parser.add_argument("--refined-iter", type=int, default=1,
+                    help="iteration of the refinement (with --refined): k = 1 pilot = MC-SUGAR with C^y (folder <tag>), "
+                         "k > 1 pilot = refined MC-SUGAR of iteration k-1 (folder <tag>_refined or <tag>_refined<k-1>); "
+                         "output folder <tag>_refined (k = 1) or <tag>_refined<k>")
 parser.add_argument("--bounds", type=float, nargs=4, default=[4, 10, 3, 9],
                     help="bounds of log10(mu_smooth) (2 values) and log10(mu_sparse) (2 values)")
 args, remaining = parser.parse_known_args()
@@ -260,13 +264,16 @@ def main(cfg):
     if args.refined:
         # pilot: couple of the MC-SUGAR minimization with the metric C^y; the metric of the refined MC-SURE is the
         # inverse shrinkage covariance of the residual of its reconstruction (from x = 0), fixed during the minimization
-        mu_pilot = np.load(out_dir / "trajectory.npz", allow_pickle=True)["mu_opt"]
+        k = args.refined_iter
+        pilot_dir = out_dir if k == 1 else out_dir.with_name(out_dir.name + ("_refined" if k == 2 else f"_refined{k - 1}"))
+        mu_pilot = np.load(pilot_dir / "trajectory.npz", allow_pickle=True)["mu_opt"]
+        print(f"Refined MC-SURE, iteration {k}: pilot from {pilot_dir.name}", flush=True)
         print(f"Refined MC-SURE: pilot mu = ({mu_pilot[0]:.4e}, {mu_pilot[1]:.4e})", flush=True)
         x_pilot, _, _, _ = mdrex.run_bfgs(np.zeros((C, H, W)), y, mu_pilot[1], mu_pilot[0])
         with torch.no_grad():
             C_inv_y = M.shrinkage_cov_inv(centered(to_patches(y - fm(torch.tensor(x_pilot, dtype=torch.float32, device=device)))))
         theta0 = np.log10(mu_pilot)
-        out_dir = out_dir.with_name(out_dir.name + "_refined")
+        out_dir = out_dir.with_name(out_dir.name + ("_refined" if k == 1 else f"_refined{k}"))
     out_dir.mkdir(parents=True, exist_ok=True)
     state = {"x": np.zeros((C, H, W)), "x_eps": np.zeros((C, H, W)), "scale": 1.0}
     hist = []
