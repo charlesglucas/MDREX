@@ -5,6 +5,8 @@
 # (results/grids_111111111111/grid_sure_<shape>_alpha<..>_angle0_gradS) around their PSNR maximum.
 #   spiral 1e-6: (3e7, 3e5) (1e7, 3e5) (3e7, 1e5); spiral 5e-6 and 1e-5: (3e6, 1e5)
 #   circle 1e-6: (3e7, 3e5) (1e7, 3e5) (1e7, 1e5); circle 5e-6: (1e7, 1e5) (3e6, 1e5) (1e7, 3e5)
+#   second round, neighbours of the best couples: circle 1e-6: (1e8, 3e5) (3e7, 1e6) (1e8, 1e6);
+#   circle 5e-6: (3e7, 3e5) (1e7, 1e6) (3e6, 3e5)
 # output: results/mdrex_results/musmooth<mu>_musparse<mu>_<shape>_alpha<1em6|5em6|1em5>_gradS/x_opt.fits
 # Jobs spread alternately over vercors14 and vercors9.
 ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
@@ -13,7 +15,8 @@ RUN=$ROOT/scripts/run_results/syntheticdata_shape.py
 CLUSTERS=(vercors14 vercors9)
 n=0
 for job in spiral:1e-6:3e7:3e5 spiral:1e-6:1e7:3e5 spiral:1e-6:3e7:1e5 spiral:5e-6:3e6:1e5 spiral:1e-5:3e6:1e5 \
-           circle:1e-6:3e7:3e5 circle:1e-6:1e7:3e5 circle:1e-6:1e7:1e5 circle:5e-6:1e7:1e5 circle:5e-6:3e6:1e5 circle:5e-6:1e7:3e5; do
+           circle:1e-6:3e7:3e5 circle:1e-6:1e7:3e5 circle:1e-6:1e7:1e5 circle:5e-6:1e7:1e5 circle:5e-6:3e6:1e5 circle:5e-6:1e7:3e5 \
+           circle:1e-6:1e8:3e5 circle:1e-6:3e7:1e6 circle:1e-6:1e8:1e6 circle:5e-6:3e7:3e5 circle:5e-6:1e7:1e6 circle:5e-6:3e6:3e5; do
   IFS=: read shape flux sm sp <<< "$job"
   tag=$(echo $flux | sed 's/e-/em/')
   [ -e "$ROOT/results/mdrex_results/musmooth${sm}_musparse${sp}_${shape}_alpha${tag}_gradS/x_opt.fits" ] && { echo "done: $job"; continue; }
