@@ -30,6 +30,13 @@ parser.add_argument("--normalize", action="store_true",
                     help="MC-SURE and MC-SUGAR divided by the norm of MC-SUGAR (d/dlog10 mu) at the first evaluation, so that the "
                          "first L-BFGS-B step (identity initial metric) is about one decade instead of jumping to the bounds")
 parser.add_argument("--refined", action="store_true", help="refined MC-SURE (metric from the residual of the C^y MC-SUGAR couple)")
+parser.add_argument("--outer", type=int, default=0,
+                    help="fixed-point iterations on the covariance in the same job: after the minimization with the current "
+                         "metric (C^y, or the refined one with --refined), the covariance is re-estimated on the residual of the "
+                         "reconstruction at the couple found and MC-SURE is minimized again from this couple, at most --outer "
+                         "times; stops when the couple moves by less than --outer-tol decade, or when mu_smooth reaches its lower "
+                         "bound (drift toward weak regularizations: the previous iteration is kept). Folders <..>_refined<k>")
+parser.add_argument("--outer-tol", type=float, default=0.1, help="tolerance (decade) of the fixed-point iterations")
 parser.add_argument("--refined-iter", type=int, default=1,
                     help="iteration of the refinement (with --refined): k = 1 pilot = MC-SUGAR with C^y (folder <tag>), "
                          "k > 1 pilot = refined MC-SUGAR of iteration k-1 (folder <tag>_refined or <tag>_refined<k-1>); "
@@ -274,10 +281,8 @@ def main(cfg):
             C_inv_y = M.shrinkage_cov_inv(centered(to_patches(y - fm(torch.tensor(x_pilot, dtype=torch.float32, device=device)))))
         theta0 = np.log10(mu_pilot)
         out_dir = out_dir.with_name(out_dir.name + ("_refined" if k == 1 else f"_refined{k}"))
-    out_dir.mkdir(parents=True, exist_ok=True)
     state = {"x": np.zeros((C, H, W)), "x_eps": np.zeros((C, H, W)), "scale": 1.0}
     hist = []
-
     def sure_and_sugar(theta):   # theta = log10(mu_smooth, mu_sparse)
         mu_smooth, mu_sparse = 10.0 ** theta
         print(f"\n=== evaluation {len(hist) + 1}: mu_smooth={mu_smooth:.4e} mu_sparse={mu_sparse:.4e}", flush=True)
@@ -311,20 +316,52 @@ def main(cfg):
 
     b = args.bounds
     lower, upper = np.array([b[0], b[2]]), np.array([b[1], b[3]])
-    theta0 = np.clip(theta0, lower, upper)
-    # VMLMB (same quasi-Newton method with bounds as for the reconstructions); its first step is limited to
-    # dxabs = 1 in log10(mu), i.e. one decade. A line-search instance of its own is required: the default `lnsrch`
-    # argument of optm.vmlmb is a single LineSearch object shared by all the calls, so that the reconstructions run
-    # inside sure_and_sugar (run_bfgs -> optm.vmlmb) would overwrite the state of the outer line search (initial value,
-    # step), which then never converges and keeps evaluating the same point.
-    theta, fth, gth, status = optm.vmlmb(sure_and_sugar, theta0, lower=lower, upper=upper, maxeval=args.maxfun,
-                                         lnsrch=optm.LineSearch(), ftol=args.ftol, xtol=(args.xtol, 0.0),
-                                         gtol=(0.0, args.gtol), verb=1, throwerrors=False)
-    message = optm.reason(status)
-    print("\nVMLMB:", message, " theta =", theta, " mu =", 10.0 ** theta, flush=True)
-    np.savez(out_dir / "trajectory.npz", **{k: np.array([h[k] for h in hist]) for k in hist[0]}, x_last=state["x"],
-             mu_opt=10.0 ** theta, success=status in (optm.FTEST_SATISFIED, optm.GTEST_SATISFIED, optm.XTEST_SATISFIED),
-             message=str(message), optimizer="vmlmb")
+
+    def minimize(theta_start):
+        # VMLMB (same quasi-Newton method with bounds as for the reconstructions); its first step is limited to
+        # dxabs = 1 in log10(mu), i.e. one decade. A line-search instance of its own is required: the default `lnsrch`
+        # argument of optm.vmlmb is a single LineSearch object shared by all the calls, so that the reconstructions run
+        # inside sure_and_sugar (run_bfgs -> optm.vmlmb) would overwrite the state of the outer line search (initial value,
+        # step), which then never converges and keeps evaluating the same point.
+        theta, fth, gth, status = optm.vmlmb(sure_and_sugar, np.clip(theta_start, lower, upper), lower=lower, upper=upper,
+                                             maxeval=args.maxfun, lnsrch=optm.LineSearch(), ftol=args.ftol,
+                                             xtol=(args.xtol, 0.0), gtol=(0.0, args.gtol), verb=1, throwerrors=False)
+        message = optm.reason(status)
+        print("\nVMLMB:", message, " theta =", theta, " mu =", 10.0 ** theta, flush=True)
+        np.savez(out_dir / "trajectory.npz", **{k: np.array([h[k] for h in hist]) for k in hist[0]}, x_last=state["x"],
+                 mu_opt=10.0 ** theta, success=status in (optm.FTEST_SATISFIED, optm.GTEST_SATISFIED, optm.XTEST_SATISFIED),
+                 message=str(message), optimizer="vmlmb")
+        return theta
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    theta = minimize(theta0)
+    base = out_dir.name.split("_refined")[0]
+    k0 = args.refined_iter if args.refined else 0
+    path_theta = [theta]
+    for k in range(k0 + 1, k0 + 1 + args.outer):
+        # covariance re-estimated on the residual of the reconstruction at the couple found, then MC-SURE minimized again
+        mu = 10.0 ** theta
+        print(f"\n##### fixed-point iteration {k}: pilot mu = ({mu[0]:.4e}, {mu[1]:.4e})", flush=True)
+        x_pilot, _, _, _ = mdrex.run_bfgs(np.zeros((C, H, W)), y, mu[1], mu[0])
+        with torch.no_grad():
+            C_inv_y = M.shrinkage_cov_inv(centered(to_patches(y - fm(torch.tensor(x_pilot, dtype=torch.float32, device=device)))))
+        out_dir = out_dir.with_name(base + ("_refined" if k == 1 else f"_refined{k}"))
+        out_dir.mkdir(parents=True, exist_ok=True)
+        state = {"x": np.zeros((C, H, W)), "x_eps": np.zeros((C, H, W)), "scale": 1.0}
+        hist = []
+        theta_new = minimize(theta)
+        step = np.abs(theta_new - theta).max()
+        print(f"##### fixed-point iteration {k}: couple moved by {step:.3f} decade", flush=True)
+        if theta_new[0] <= lower[0] + 1e-3:
+            print("##### mu_smooth at its lower bound (drift): previous iteration kept", flush=True)
+            break
+        theta = theta_new
+        path_theta.append(theta)
+        if step < args.outer_tol:
+            print(f"##### fixed point reached (< {args.outer_tol} decade)", flush=True)
+            break
+    np.savez(out_dir.with_name(base + "_fixedpoint.npz"), mu_path=10.0 ** np.array(path_theta), mu_opt=10.0 ** theta)
+    print("Final couple:", 10.0 ** theta, flush=True)
 
 
 if __name__ == "__main__":
