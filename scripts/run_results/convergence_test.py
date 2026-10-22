@@ -15,6 +15,9 @@ parser.add_argument("--angle", type=int, default=0, choices=list(range(0, 325, 3
 parser.add_argument("--flux", type=float, default=5e-6)
 parser.add_argument("--tols", type=str, nargs="+", default=["1e-8:1e-6", "0:1e-6", "0:1e-8", "0:1e-10"],
                     help="ftol:xtol pairs")
+parser.add_argument("--trace", action="store_true",
+                    help="record at each VMLMB iteration the objective, the projected gradient norm and the wavelength-averaged "
+                         "iterate (files trace_ftol<v>_xtol<v>.npz)")
 args, remaining = parser.parse_known_args()
 # Remove parsed args so Hydra doesn't complain.
 sys.argv = [sys.argv[0]] + remaining
@@ -200,13 +203,19 @@ def main(cfg):
               / f"{SHAPE}_angle{ANGLE}_alpha{mu_to_str(FLUX)}_musmooth{mu_to_str(MU_SMOOTH)}_musparse{mu_to_str(MU_SPARSE)}")
     outdir.mkdir(parents=True, exist_ok=True)
     for ftol, xtol in TOLS:
-        outfile = outdir / f"ftol{mu_to_str(ftol)}_xtol{mu_to_str(xtol)}.npz"
+        outfile = outdir / f"{'trace_' if args.trace else ''}ftol{mu_to_str(ftol)}_xtol{mu_to_str(xtol)}.npz"
         if outfile.exists():
             print(f"Skipping {outfile.name} (already computed)")
             continue
         t0 = time.time()
         with torch.no_grad():
-            (xdisc, fx, gx, status) = mdrex.run_bfgs(np.zeros((C, H, W)), data_y, MU_SPARSE, MU_SMOOTH, ftol=ftol, xtol=xtol)
+            trace = {"iters": [], "evals": [], "f": [], "pgnorm": [], "x_mean": [], "t": []}
+            def observer(iters, evals, rejects, t, x, f, g, pgnorm, alpha, fg):
+                trace["iters"].append(iters); trace["evals"].append(evals); trace["f"].append(float(f))
+                trace["pgnorm"].append(float(pgnorm)); trace["t"].append(float(t))
+                trace["x_mean"].append(np.mean(np.asarray(x), axis=0).astype(np.float32))
+            (xdisc, fx, gx, status) = mdrex.run_bfgs(np.zeros((C, H, W)), data_y, MU_SPARSE, MU_SMOOTH, ftol=ftol, xtol=xtol,
+                                                     observer=observer if args.trace else None)
         elapsed = time.time() - t0
         x_mean = np.mean(xdisc, axis=0)
         pw, ps = psnr(gt, x_mean)
@@ -214,7 +223,7 @@ def main(cfg):
               f"time={elapsed:.0f}s  PSNR whole={pw:.3f} support={ps:.3f}", flush=True)
         np.savez(outfile, x=xdisc, fx=fx, n_eval=mdrex.n_eval, status=str(status), time=elapsed, psnr_whole=pw,
                  psnr_supp=ps, ftol=ftol, xtol=xtol, mu_smooth=MU_SMOOTH, mu_sparse=MU_SPARSE, shape=SHAPE,
-                 angle=ANGLE, flux=FLUX)
+                 angle=ANGLE, flux=FLUX, gt=gt, **({f"trace_{k}": np.array(v) for k, v in trace.items()} if args.trace else {}))
         torch.cuda.empty_cache()
 
 if __name__ == "__main__":

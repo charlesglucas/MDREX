@@ -254,7 +254,7 @@ class MDREX:
         torch.cuda.empty_cache()
         return fx, gx
 
-    def run_bfgs(self, x_disc_0, y, mu_sparse, mu_smooth, ftol=1.0e-8, xtol=1.0e-6, gtol=1.0e-5):
+    def run_bfgs(self, x_disc_0, y, mu_sparse, mu_smooth, ftol=1.0e-8, xtol=1.0e-6, gtol=1.0e-5, observer=None):
         """
         Run BFGS optimization for given regularization parameters and return the optimized solution, function value, gradient, and status.
         ftol: relative tolerance of VMLMB on the objective (|f - f_prev| <= ftol |f|). The objective is dominated by
@@ -286,7 +286,9 @@ class MDREX:
                 print(f"[fg {self.n_eval}] f={fx:.6e} ||g||={np.linalg.norm(gx):.3e} "
                       f"finite g={bool(np.all(np.isfinite(gx)))}", flush=True)
             return fx, gx
-        xdisc_opt, fx, gx, status = optm.vmlmb(fg, x_disc_0, verb=1, lower=0, maxiter=100000, observer=None, ftol=ftol, xtol=xtol, gtol=gtol)
+        # observer(iters, evals, rejects, t, x, f, g, pgnorm, alpha, fg): optional, called at each iteration (diagnostics
+        # only, e.g. convergence curves), the optimization is unchanged
+        xdisc_opt, fx, gx, status = optm.vmlmb(fg, x_disc_0, verb=1, lower=0, maxiter=100000, observer=observer, ftol=ftol, xtol=xtol, gtol=gtol)
         return xdisc_opt, fx, gx, status
 
     ## Data term
