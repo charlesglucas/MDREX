@@ -330,7 +330,7 @@ class MDREX:
         
         return bg_params
 
-    def compute_mc_sure(self, y, x_tensor_opt, xdisc_0, mu_sparse, mu_smooth, n_mc=1):
+    def compute_mc_sure(self, y, x_tensor_opt, xdisc_0, mu_sparse, mu_smooth, n_mc=1, ftol=1.0e-8, xtol=1.0e-6):
         self.to_patches = PatchesHandler()
         self.to_params = ParamsGaussianHandler()
 
@@ -357,7 +357,7 @@ class MDREX:
         for _ in range(n_mc):
             v = torch.randn_like(y)
             y_eps = y + delta * v
-            (xdisc_opt_eps, fx, gx, status) = self.run_bfgs(xdisc_0, y_eps, mu_sparse, mu_smooth)
+            (xdisc_opt_eps, fx, gx, status) = self.run_bfgs(xdisc_0, y_eps, mu_sparse, mu_smooth, ftol=ftol, xtol=xtol)
             x_tensor_eps = torch.tensor(xdisc_opt_eps, dtype=torch.float32, device=y.device)
 
             diff_eps = y_eps - self.forward_model(x_tensor_eps)

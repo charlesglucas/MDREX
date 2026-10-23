@@ -12,6 +12,9 @@ parser.add_argument("--shape", type=str, default=None)
 parser.add_argument("--out", type=str, default=None, help="Output NPZ path (overrides default naming)")
 parser.add_argument("--angle", type=int, default=None, help="Parallactic angle of the disk in degrees (0, 36, ..., 324); "
                     "default None = 0 degree and the original folder name; otherwise folder suffixed _angle<angle>")
+parser.add_argument("--ftol", type=float, default=1e-8, help="relative tolerance of VMLMB on the objective (default 1e-8; "
+                    "0 for converged reconstructions, the convergence being then decided by xtol / gtol)")
+parser.add_argument("--xtol", type=float, default=1e-6, help="relative tolerance of VMLMB on the variables (default 1e-6)")
 parser.add_argument("--tag", type=str, default="", help="Suffix of the output folder, e.g. gradC -> grid_sure_<shape>_alpha<flux>_gradC")
 args, remaining = parser.parse_known_args()
 # Remove parsed args so Hydra doesn't complain.
@@ -198,12 +201,13 @@ def main(cfg):
         print(f"Running single combination: mu_smooth={mu_smooth}, mu_sparse={mu_sparse}")
 
         xdisc_0 = np.zeros((C, H, W))
-        (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_sparse, mu_smooth)
+        (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_sparse, mu_smooth, ftol=args.ftol, xtol=args.xtol)
 
         ## Compute MC-SURE and MSE
         x_tensor_opt = torch.tensor(xdisc_opt, dtype=torch.float32, device=device)
         torch.manual_seed(42)
-        sure_total, data_term, div_est = mdrex.compute_mc_sure(y, x_tensor_opt, xdisc_0, mu_sparse, mu_smooth)
+        sure_total, data_term, div_est = mdrex.compute_mc_sure(y, x_tensor_opt, xdisc_0, mu_sparse, mu_smooth,
+                                                               ftol=args.ftol, xtol=args.xtol)
         mse_total = mahalanobis_mse(x_gt, x_tensor_opt)
     else:
         s1 = 10; s2 = 10 # number of values for mu_smooth and mu_sparse
