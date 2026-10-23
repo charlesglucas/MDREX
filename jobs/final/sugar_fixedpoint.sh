@@ -14,7 +14,9 @@ ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
 PY=$ROOT/.venv/bin/python
 RUN=$ROOT/scripts/run_results/syntheticdata_sugar.py
 OPTS="--angle 0 --bounds 6 9 4.4771 7.4771 --hvp-step 1e-2 --normalize --maxfun 12 --xtol 0.05 --ftol 0 --gtol 0 \
-      --outer 4 --outer-tol 0.1 --tag gradSfp"
+      --outer 4 --outer-tol 0.1"
+# REC_FTOL=0: converged reconstructions (ftol 0, as for the real data), tag gradSfpf0; default 1e-8, tag gradSfp
+if [ "${REC_FTOL:-1e-8}" = 0 ]; then OPTS="$OPTS --rec-ftol 0 --tag gradSfpf0"; else OPTS="$OPTS --tag gradSfp"; fi
 CLUSTERS=(vercors14 vercors9)
 SHAPES=("${@:-medium_ellipse spiral circle}")
 n=0
@@ -23,7 +25,7 @@ for shape in ${SHAPES[@]}; do
     tag=$(echo $flux | sed 's/e-/em/')
     CL=${CLUSTERS[$((n % ${#CLUSTERS[@]}))]}; n=$((n + 1))
     mu0=$($PY -c "import numpy as np; m=np.load('$ROOT/results/sugar/${shape}_alpha${tag}_angle0_gradSnorm60tol/trajectory.npz')['mu_opt']; print(f'{m[0]:.4e} {m[1]:.4e}')")
-    oarsub -l "gpu=1,walltime=72:00:00" -p "cluster='$CL'" -n "sugarfp_${shape}_${tag}" \
+    oarsub -l "gpu=1,walltime=72:00:00" -p "cluster='$CL'" -n "sugarfp${REC_FTOL:+f0}_${shape}_${tag}" \
       "cd $ROOT && CUDA_VISIBLE_DEVICES=0 $PY $RUN --flux $flux --shape $shape --mu0 $mu0 $OPTS" | grep OAR_JOB_ID
   done
 done

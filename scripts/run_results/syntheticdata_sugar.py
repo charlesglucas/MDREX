@@ -30,6 +30,9 @@ parser.add_argument("--normalize", action="store_true",
                     help="MC-SURE and MC-SUGAR divided by the norm of MC-SUGAR (d/dlog10 mu) at the first evaluation, so that the "
                          "first L-BFGS-B step (identity initial metric) is about one decade instead of jumping to the bounds")
 parser.add_argument("--refined", action="store_true", help="refined MC-SURE (metric from the residual of the C^y MC-SUGAR couple)")
+parser.add_argument("--rec-ftol", type=float, default=1e-8,
+                    help="relative tolerance of VMLMB on the objective for the reconstructions x_hat, x_hat_eps and the pilots "
+                         "(default 1e-8; 0: converged reconstructions, as for the real data)")
 parser.add_argument("--outer", type=int, default=0,
                     help="fixed-point iterations on the covariance in the same job: after the minimization with the current "
                          "metric (C^y, or the refined one with --refined), the covariance is re-estimated on the residual of the "
@@ -276,7 +279,7 @@ def main(cfg):
         mu_pilot = np.load(pilot_dir / "trajectory.npz", allow_pickle=True)["mu_opt"]
         print(f"Refined MC-SURE, iteration {k}: pilot from {pilot_dir.name}", flush=True)
         print(f"Refined MC-SURE: pilot mu = ({mu_pilot[0]:.4e}, {mu_pilot[1]:.4e})", flush=True)
-        x_pilot, _, _, _ = mdrex.run_bfgs(np.zeros((C, H, W)), y, mu_pilot[1], mu_pilot[0])
+        x_pilot, _, _, _ = mdrex.run_bfgs(np.zeros((C, H, W)), y, mu_pilot[1], mu_pilot[0], ftol=args.rec_ftol)
         with torch.no_grad():
             C_inv_y = M.shrinkage_cov_inv(centered(to_patches(y - fm(torch.tensor(x_pilot, dtype=torch.float32, device=device)))))
         theta0 = np.log10(mu_pilot)
@@ -287,8 +290,8 @@ def main(cfg):
         mu_smooth, mu_sparse = 10.0 ** theta
         print(f"\n=== evaluation {len(hist) + 1}: mu_smooth={mu_smooth:.4e} mu_sparse={mu_sparse:.4e}", flush=True)
         # each mu: reconstructions from x = 0 (as for the grids), so that MC-SURE is a deterministic function of mu
-        x, fx, gx, st = mdrex.run_bfgs(np.zeros((C, H, W)), y, mu_sparse, mu_smooth)
-        x_eps, _, _, st_eps = mdrex.run_bfgs(np.zeros((C, H, W)), y_eps, mu_sparse, mu_smooth)
+        x, fx, gx, st = mdrex.run_bfgs(np.zeros((C, H, W)), y, mu_sparse, mu_smooth, ftol=args.rec_ftol)
+        x_eps, _, _, st_eps = mdrex.run_bfgs(np.zeros((C, H, W)), y_eps, mu_sparse, mu_smooth, ftol=args.rec_ftol)
         state["x"], state["x_eps"] = x, x_eps
         D, gD = D_and_grad(x)
         div = divergence(x, x_eps)
@@ -342,7 +345,7 @@ def main(cfg):
         # covariance re-estimated on the residual of the reconstruction at the couple found, then MC-SURE minimized again
         mu = 10.0 ** theta
         print(f"\n##### fixed-point iteration {k}: pilot mu = ({mu[0]:.4e}, {mu[1]:.4e})", flush=True)
-        x_pilot, _, _, _ = mdrex.run_bfgs(np.zeros((C, H, W)), y, mu[1], mu[0])
+        x_pilot, _, _, _ = mdrex.run_bfgs(np.zeros((C, H, W)), y, mu[1], mu[0], ftol=args.rec_ftol)
         with torch.no_grad():
             C_inv_y = M.shrinkage_cov_inv(centered(to_patches(y - fm(torch.tensor(x_pilot, dtype=torch.float32, device=device)))))
         out_dir = out_dir.with_name(base + ("_refined" if k == 1 else f"_refined{k}"))

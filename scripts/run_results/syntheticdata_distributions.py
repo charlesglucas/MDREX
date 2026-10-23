@@ -10,6 +10,8 @@ parser.add_argument("--mu-sparse", type=float, default=None, help="Regularizatio
 parser.add_argument("--shape", type=str, default=None, help="Shape")
 parser.add_argument("--out", type=str, default=None, help="Output NPZ path (overrides default naming)")
 parser.add_argument("--tag", type=str, default="", help="Suffix of the output folder, e.g. gradS")
+parser.add_argument("--ftol", type=float, default=1e-8, help="Relative tolerance of VMLMB on the objective (default 1e-8); "
+                    "results with another value are saved in a folder suffixed _ftol<value>")
 args, remaining = parser.parse_known_args()
 # Remove parsed args so Hydra doesn't complain.
 sys.argv = [sys.argv[0]] + remaining
@@ -18,6 +20,7 @@ MU_SMOOTH = args.mu_smooth
 MU_SPARSE = args.mu_sparse
 SHAPE = args.shape
 TAG = args.tag
+FTOL = args.ftol
 OUTPUT_PATH = args.out
 
 # Configure GPU memory management
@@ -183,7 +186,7 @@ def main(cfg):
                 x_gt = flux*torch.tensor(datadisk, dtype=torch.float32, device=device) 
                 x_gt = x_gt.unsqueeze(0).repeat(C, 1, 1)
                 data = mdrex.forward_model(x_gt) + y 
-                (xdisc, fx, gx, status) = mdrex.run_bfgs(xdisc, data, MU_SPARSE, MU_SMOOTH)
+                (xdisc, fx, gx, status) = mdrex.run_bfgs(xdisc, data, MU_SPARSE, MU_SMOOTH, ftol=FTOL)
                 x_opt[i, a, :, :] = np.mean(xdisc, axis=0)
        
     def mu_to_str(mu):  # 1e6 -> "1e6", 5e5 -> "5e5", 3.89e6 -> "3.89e6" (3 significant digits)
@@ -191,7 +194,8 @@ def main(cfg):
         mantissa = mantissa.rstrip("0").rstrip(".")
         return f"{mantissa}e{int(exp)}"
 
-    outdir = Path("results") / f"distributions_5em6" / (f"{shape}_musmooth{mu_to_str(MU_SMOOTH)}_musparse{mu_to_str(MU_SPARSE)}" + (f"_{TAG}" if TAG else ""))
+    outdir = Path("results") / f"distributions_5em6" / (f"{shape}_musmooth{mu_to_str(MU_SMOOTH)}_musparse{mu_to_str(MU_SPARSE)}"
+                                                         + ("" if FTOL == 1e-8 else f"_ftol{FTOL:g}") + (f"_{TAG}" if TAG else ""))
     outdir.mkdir(parents=True, exist_ok=True)
     outfile = outdir / "x_opt.fits"
     fits.writeto(outfile, x_opt, overwrite=True)
