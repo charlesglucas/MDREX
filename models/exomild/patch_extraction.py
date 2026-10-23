@@ -238,7 +238,7 @@ class WavelengthAligner(nn.Module):
         if self.grid is None:
             self.init(C=C, H=H, device=x.device)
 
-        grid = self.offset + (self.grid - self.offset) * coeff
+        grid = (self.offset + (self.grid - self.offset) * coeff).to(x.dtype)   # float64 objective (to_double)
 
         # breakpoint()
         x = F.grid_sample(

@@ -20,7 +20,7 @@ class PatchesHandler:
 
     def init_folder(self, H, W, device):
         self.folder = nn.Fold(output_size=(H, W), kernel_size=self.patch_size, stride=self.stride)
-        divisor = self.folder(self.unfolder(torch.ones((1, H, W), device=device, dtype=torch.float32)))[None, ...]
+        divisor = self.folder(self.unfolder(torch.ones((1, H, W), device=device, dtype=torch.get_default_dtype())))[None, ...]
         self.divisor_inv = 1 / divisor
 
     def forward(self, x, lbda):
@@ -46,7 +46,7 @@ class PatchesHandler:
         yyxx = torch.tensor(yyxx, device=x.device, dtype=torch.float32)[None, ...]
         grid = yyxx.permute(0, 2, 3, 1).to(x.device)
         offset = torch.tensor(1 / (H - 1), dtype=torch.float32)
-        grid = offset + (grid - offset) * coeff
+        grid = (offset + (grid - offset) * coeff).to(x.dtype)   # float64 objective (to_double)
         x = F.grid_sample(x, grid=grid, align_corners=True, mode="bicubic", padding_mode="border")
         x = rearrange(x, "c (b t) h w ->  b c t h w", b=bs, t=T)
         return x.permute(0,1,2,4,3)
@@ -249,7 +249,7 @@ class MDREX:
                 del x64
         (grad_x,) = torch.autograd.grad(surrogate, x_tensor, retain_graph=False, create_graph=False, allow_unused=False)
         fx = np.float64(loss)
-        gx = grad_x.detach().cpu().numpy().astype(np.float32)
+        gx = grad_x.detach().cpu().numpy().astype(np.float64 if self.dtype == torch.float64 else np.float32)
         del loss, surrogate, grad_x, grad_diff, im, diff, diff_leaf, x_tensor
         gc.collect()
         torch.cuda.empty_cache()
