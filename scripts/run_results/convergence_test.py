@@ -18,6 +18,8 @@ parser.add_argument("--tols", type=str, nargs="+", default=["1e-8:1e-6", "0:1e-6
 parser.add_argument("--restarts", type=int, default=0,
                     help="after the reconstruction, restart VMLMB from its result this number of times (L-BFGS memory reset), "
                          "to see whether the objective and the flux keep decreasing (stall of the line search)")
+parser.add_argument("--exact-grad", action="store_true",
+                    help="shrinkage coefficient rho differentiated (exact gradient of the objective; files exactgrad_...)")
 parser.add_argument("--double", action="store_true", help="objective and gradient computed in float64")
 parser.add_argument("--gradcheck", type=str, default=None,
                     help="no reconstruction: at the iterate x of this npz file (e.g. the stalled point of a trace file), compare "
@@ -214,11 +216,14 @@ def main(cfg):
     outdir = (ROOT / "results" / "convergence"
               / f"{SHAPE}_angle{ANGLE}_alpha{mu_to_str(FLUX)}_musmooth{mu_to_str(MU_SMOOTH)}_musparse{mu_to_str(MU_SPARSE)}")
     outdir.mkdir(parents=True, exist_ok=True)
+    if args.exact_grad:
+        import models.exomild.engine as engine
+        engine.DETACH_RHO = False
     if args.gradcheck:
         gradcheck(mdrex, data_y, pathlib.Path(args.gradcheck), outdir)
         return
     for ftol, xtol in TOLS:
-        outfile = outdir / (f"{'trace_' if args.trace else ''}{'double_' if args.double else ''}"
+        outfile = outdir / (f"{'trace_' if args.trace else ''}{'exactgrad_' if args.exact_grad else ''}{'double_' if args.double else ''}"
                             f"{f'restart{args.restarts}_' if args.restarts else ''}ftol{mu_to_str(ftol)}_xtol{mu_to_str(xtol)}.npz")
         if outfile.exists():
             print(f"Skipping {outfile.name} (already computed)")
