@@ -1756,6 +1756,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # shrinkage coefficient rho of the covariance estimate not differentiated (True, default) or differentiated (False,
 # exact gradient of the objective; diagnostic of convergence_test.py --gradcheck)
 DETACH_RHO = True
+# fixed shrinkage coefficients (set by reconstruction.mdrex.MDREX.objective): None -> recomputed at each call;
+# {"mode": "record", "store": []} -> computed and stored in call order (one entry per batch of patches and term);
+# {"mode": "replay", "store": [...], "i": 0} -> the stored coefficients are used in the same call order
+RHO_STATE = None
 
 def get_likelihood_compound(y_t, m_n, C_n, s_nt):
     b, T, K = y_t.shape
@@ -3212,12 +3216,22 @@ class EngineSpatial(nn.Module):
 
             num = tr_SS + tr2_S - 2 * tr_S2
             den = (T + 1) * (tr_SS - tr_S2)
-            # Always recompute rho per batch (enables @batchify on fit_params)
-            # shrinkage coefficient treated as independent of x: not differentiated (the gradient still flows
-            # through the mean and the sample covariance S_hat)
             rho = torch.clip(num / den, 0, 1)
-            if DETACH_RHO:
+            if RHO_STATE is None:
+                # recomputed at each call on the current input, differentiated or not (DETACH_RHO)
+                if DETACH_RHO:
+                    rho = rho.detach()
+            elif RHO_STATE["mode"] == "record":
+                # shrinkage coefficients of the data (fixed Psi of Algorithm 1), stored batch by batch in call order
                 rho = rho.detach()
+                RHO_STATE["store"].append(rho)
+            else:
+                # replay: the stored coefficients, constant w.r.t. x (the gradient flows through the mean and S_hat)
+                i = RHO_STATE["i"]
+                assert i < len(RHO_STATE["store"]) and RHO_STATE["store"][i].shape == rho.shape, \
+                    "fixed shrinkage coefficients: calls do not match the recorded ones"
+                rho = RHO_STATE["store"][i].to(rho.dtype)
+                RHO_STATE["i"] = i + 1
             rho = rho.view(bsp, G, 1, 1)
 
             # diag_flat = torch.einsum("bsgii->bsgi", S_hat)

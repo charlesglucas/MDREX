@@ -6,6 +6,7 @@ import torch.nn.functional as F
 import utils.optm as optm
 from utils.rotation import BatchRotationOperator
 from models.exomild.exomild import ExoMILD
+import models.exomild.engine as exomild_engine
 import torch.nn as nn
 import gc
 import os
@@ -204,12 +205,52 @@ class MDREX:
         self.mask = mask
         self.lbda = lbda
         self.dtype = torch.float32   # precision of the objective and its gradient (to_double: float64)
+        # shrinkage coefficients of the covariances fixed (Algorithm 1 of the paper): computed once on the data y
+        # (residual at x = 0) and kept constant in the objective and its gradient; False -> recomputed at each
+        # evaluation on the residual y - A x (differentiated or not according to exomild_engine.DETACH_RHO)
+        self.fixed_rho = True
+        self.rho_cache = {}          # data key -> coefficients in call order (a few data sets: y, y + xi delta)
 
         # SURE handlers
         self.to_patches = None
         self.to_params = None
 
+    @staticmethod
+    def _data_key(y):
+        y64 = y.detach().double()
+        return (tuple(y.shape), y64.sum().item(), (y64 * y64).sum().item())
+
+    def _fixed_rho(self, y):
+        """Shrinkage coefficients of the data y, for every term and batch of patches (computed at the first call for
+        these data: fit_params on the residual at x = 0, i.e. y)."""
+        key = self._data_key(y)
+        if key not in self.rho_cache:
+            if len(self.rho_cache) >= 4:
+                self.rho_cache.pop(next(iter(self.rho_cache)))
+            exomild_engine.RHO_STATE = {"mode": "record", "store": []}
+            try:
+                with torch.no_grad():
+                    for term in self.exomild.all_terms:
+                        term.fit_params(y.to(self.dtype), self.lbda)
+                self.rho_cache[key] = exomild_engine.RHO_STATE["store"]
+            finally:
+                exomild_engine.RHO_STATE = None
+            torch.cuda.empty_cache()
+        return self.rho_cache[key]
+
     def objective(self, x_disc, y, mu_sparse, mu_smooth):
+        if not self.fixed_rho:
+            return self._objective(x_disc, y, mu_sparse, mu_smooth)
+        store = self._fixed_rho(y)
+        exomild_engine.RHO_STATE = {"mode": "replay", "store": store, "i": 0}
+        try:
+            out = self._objective(x_disc, y, mu_sparse, mu_smooth)
+            assert exomild_engine.RHO_STATE["i"] == len(store), "fixed shrinkage coefficients: calls do not match"
+        finally:
+            exomild_engine.RHO_STATE = None
+        return out
+
+    def _objective(self, x_disc, y, mu_sparse, mu_smooth):
         """Objective f(x) = data term + mu_sparse R_sparse(x) + mu_smooth R_smooth(x) and its gradient (numpy float64 /
         float32), exactly the function minimized by run_bfgs (also used by SUGAR for Hessian-vector products)."""
         x_tensor = torch.tensor(x_disc, dtype=self.dtype, device=y.device, requires_grad=True)

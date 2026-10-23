@@ -18,8 +18,11 @@ parser.add_argument("--tols", type=str, nargs="+", default=["1e-8:1e-6", "0:1e-6
 parser.add_argument("--restarts", type=int, default=0,
                     help="after the reconstruction, restart VMLMB from its result this number of times (L-BFGS memory reset), "
                          "to see whether the objective and the flux keep decreasing (stall of the line search)")
-parser.add_argument("--exact-grad", action="store_true",
-                    help="shrinkage coefficient rho differentiated (exact gradient of the objective; files exactgrad_...)")
+parser.add_argument("--rho", type=str, default="fixed", choices=["fixed", "detached", "exact"],
+                    help="shrinkage coefficients rho of the covariances: fixed (computed once on y, Algorithm 1 of the paper; "
+                         "files rhofixed_...), recomputed at each evaluation and not differentiated (detached, runs gradS before "
+                         "the fix; files without prefix) or recomputed and differentiated (exact; files exactgrad_...)")
+parser.add_argument("--exact-grad", action="store_true", help="same as --rho exact")
 parser.add_argument("--double", action="store_true", help="objective and gradient computed in float64")
 parser.add_argument("--gradcheck", type=str, default=None,
                     help="no reconstruction: at the iterate x of this npz file (e.g. the stalled point of a trace file), compare "
@@ -217,13 +220,15 @@ def main(cfg):
               / f"{SHAPE}_angle{ANGLE}_alpha{mu_to_str(FLUX)}_musmooth{mu_to_str(MU_SMOOTH)}_musparse{mu_to_str(MU_SPARSE)}")
     outdir.mkdir(parents=True, exist_ok=True)
     if args.exact_grad:
-        import models.exomild.engine as engine
-        engine.DETACH_RHO = False
+        args.rho = "exact"
+    import models.exomild.engine as engine
+    mdrex.fixed_rho = args.rho == "fixed"
+    engine.DETACH_RHO = args.rho != "exact"
     if args.gradcheck:
         gradcheck(mdrex, data_y, pathlib.Path(args.gradcheck), outdir)
         return
     for ftol, xtol in TOLS:
-        outfile = outdir / (f"{'trace_' if args.trace else ''}{'exactgrad_' if args.exact_grad else ''}{'double_' if args.double else ''}"
+        outfile = outdir / (f"{'trace_' if args.trace else ''}{dict(fixed='rhofixed_', detached='', exact='exactgrad_')[args.rho]}{'double_' if args.double else ''}"
                             f"{f'restart{args.restarts}_' if args.restarts else ''}ftol{mu_to_str(ftol)}_xtol{mu_to_str(xtol)}.npz")
         if outfile.exists():
             print(f"Skipping {outfile.name} (already computed)")
@@ -258,29 +263,34 @@ def main(cfg):
         torch.cuda.empty_cache()
 
 def gradcheck(mdrex, data_y, path, outdir):
-    """Is -g a descent direction of f at x? Gradient g_det (rho detached, as in run_bfgs) and exact gradient g_ex
-    (rho differentiated); for each, projected direction d = -g (components pushing x < 0 at x = 0 removed), predicted
-    slope g.d and finite differences (f(max(x + h d, 0)) - f(x)) / h for steps h with ||h d|| / ||x|| from 1e-8 to 1e-2.
-    The evaluation noise of f is estimated by repeated evaluations at x."""
+    """Is -g a descent direction of f at x? For each treatment of the shrinkage coefficients rho (fixed: computed once on
+    y, Algorithm 1; detached: recomputed at each evaluation, not differentiated; exact: recomputed and differentiated),
+    objective f_m and gradient g_m of that mode, projected direction d = -g_m (components pushing x < 0 at x = 0 removed),
+    predicted slope g_m.d and finite differences (f_m(max(x + h d, 0)) - f_m(x)) / h for ||h d|| / ||x|| from 1e-8 to
+    1e-2. "detached" and "exact" share the same f (rho recomputed), with two different gradients."""
     import models.exomild.engine as engine
     x = np.load(path, allow_pickle=True)["x"].astype(np.float64)
-    def fg(xx, detach):
-        engine.DETACH_RHO = detach
+    def fg(xx, mode):
+        mdrex.fixed_rho, engine.DETACH_RHO = mode == "fixed", mode != "exact"
         f, g = mdrex.objective(xx, data_y, MU_SPARSE, MU_SMOOTH)
-        engine.DETACH_RHO = True
+        mdrex.fixed_rho, engine.DETACH_RHO = True, True
         return float(f), np.asarray(g, dtype=np.float64)
-    f0, g_det = fg(x, True)
-    f_rep = [fg(x, True)[0] for _ in range(3)]
-    f0_ex, g_ex = fg(x, False)
-    noise = np.std([f0] + f_rep)
-    cos = np.sum(g_det * g_ex) / np.linalg.norm(g_det) / np.linalg.norm(g_ex)
-    print(f"f(x)={f0:.10e} (repeats {[f'{v - f0:+.3e}' for v in f_rep]}, std {noise:.3e}; exact-gradient run {f0_ex - f0:+.3e})")
-    print(f"||g_det||={np.linalg.norm(g_det):.4e} ||g_ex||={np.linalg.norm(g_ex):.4e} "
-          f"||g_det-g_ex||/||g_ex||={np.linalg.norm(g_det - g_ex) / np.linalg.norm(g_ex):.4e} cos={cos:.6f}", flush=True)
-    out = {"f0": f0, "f_rep": np.array(f_rep), "g_det": g_det.astype(np.float32), "g_ex": g_ex.astype(np.float32),
-           "x": x.astype(np.float32)}
+    out = {"x": x.astype(np.float32)}
+    G = {}
+    for mode in ("fixed", "detached", "exact"):
+        f0, g = fg(x, mode)
+        f_rep = [fg(x, mode)[0] - f0 for _ in range(2)]
+        G[mode] = g
+        out[f"f0_{mode}"], out[f"g_{mode}"] = f0, g.astype(np.float32)
+        print(f"[{mode}] f(x)={f0:.10e} (repeats {[f'{v:+.3e}' for v in f_rep]}) ||g||={np.linalg.norm(g):.4e}", flush=True)
+    for a, b in (("detached", "exact"), ("fixed", "exact"), ("fixed", "detached")):
+        cos = np.sum(G[a] * G[b]) / np.linalg.norm(G[a]) / np.linalg.norm(G[b])
+        print(f"cos(g_{a}, g_{b})={cos:.6f}", flush=True)
     rels = 10.0 ** np.arange(-8, -1.5, 1.0)
-    for name, g in (("det", g_det), ("ex", g_ex)):
+    for mode in ("fixed", "detached", "exact"):
+        g = G[mode]
+        fmode = "fixed" if mode == "fixed" else "detached"   # f of the mode (detached and exact: same f)
+        f0 = out[f"f0_{mode}"]
         d = -g.copy()
         d[(x <= 0) & (d < 0)] = 0
         pg = np.linalg.norm(d)
@@ -288,13 +298,13 @@ def gradcheck(mdrex, data_y, path, outdir):
         for r in rels:
             h = r * np.linalg.norm(x) / pg
             xh = np.maximum(x + h * d, 0)
-            fh, _ = fg(xh, True)
-            slope_true = (fh - f0) / h
-            rows.append((r, h, fh - f0, slope_true, np.sum(g_det * (xh - x)) / h, np.sum(g_ex * (xh - x)) / h))
-            print(f"d=-P(g_{name}) ||h d||/||x||={r:.0e}: f(x+hd)-f(x)={fh - f0:+.4e}  FD slope={slope_true:+.4e}  "
-                  f"g_det.d={rows[-1][4]:+.4e}  g_ex.d={rows[-1][5]:+.4e}", flush=True)
-        out[f"fd_{name}"] = np.array(rows)
-    np.savez(outdir / f"gradcheck_{path.stem}.npz", **out)
+            fh, _ = fg(xh, fmode)
+            pred = np.sum(g * (xh - x)) / h
+            rows.append((r, h, fh - f0, (fh - f0) / h, pred))
+            print(f"[{mode}] d=-P(g) ||h d||/||x||={r:.0e}: f(x+hd)-f(x)={fh - f0:+.4e}  FD slope={(fh - f0) / h:+.4e}  "
+                  f"predicted g.d={pred:+.4e}", flush=True)
+        out[f"fd_{mode}"] = np.array(rows)
+    np.savez(outdir / f"gradcheck3_{path.stem}.npz", **out)
 
 
 if __name__ == "__main__":
