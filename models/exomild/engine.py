@@ -1752,6 +1752,11 @@ from torch.utils.checkpoint import checkpoint
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
+
+# shrinkage coefficient rho of the covariance estimate not differentiated (True, default) or differentiated (False,
+# exact gradient of the objective; diagnostic of convergence_test.py --gradcheck)
+DETACH_RHO = True
+
 def get_likelihood_compound(y_t, m_n, C_n, s_nt):
     b, T, K = y_t.shape
     b, N, K = m_n.shape
@@ -3210,7 +3215,9 @@ class EngineSpatial(nn.Module):
             # Always recompute rho per batch (enables @batchify on fit_params)
             # shrinkage coefficient treated as independent of x: not differentiated (the gradient still flows
             # through the mean and the sample covariance S_hat)
-            rho = torch.clip(num / den, 0, 1).detach()
+            rho = torch.clip(num / den, 0, 1)
+            if DETACH_RHO:
+                rho = rho.detach()
             rho = rho.view(bsp, G, 1, 1)
 
             # diag_flat = torch.einsum("bsgii->bsgi", S_hat)

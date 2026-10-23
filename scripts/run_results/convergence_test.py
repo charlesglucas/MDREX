@@ -19,6 +19,10 @@ parser.add_argument("--restarts", type=int, default=0,
                     help="after the reconstruction, restart VMLMB from its result this number of times (L-BFGS memory reset), "
                          "to see whether the objective and the flux keep decreasing (stall of the line search)")
 parser.add_argument("--double", action="store_true", help="objective and gradient computed in float64")
+parser.add_argument("--gradcheck", type=str, default=None,
+                    help="no reconstruction: at the iterate x of this npz file (e.g. the stalled point of a trace file), compare "
+                         "the gradient with detached shrinkage coefficient rho (as in run_bfgs) with the exact gradient, and both "
+                         "with finite differences of f along the projected descent directions (file gradcheck_<name>.npz)")
 parser.add_argument("--trace", action="store_true",
                     help="record at each VMLMB iteration the objective, the projected gradient norm and the wavelength-averaged "
                          "iterate (files trace_ftol<v>_xtol<v>.npz)")
@@ -210,6 +214,9 @@ def main(cfg):
     outdir = (ROOT / "results" / "convergence"
               / f"{SHAPE}_angle{ANGLE}_alpha{mu_to_str(FLUX)}_musmooth{mu_to_str(MU_SMOOTH)}_musparse{mu_to_str(MU_SPARSE)}")
     outdir.mkdir(parents=True, exist_ok=True)
+    if args.gradcheck:
+        gradcheck(mdrex, data_y, pathlib.Path(args.gradcheck), outdir)
+        return
     for ftol, xtol in TOLS:
         outfile = outdir / (f"{'trace_' if args.trace else ''}{'double_' if args.double else ''}"
                             f"{f'restart{args.restarts}_' if args.restarts else ''}ftol{mu_to_str(ftol)}_xtol{mu_to_str(xtol)}.npz")
@@ -244,6 +251,46 @@ def main(cfg):
                  angle=ANGLE, flux=FLUX, gt=gt, **({f"trace_{k}": np.array(v) for k, v in trace.items()} if args.trace else {}),
                  restarts=np.array(restart_info if args.restarts else [], dtype=object))
         torch.cuda.empty_cache()
+
+def gradcheck(mdrex, data_y, path, outdir):
+    """Is -g a descent direction of f at x? Gradient g_det (rho detached, as in run_bfgs) and exact gradient g_ex
+    (rho differentiated); for each, projected direction d = -g (components pushing x < 0 at x = 0 removed), predicted
+    slope g.d and finite differences (f(max(x + h d, 0)) - f(x)) / h for steps h with ||h d|| / ||x|| from 1e-8 to 1e-2.
+    The evaluation noise of f is estimated by repeated evaluations at x."""
+    import models.exomild.engine as engine
+    x = np.load(path, allow_pickle=True)["x"].astype(np.float64)
+    def fg(xx, detach):
+        engine.DETACH_RHO = detach
+        f, g = mdrex.objective(xx, data_y, MU_SPARSE, MU_SMOOTH)
+        engine.DETACH_RHO = True
+        return float(f), np.asarray(g, dtype=np.float64)
+    f0, g_det = fg(x, True)
+    f_rep = [fg(x, True)[0] for _ in range(3)]
+    f0_ex, g_ex = fg(x, False)
+    noise = np.std([f0] + f_rep)
+    cos = np.sum(g_det * g_ex) / np.linalg.norm(g_det) / np.linalg.norm(g_ex)
+    print(f"f(x)={f0:.10e} (repeats {[f'{v - f0:+.3e}' for v in f_rep]}, std {noise:.3e}; exact-gradient run {f0_ex - f0:+.3e})")
+    print(f"||g_det||={np.linalg.norm(g_det):.4e} ||g_ex||={np.linalg.norm(g_ex):.4e} "
+          f"||g_det-g_ex||/||g_ex||={np.linalg.norm(g_det - g_ex) / np.linalg.norm(g_ex):.4e} cos={cos:.6f}", flush=True)
+    out = {"f0": f0, "f_rep": np.array(f_rep), "g_det": g_det.astype(np.float32), "g_ex": g_ex.astype(np.float32),
+           "x": x.astype(np.float32)}
+    rels = 10.0 ** np.arange(-8, -1.5, 1.0)
+    for name, g in (("det", g_det), ("ex", g_ex)):
+        d = -g.copy()
+        d[(x <= 0) & (d < 0)] = 0
+        pg = np.linalg.norm(d)
+        rows = []
+        for r in rels:
+            h = r * np.linalg.norm(x) / pg
+            xh = np.maximum(x + h * d, 0)
+            fh, _ = fg(xh, True)
+            slope_true = (fh - f0) / h
+            rows.append((r, h, fh - f0, slope_true, np.sum(g_det * (xh - x)) / h, np.sum(g_ex * (xh - x)) / h))
+            print(f"d=-P(g_{name}) ||h d||/||x||={r:.0e}: f(x+hd)-f(x)={fh - f0:+.4e}  FD slope={slope_true:+.4e}  "
+                  f"g_det.d={rows[-1][4]:+.4e}  g_ex.d={rows[-1][5]:+.4e}", flush=True)
+        out[f"fd_{name}"] = np.array(rows)
+    np.savez(outdir / f"gradcheck_{path.stem}.npz", **out)
+
 
 if __name__ == "__main__":
     main()
