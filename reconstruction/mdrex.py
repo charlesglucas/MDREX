@@ -203,6 +203,7 @@ class MDREX:
         self.rot = rot
         self.mask = mask
         self.lbda = lbda
+        self.dtype = torch.float32   # precision of the objective and its gradient (to_double: float64)
 
         # SURE handlers
         self.to_patches = None
@@ -211,7 +212,7 @@ class MDREX:
     def objective(self, x_disc, y, mu_sparse, mu_smooth):
         """Objective f(x) = data term + mu_sparse R_sparse(x) + mu_smooth R_smooth(x) and its gradient (numpy float64 /
         float32), exactly the function minimized by run_bfgs (also used by SUGAR for Hessian-vector products)."""
-        x_tensor = torch.tensor(x_disc, dtype=torch.float32, device=y.device, requires_grad=True)
+        x_tensor = torch.tensor(x_disc, dtype=self.dtype, device=y.device, requires_grad=True)
         with torch.set_grad_enabled(True):
             im = self.forward_model(x_tensor)
             diff = y - im
@@ -290,6 +291,18 @@ class MDREX:
         # only, e.g. convergence curves), the optimization is unchanged
         xdisc_opt, fx, gx, status = optm.vmlmb(fg, x_disc_0, verb=1, lower=0, maxiter=100000, observer=observer, ftol=ftol, xtol=xtol, gtol=gtol)
         return xdisc_opt, fx, gx, status
+
+    def to_double(self):
+        """Objective and gradient computed in float64 (diagnostic of the numerical precision of the objective):
+        ExoMILD model, PSF, mask, wavelengths and rotation grid in float64; y must be converted by the caller."""
+        self.dtype = torch.float64
+        self.exomild = self.exomild.double()
+        self.psf, self.mask, self.lbda = self.psf.double(), self.mask.double(), self.lbda.double()
+        self.rot = self.rot.double()
+        H = self.batch_rotation.in_size
+        self.batch_rotation = BatchRotationOperator(device=self.psf.device, in_size=H, out_size=H, mode="bicubic",
+                                                    zero_init=True, dtype=torch.float64)
+        return self
 
     ## Data term
     def forward_model(self, x_disc):

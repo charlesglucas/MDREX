@@ -15,6 +15,10 @@ parser.add_argument("--angle", type=int, default=0, choices=list(range(0, 325, 3
 parser.add_argument("--flux", type=float, default=5e-6)
 parser.add_argument("--tols", type=str, nargs="+", default=["1e-8:1e-6", "0:1e-6", "0:1e-8", "0:1e-10"],
                     help="ftol:xtol pairs")
+parser.add_argument("--restarts", type=int, default=0,
+                    help="after the reconstruction, restart VMLMB from its result this number of times (L-BFGS memory reset), "
+                         "to see whether the objective and the flux keep decreasing (stall of the line search)")
+parser.add_argument("--double", action="store_true", help="objective and gradient computed in float64")
 parser.add_argument("--trace", action="store_true",
                     help="record at each VMLMB iteration the objective, the projected gradient norm and the wavelength-averaged "
                          "iterate (files trace_ftol<v>_xtol<v>.npz)")
@@ -170,6 +174,10 @@ def main(cfg):
     # ------------------------------------------------------------
 
     mdrex = MDREX(y=y, rot=rot, psf=psf_crop, mask=mask, lbda=lbda, model_state=model_state, **cfg_model)
+    if args.double:
+        torch.set_default_dtype(torch.float64)
+        mdrex.to_double()
+        y = y.double()
 
     # ------------------------------------------------------------
     # 4. Reconstructions with several tolerances
@@ -195,7 +203,7 @@ def main(cfg):
         data = data.byteswap().view(data.dtype.newbyteorder('='))
     datadisk = data[513-128:513+128, 513-128:513+128].astype(np.float32)
     with torch.no_grad():
-        x_gt = FLUX*torch.tensor(datadisk, dtype=torch.float32, device=device)
+        x_gt = FLUX*torch.tensor(datadisk, dtype=y.dtype, device=device)
         data_y = mdrex.forward_model(x_gt.unsqueeze(0).repeat(C, 1, 1)) + y
     gt = FLUX * datadisk
 
@@ -203,7 +211,8 @@ def main(cfg):
               / f"{SHAPE}_angle{ANGLE}_alpha{mu_to_str(FLUX)}_musmooth{mu_to_str(MU_SMOOTH)}_musparse{mu_to_str(MU_SPARSE)}")
     outdir.mkdir(parents=True, exist_ok=True)
     for ftol, xtol in TOLS:
-        outfile = outdir / f"{'trace_' if args.trace else ''}ftol{mu_to_str(ftol)}_xtol{mu_to_str(xtol)}.npz"
+        outfile = outdir / (f"{'trace_' if args.trace else ''}{'double_' if args.double else ''}"
+                            f"{f'restart{args.restarts}_' if args.restarts else ''}ftol{mu_to_str(ftol)}_xtol{mu_to_str(xtol)}.npz")
         if outfile.exists():
             print(f"Skipping {outfile.name} (already computed)")
             continue
@@ -216,6 +225,15 @@ def main(cfg):
                 trace["x_mean"].append(np.mean(np.asarray(x), axis=0).astype(np.float32))
             (xdisc, fx, gx, status) = mdrex.run_bfgs(np.zeros((C, H, W)), data_y, MU_SPARSE, MU_SMOOTH, ftol=ftol, xtol=xtol,
                                                      observer=observer if args.trace else None)
+            restart_info = []
+            for r in range(args.restarts):
+                offset = trace["iters"][-1] if trace["iters"] else 0
+                def observer_r(iters, evals, rejects, t, x, f, g, pgnorm, alpha, fg, _o=offset):
+                    observer(iters + _o, evals, rejects, t, x, f, g, pgnorm, alpha, fg)
+                (xdisc, fx, gx, status) = mdrex.run_bfgs(xdisc, data_y, MU_SPARSE, MU_SMOOTH, ftol=ftol, xtol=xtol,
+                                                         observer=observer_r if args.trace else None)
+                restart_info.append((r + 1, float(fx), float(np.sum(np.mean(xdisc, axis=0))), str(status)))
+                print(f"restart {r + 1}: f={float(fx):.10e} flux={restart_info[-1][2]:.6e} status={status}", flush=True)
         elapsed = time.time() - t0
         x_mean = np.mean(xdisc, axis=0)
         pw, ps = psnr(gt, x_mean)
@@ -223,7 +241,8 @@ def main(cfg):
               f"time={elapsed:.0f}s  PSNR whole={pw:.3f} support={ps:.3f}", flush=True)
         np.savez(outfile, x=xdisc, fx=fx, n_eval=mdrex.n_eval, status=str(status), time=elapsed, psnr_whole=pw,
                  psnr_supp=ps, ftol=ftol, xtol=xtol, mu_smooth=MU_SMOOTH, mu_sparse=MU_SPARSE, shape=SHAPE,
-                 angle=ANGLE, flux=FLUX, gt=gt, **({f"trace_{k}": np.array(v) for k, v in trace.items()} if args.trace else {}))
+                 angle=ANGLE, flux=FLUX, gt=gt, **({f"trace_{k}": np.array(v) for k, v in trace.items()} if args.trace else {}),
+                 restarts=np.array(restart_info if args.restarts else [], dtype=object))
         torch.cuda.empty_cache()
 
 if __name__ == "__main__":
