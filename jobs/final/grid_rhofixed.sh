@@ -5,10 +5,16 @@
 # (stop at the precision of the objective). Square 7 x 7 grid (mu_smooth 1e6..1e9, mu_sparse 3e4..3e7, half-decade step).
 #   -> results/grids_111111111111/grid_sure_<shape>_alpha<..>_angle0_rhofix/
 # Usage: bash grid_rhofixed.sh <shape> <flux> [number of jobs, default 6]   e.g. bash grid_rhofixed.sh spiral 1e-6
-# Couples already computed are skipped. Jobs spread over vercors14 / vercors9.
+# Couples already computed are skipped. Jobs spread over vercors14 / vercors9, or, with CLUSTERS="vercors10 vercors11 ...",
+# submitted to any free GPU of these clusters.
 ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
 PY=$ROOT/.venv/bin/python
-CLUSTERS=(vercors14 vercors9)
+if [ -n "$CLUSTERS" ]; then
+  PROP="cluster IN ($(for c in $CLUSTERS; do printf "'%s'," $c; done | sed 's/,$//'))"
+  PROPS=("$PROP" "$PROP")
+else
+  PROPS=("cluster='vercors14'" "cluster='vercors9'")
+fi
 shape=$1; flux=$2; nj=${3:-6}
 tag=$(echo $flux | sed 's/e-/em/')
 dir=$ROOT/results/grids_111111111111/grid_sure_${shape}_alpha${tag}_angle0_rhofix
@@ -22,6 +28,6 @@ for sm in 1e6 3e6 1e7 3e7 1e8 3e8 1e9; do
   done
 done
 for i in $(seq 0 $((nj - 1))); do
-  [ -n "${cmds[$i]}" ] && oarsub -l "gpu=1,walltime=48:00:00" -p "cluster='${CLUSTERS[$((i % 2))]}'" \
+  [ -n "${cmds[$i]}" ] && oarsub -l "gpu=1,walltime=48:00:00" -p "${PROPS[$((i % 2))]}" \
     -n "gridrf_${shape}_${tag}_$i" "cd $ROOT && ${cmds[$i]}" | grep -o "OAR_JOB_ID=[0-9]*"
 done

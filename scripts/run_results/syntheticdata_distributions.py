@@ -10,6 +10,7 @@ parser.add_argument("--mu-sparse", type=float, default=None, help="Regularizatio
 parser.add_argument("--shape", type=str, default=None, help="Shape")
 parser.add_argument("--out", type=str, default=None, help="Output NPZ path (overrides default naming)")
 parser.add_argument("--tag", type=str, default="", help="Suffix of the output folder, e.g. gradS")
+parser.add_argument("--xtol", type=float, default=1e-6, help="Relative tolerance of VMLMB on the variables (default 1e-6)")
 parser.add_argument("--ftol", type=float, default=1e-8, help="Relative tolerance of VMLMB on the objective (default 1e-8); "
                     "results with another value are saved in a folder suffixed _ftol<value>")
 args, remaining = parser.parse_known_args()
@@ -186,7 +187,7 @@ def main(cfg):
                 x_gt = flux*torch.tensor(datadisk, dtype=torch.float32, device=device) 
                 x_gt = x_gt.unsqueeze(0).repeat(C, 1, 1)
                 data = mdrex.forward_model(x_gt) + y 
-                (xdisc, fx, gx, status) = mdrex.run_bfgs(xdisc, data, MU_SPARSE, MU_SMOOTH, ftol=FTOL)
+                (xdisc, fx, gx, status) = mdrex.run_bfgs(xdisc, data, MU_SPARSE, MU_SMOOTH, ftol=FTOL, xtol=args.xtol)
                 x_opt[i, a, :, :] = np.mean(xdisc, axis=0)
        
     def mu_to_str(mu):  # 1e6 -> "1e6", 5e5 -> "5e5", 3.89e6 -> "3.89e6" (3 significant digits)
