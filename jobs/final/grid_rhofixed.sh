@@ -5,6 +5,7 @@
 # (stop at the precision of the objective). Square 7 x 7 grid (mu_smooth 1e6..1e9, mu_sparse 3e4..3e7, half-decade step).
 #   -> results/grids_111111111111/grid_sure_<shape>_alpha<..>_angle0_rhofix/
 # Usage: bash grid_rhofixed.sh <shape> <flux> [number of jobs, default 6]   e.g. bash grid_rhofixed.sh spiral 1e-6
+# Each couple is limited to 4 h (timeout: a hung start on a node does not block the whole job).
 # Couples already computed are skipped. Jobs spread over vercors14 / vercors9, or, with CLUSTERS="vercors10 vercors11 ...",
 # submitted to any free GPU of these clusters.
 ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
@@ -23,7 +24,7 @@ for sm in 1e6 3e6 1e7 3e7 1e8 3e8 1e9; do
   for sp in 3e4 1e5 3e5 1e6 3e6 1e7 3e7; do
     f=$dir/musmooth$(awk "BEGIN{printf \"%.1f\", $sm}")_musparse$(awk "BEGIN{printf \"%.1f\", $sp}").npz
     [ -e "$f" ] && continue
-    cmds[$((k % nj))]="${cmds[$((k % nj))]} CUDA_VISIBLE_DEVICES=0 $PY $ROOT/scripts/run_results/syntheticdata_sure_gpu.py --mu-smooth $sm --mu-sparse $sp --flux $flux --shape $shape --angle 0 --tag rhofix --ftol 0 --xtol 1e-10;"
+    cmds[$((k % nj))]="${cmds[$((k % nj))]} CUDA_VISIBLE_DEVICES=0 timeout 4h $PY $ROOT/scripts/run_results/syntheticdata_sure_gpu.py --mu-smooth $sm --mu-sparse $sp --flux $flux --shape $shape --angle 0 --tag rhofix --ftol 0 --xtol 1e-10;"
     k=$((k + 1))
   done
 done
