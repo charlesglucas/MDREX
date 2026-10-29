@@ -159,11 +159,17 @@ def main(cfg):
     # <shape>_alpha<flux>_angle0_gradSnorm60tol_refined, rounded to 3 significant digits) at angle 0, and reused for the 10 parallactic angles. Results of syntheticdata_shape.py --flux
     # (results/mdrex_results/musmooth<mu>_musparse<mu>_<shape>_alpha<flux>_gradS) or, if absent, of the run with the
     # 3 contrasts (results/mdrex_results/musmooth<mu>_musparse<mu>_<shape>_gradS).
-    TAG = "gradS"
+    # TAG=ftol0_rhofix (env): fixed shrinkage coefficients (Algorithm 1), couples of refined MC-SUGAR
+    # (results/sugar/<shape>_alpha<flux>_angle0_rhofixfp_refined), reconstructions with ftol 0 / xtol 1e-10
+    TAG = os.environ.get("TAG", "gradS")
     sfx = f"_{TAG}" if TAG else ""
     MU_SELECTED = {"medium_ellipse": ["1.36e7_1.49e6", "3.89e6_1.4e6", "2.67e6_1.28e6"],
                    "spiral":         ["1.15e7_1.39e6", "1.02e7_5.39e5", "9.32e6_6.15e5"],
                    "circle":         ["1.08e7_1.6e6", "3.7e6_7.82e5", "3.46e6_8.97e5"]}
+    if TAG == "ftol0_rhofix":
+        MU_SELECTED = {"medium_ellipse": ["1.24e7_1.55e6", "4.28e6_1.3e6", "3.3e6_1.25e6"],
+                       "spiral":         ["1.1e7_1.23e6", "1.26e7_7.41e5", "1.16e7_6.14e5"],
+                       "circle":         ["9.59e6_1.04e6", "3.08e6_8.3e5", "2.38e6_7.9e5"]}
     flux_tags = ["1em6", "5em6", "1em5"]
     x_mdrex = np.zeros_like(x_gt_store)
     for (s, shape) in enumerate(["medium_ellipse", "spiral", "circle"]):
@@ -211,17 +217,22 @@ def main(cfg):
         vals = [mu_tex(f"{m}e{e}") for m, e in re.findall(r"mu(?:smooth|sparse)([0-9]+)e([0-9]+)", mdrex_dir)]
         return f"({vals[0]}, {vals[1]})"
     fixed_dir = "musmooth5e6_musparse1e5"
-    x_mdrex_fixed = np.zeros_like(x_gt_store)
-    for (s, shape) in enumerate(["medium_ellipse", "spiral", "circle"]):
-        with fits.open(ROOT / f"results/mdrex_results/{fixed_dir}_{shape}{sfx}/x_opt.fits") as hdul:
-            x_mdrex_fixed[:, :, s] = hdul[0].data[:, :, s]
-    psnr_fixed = compute_psnr(x_gt_store, x_rexpaco, x_mdrex_fixed)
-    psnr_conv_fixed = compute_psnr(x_gt_conv, x_rexpaco_conv, convolve_stack(x_mdrex_fixed, psf))
-    print_psnr_table(psnr_fixed, psnr_conv_fixed,
-                     "{\\bf Comparison of performances with fixed hyperparameters.} Same as "
-                     "Table~\\ref{table:PSNR} with the same hyperparameters "
-                     f"$\\boldsymbol{{\\mu}} = {mu_latex(fixed_dir)}$ for all the geometries and contrasts. "
-                     "The best method is in bold.", label="table:PSNR-fixed")
+    if not all((ROOT / f"results/mdrex_results/{fixed_dir}_{shape}{sfx}/x_opt.fits").exists()
+               for shape in ["medium_ellipse", "spiral", "circle"]):
+        print(f"% no runs {fixed_dir}_<shape>{sfx}: table with fixed hyperparameters skipped")
+        fixed_dir = None
+    if fixed_dir:
+        x_mdrex_fixed = np.zeros_like(x_gt_store)
+        for (s, shape) in enumerate(["medium_ellipse", "spiral", "circle"]):
+            with fits.open(ROOT / f"results/mdrex_results/{fixed_dir}_{shape}{sfx}/x_opt.fits") as hdul:
+                x_mdrex_fixed[:, :, s] = hdul[0].data[:, :, s]
+        psnr_fixed = compute_psnr(x_gt_store, x_rexpaco, x_mdrex_fixed)
+        psnr_conv_fixed = compute_psnr(x_gt_conv, x_rexpaco_conv, convolve_stack(x_mdrex_fixed, psf))
+        print_psnr_table(psnr_fixed, psnr_conv_fixed,
+                         "{\\bf Comparison of performances with fixed hyperparameters.} Same as "
+                         "Table~\\ref{table:PSNR} with the same hyperparameters "
+                         f"$\\boldsymbol{{\\mu}} = {mu_latex(fixed_dir)}$ for all the geometries and contrasts. "
+                         "The best method is in bold.", label="table:PSNR-fixed")
 
     # ======================================================================
     # 5. GROUND-TRUTH SHAPES

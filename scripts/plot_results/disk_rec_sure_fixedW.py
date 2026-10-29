@@ -38,6 +38,7 @@ REFINED_ITER = int(os.environ.get("REFINED_ITER", "1"))
 SHOW_PSNR = os.environ.get("SHOW_PSNR", "0") == "1"  # extra row: PSNR (whole image) of x_hat, best PSNR = black star
 SUGAR_ALL_PANELS = os.environ.get("SUGAR_ALL_PANELS", "0") == "1"
 SHOW_SUGAR = True  # MC-SUGAR couples (results/sugar) on the MC-SURE and refined MC-SURE panels (orange X)
+SUGAR_TAG = os.environ.get("SUGAR_TAG", "gradS")  # MC-SUGAR runs results/sugar/<shape>_alpha<flux>_angle0_<SUGAR_TAG>[_refined]
 # Couples displayed / used for the minima (comma-separated lists, e.g. "1e6,3e6,1e7"); default: all the couples of the folder.
 # Angle-0 grids of Table 1: square 7 x 7 grid with a regular half-decade step
 #   GRID_SMOOTH=1e6,3e6,1e7,3e7,1e8,3e8,1e9 GRID_SPARSE=3e4,1e5,3e5,1e6,3e6,1e7,3e7
@@ -394,7 +395,7 @@ def main(cfg):
         for sugar_dir, marker, key in (("", "X", "sugar"), ("_refined", "D", "ref_sugar")) if SHOW_SUGAR else ():
             if key not in shown:
                 continue
-            sugar_file = ROOT / "results" / "sugar" / f"{shape}_alpha{flux}_angle0_gradS{sugar_dir}" / "trajectory.npz"
+            sugar_file = ROOT / "results" / "sugar" / f"{shape}_alpha{flux}_angle0_{SUGAR_TAG}{sugar_dir}" / "trajectory.npz"
             if not sugar_file.exists():
                 continue
             tr = np.load(sugar_file, allow_pickle=True)
