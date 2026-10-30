@@ -409,10 +409,10 @@ class MDREX:
         div_est = 0.0
         delta = 1e-1 * (y - y.median()).abs().median()
         for _ in range(n_mc):
-            v = torch.randn_like(y)
+            v = torch.randn_like(y, dtype=torch.float32).to(y.dtype)  # same vector in float32 and float64
             y_eps = y + delta * v
             (xdisc_opt_eps, fx, gx, status) = self.run_bfgs(xdisc_0, y_eps, mu_sparse, mu_smooth, ftol=ftol, xtol=xtol)
-            x_tensor_eps = torch.tensor(xdisc_opt_eps, dtype=torch.float32, device=y.device)
+            x_tensor_eps = torch.tensor(xdisc_opt_eps, dtype=y.dtype, device=y.device)
 
             diff_eps = y_eps - self.forward_model(x_tensor_eps)
             # params_eps = self.fit_params_noweight(diff_eps)

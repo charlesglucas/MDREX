@@ -15,6 +15,8 @@ parser.add_argument("--angle", type=int, default=None, help="Parallactic angle o
 parser.add_argument("--ftol", type=float, default=1e-8, help="relative tolerance of VMLMB on the objective (default 1e-8; "
                     "0 for converged reconstructions, the convergence being then decided by xtol / gtol)")
 parser.add_argument("--xtol", type=float, default=1e-6, help="relative tolerance of VMLMB on the variables (default 1e-6)")
+parser.add_argument("--double", action="store_true", help="reconstructions and MC-SURE computed in float64 (same data "
+                    "and same Monte Carlo vector as in float32)")
 parser.add_argument("--tag", type=str, default="", help="Suffix of the output folder, e.g. gradC -> grid_sure_<shape>_alpha<flux>_gradC")
 args, remaining = parser.parse_known_args()
 # Remove parsed args so Hydra doesn't complain.
@@ -189,6 +191,10 @@ def main(cfg):
         x_gt = flux*torch.tensor(datadisk, dtype=torch.float32, device=device) 
         x_gt = x_gt.unsqueeze(0).repeat(C, 1, 1)
         y = mdrex.forward_model(x_gt) + y 
+    if args.double:
+        torch.set_default_dtype(torch.float64)
+        mdrex.to_double()
+        y, x_gt = y.double(), x_gt.double()
 
     # ------------------------------------------------------------
     # 3. Scheme over regularization parameters
@@ -204,7 +210,7 @@ def main(cfg):
         (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_sparse, mu_smooth, ftol=args.ftol, xtol=args.xtol)
 
         ## Compute MC-SURE and MSE
-        x_tensor_opt = torch.tensor(xdisc_opt, dtype=torch.float32, device=device)
+        x_tensor_opt = torch.tensor(xdisc_opt, dtype=y.dtype, device=device)
         torch.manual_seed(42)
         sure_total, data_term, div_est = mdrex.compute_mc_sure(y, x_tensor_opt, xdisc_0, mu_sparse, mu_smooth,
                                                                ftol=args.ftol, xtol=args.xtol)
