@@ -46,6 +46,10 @@ parser.add_argument("--refined-iter", type=int, default=1,
                     help="iteration of the refinement (with --refined): k = 1 pilot = MC-SUGAR with C^y (folder <tag>), "
                          "k > 1 pilot = refined MC-SUGAR of iteration k-1 (folder <tag>_refined or <tag>_refined<k-1>); "
                          "output folder <tag>_refined (k = 1) or <tag>_refined<k>")
+parser.add_argument("--max-step", type=float, default=float("inf"),
+                    help="trust region (decade): a point farther than --max-step from the best couple evaluated so far is not "
+                         "evaluated (no reconstruction) and gets a large MC-SURE, so that the line search of VMLMB backtracks "
+                         "(the quasi-Newton steps of VMLMB are not bounded, only its first step)")
 parser.add_argument("--bounds", type=float, nargs=4, default=[4, 10, 3, 9],
                     help="bounds of log10(mu_smooth) (2 values) and log10(mu_sparse) (2 values)")
 args, remaining = parser.parse_known_args()
@@ -290,6 +294,13 @@ def main(cfg):
     hist = []
     def sure_and_sugar(theta):   # theta = log10(mu_smooth, mu_sparse)
         mu_smooth, mu_sparse = 10.0 ** theta
+        if hist and np.isfinite(args.max_step):
+            best = min(hist, key=lambda h: h["sure"])
+            dist = np.abs(theta - np.log10([best["mu_smooth"], best["mu_sparse"]])).max()
+            if dist > args.max_step:   # outside the trust region: rejected without reconstruction
+                print(f"\n=== rejected: mu_smooth={mu_smooth:.4e} mu_sparse={mu_sparse:.4e} is {dist:.2f} decade from the "
+                      f"best couple (> --max-step {args.max_step})", flush=True)
+                return (best["sure"] + abs(best["sure"])) * state["scale"], best["grad_theta"] * state["scale"]
         print(f"\n=== evaluation {len(hist) + 1}: mu_smooth={mu_smooth:.4e} mu_sparse={mu_sparse:.4e}", flush=True)
         # each mu: reconstructions from x = 0 (as for the grids), so that MC-SURE is a deterministic function of mu
         x, fx, gx, st = mdrex.run_bfgs(np.zeros((C, H, W)), y, mu_sparse, mu_smooth, ftol=args.rec_ftol, xtol=args.rec_xtol)
