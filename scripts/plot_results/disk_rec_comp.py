@@ -170,6 +170,11 @@ def main(cfg):
         MU_SELECTED = {"medium_ellipse": ["1.24e7_1.55e6", "4.28e6_1.3e6", "3.3e6_1.25e6"],
                        "spiral":         ["1.1e7_1.23e6", "1.26e7_7.41e5", "1.16e7_6.14e5"],
                        "circle":         ["9.59e6_1.04e6", "3.08e6_8.3e5", "2.38e6_7.9e5"]}
+    # TAG=ftol0_rhofix2 (env): couples of the second refined MC-SUGAR iteration (..._rhofixfp_refined2)
+    if TAG == "ftol0_rhofix2":
+        MU_SELECTED = {"medium_ellipse": ["1.13e7_1.25e6", "3.13e6_1.05e6", "1.37e6_1.16e6"],
+                       "spiral":         ["1.1e7_1.13e6", "9.67e6_5e5", "6.03e6_4.36e5"],
+                       "circle":         ["9.24e6_1e6", "2.2e6_6.12e5", "1.64e6_5.06e5"]}
     flux_tags = ["1em6", "5em6", "1em5"]
     x_mdrex = np.zeros_like(x_gt_store)
     for (s, shape) in enumerate(["medium_ellipse", "spiral", "circle"]):
