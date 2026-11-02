@@ -232,8 +232,8 @@ def main(cfg):
         Ax_gt = fm(x_gt)
     N = y.numel()
     xi = (1e-1 * (y - y.median()).abs().median()).item()
-    gen = torch.Generator(device=device).manual_seed(args.seed)
-    delta = torch.randn(y.shape, generator=gen, device=device)
+    gen = torch.Generator(device="cpu").manual_seed(args.seed)   # CPU: same probe on all the GPU models
+    delta = torch.randn(y.shape, generator=gen).to(device)
     y_eps = y + xi * delta
     ct = lambda z: z - z.mean(dim=2, keepdim=True)                            # per-channel temporal centering
     div_const = torch.sum(delta * delta.mean(dim=2, keepdim=True)).item()    # (1/xi) delta^T mean_t(xi delta)

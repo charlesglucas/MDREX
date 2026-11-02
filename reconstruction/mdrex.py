@@ -384,7 +384,7 @@ class MDREX:
         
         return bg_params
 
-    def compute_mc_sure(self, y, x_tensor_opt, xdisc_0, mu_sparse, mu_smooth, n_mc=1, ftol=1.0e-8, xtol=1.0e-6):
+    def compute_mc_sure(self, y, x_tensor_opt, xdisc_0, mu_sparse, mu_smooth, n_mc=1, ftol=1.0e-8, xtol=1.0e-6, seed=42):
         self.to_patches = PatchesHandler()
         self.to_params = ParamsGaussianHandler()
 
@@ -408,8 +408,11 @@ class MDREX:
         # AXp = params_AX["patches"].squeeze(0)
         div_est = 0.0
         delta = 1e-1 * (y - y.median()).abs().median()
+        gen = torch.Generator(device="cpu").manual_seed(seed)
         for _ in range(n_mc):
-            v = torch.randn_like(y, dtype=torch.float32).to(y.dtype)  # same vector in float32 and float64
+            # drawn on the CPU: the CUDA generator gives different vectors on different GPU models for the same seed
+            # (the couples of a grid computed on different clusters would not share the same Monte Carlo vector)
+            v = torch.randn(y.shape, generator=gen, dtype=torch.float32).to(device=y.device, dtype=y.dtype)
             y_eps = y + delta * v
             (xdisc_opt_eps, fx, gx, status) = self.run_bfgs(xdisc_0, y_eps, mu_sparse, mu_smooth, ftol=ftol, xtol=xtol)
             x_tensor_eps = torch.tensor(xdisc_opt_eps, dtype=y.dtype, device=y.device)

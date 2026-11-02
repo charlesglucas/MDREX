@@ -206,8 +206,8 @@ def main(cfg):
         os.replace(tmp_file, y_file)
 
     # Monte Carlo probe, the same for all the couples; perturbation xi = 0.1 MAD(y) (as in compute_mc_sure)
-    gen = torch.Generator(device=y.device).manual_seed(SEED)
-    delta = torch.randn(y.shape, generator=gen, device=y.device, dtype=y.dtype)
+    gen = torch.Generator(device="cpu").manual_seed(SEED)   # CPU: same probe on all the GPU models
+    delta = torch.randn(y.shape, generator=gen, dtype=y.dtype).to(y.device)
     xi = 1e-1 * (y - y.median()).abs().median()
     y_eps = y + xi * delta
 

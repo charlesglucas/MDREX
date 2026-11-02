@@ -17,6 +17,9 @@ parser.add_argument("--ftol", type=float, default=1e-8, help="relative tolerance
 parser.add_argument("--xtol", type=float, default=1e-6, help="relative tolerance of VMLMB on the variables (default 1e-6)")
 parser.add_argument("--double", action="store_true", help="reconstructions and MC-SURE computed in float64 (same data "
                     "and same Monte Carlo vector as in float32)")
+parser.add_argument("--redo-div", type=str, default=None,
+                    help="existing result file: its reconstruction x_hat is kept and only MC-SURE (perturbed reconstruction, "
+                         "Monte Carlo vector drawn on the CPU) is recomputed")
 parser.add_argument("--tag", type=str, default="", help="Suffix of the output folder, e.g. gradC -> grid_sure_<shape>_alpha<flux>_gradC")
 args, remaining = parser.parse_known_args()
 # Remove parsed args so Hydra doesn't complain.
@@ -207,11 +210,13 @@ def main(cfg):
         print(f"Running single combination: mu_smooth={mu_smooth}, mu_sparse={mu_sparse}")
 
         xdisc_0 = np.zeros((C, H, W))
-        (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_sparse, mu_smooth, ftol=args.ftol, xtol=args.xtol)
+        if args.redo_div:   # reconstruction x_hat of the existing file kept, only MC-SURE (x_hat_eps) recomputed
+            xdisc_opt = np.load(args.redo_div)["x"]
+        else:
+            (xdisc_opt, fx, gx, status) = mdrex.run_bfgs(xdisc_0, y, mu_sparse, mu_smooth, ftol=args.ftol, xtol=args.xtol)
 
         ## Compute MC-SURE and MSE
         x_tensor_opt = torch.tensor(xdisc_opt, dtype=y.dtype, device=device)
-        torch.manual_seed(42)
         sure_total, data_term, div_est = mdrex.compute_mc_sure(y, x_tensor_opt, xdisc_0, mu_sparse, mu_smooth,
                                                                ftol=args.ftol, xtol=args.xtol)
         mse_total = mahalanobis_mse(x_gt, x_tensor_opt)
