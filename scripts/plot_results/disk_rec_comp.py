@@ -162,7 +162,7 @@ def main(cfg):
     # TAG=ftol0_rhofix (env): fixed shrinkage coefficients (Algorithm 1), couples of refined MC-SUGAR
     # (results/sugar/<shape>_alpha<flux>_angle0_rhofixfp_refined), reconstructions with ftol 0 / xtol 1e-10
     TAG = os.environ.get("TAG", "gradS")
-    sfx = f"_{TAG}" if TAG else ""
+    sfx0 = f"_{TAG}" if TAG else ""
     MU_SELECTED = {"medium_ellipse": ["1.36e7_1.49e6", "3.89e6_1.4e6", "2.67e6_1.28e6"],
                    "spiral":         ["1.15e7_1.39e6", "1.02e7_5.39e5", "9.32e6_6.15e5"],
                    "circle":         ["1.08e7_1.6e6", "3.7e6_7.82e5", "3.46e6_8.97e5"]}
@@ -175,17 +175,26 @@ def main(cfg):
         MU_SELECTED = {"medium_ellipse": ["1.13e7_1.25e6", "3.13e6_1.05e6", "1.37e6_1.16e6"],
                        "spiral":         ["1.1e7_1.13e6", "9.67e6_5e5", "6.03e6_4.36e5"],
                        "circle":         ["9.24e6_1e6", "2.2e6_6.12e5", "1.64e6_5.06e5"]}
+    # TAG=ftol0_rhofix4 (env): spiral at the fixed point of the refined MC-SUGAR (..._rhofixfp_refined4), other shapes as rhofix2
+    sfx_shape = {}
+    if TAG == "ftol0_rhofix4":
+        MU_SELECTED = {"medium_ellipse": ["1.13e7_1.25e6", "3.13e6_1.05e6", "1.37e6_1.16e6"],
+                       "spiral":         ["1.16e7_9.8e5", "8.2e6_3.06e5", "5.05e6_3.59e5"],
+                       "circle":         ["9.24e6_1e6", "2.2e6_6.12e5", "1.64e6_5.06e5"]}
+        sfx_shape = {"medium_ellipse": "_ftol0_rhofix2", "circle": "_ftol0_rhofix2"}
     flux_tags = ["1em6", "5em6", "1em5"]
     x_mdrex = np.zeros_like(x_gt_store)
     for (s, shape) in enumerate(["medium_ellipse", "spiral", "circle"]):
         for f, mu in enumerate(MU_SELECTED[shape]):
             sm, sp = mu.split("_")
+            sfx = sfx_shape.get(shape, sfx0)
             path = ROOT / f"results/mdrex_results/musmooth{sm}_musparse{sp}_{shape}_alpha{flux_tags[f]}{sfx}/x_opt.fits"
             if not path.exists():
                 path = ROOT / f"results/mdrex_results/musmooth{sm}_musparse{sp}_{shape}{sfx}/x_opt.fits"
             print(f"MD-REX {shape} alpha {flux_tags[f]}: {path.parent.name}")
             with fits.open(path) as hdul:
                 x_mdrex[f, :, s] = hdul[0].data[f, :, s]
+    sfx = sfx0
 
     # ======================================================================
     # 3. PSF CONVOLUTION of the ground truth and of the reconstructions
