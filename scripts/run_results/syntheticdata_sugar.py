@@ -58,6 +58,12 @@ parser.add_argument("--gabs", type=float, default=0.0,
 parser.add_argument("--restarts", type=int, default=0,
                     help="maximum number of restarts of VMLMB from the best couple while the projected gradient exceeds --gabs "
                          "(within the --maxfun evaluations of the stage)")
+parser.add_argument("--check", action="store_true",
+                    help="diagnostic instead of the minimization: MC-SURE evaluated again at the same couple (--check-mu, "
+                         "default --mu0) and MC-SUGAR compared with central finite differences (--check-steps, decade)")
+parser.add_argument("--check-mu", type=float, nargs=2, default=None)
+parser.add_argument("--check-steps", type=float, nargs="+", default=[0.05, 0.15])
+parser.add_argument("--check-repeats", type=int, default=2)
 parser.add_argument("--bounds", type=float, nargs=4, default=[4, 10, 3, 9],
                     help="bounds of log10(mu_smooth) (2 values) and log10(mu_sparse) (2 values)")
 args, remaining = parser.parse_known_args()
@@ -300,6 +306,13 @@ def main(cfg):
         out_dir = out_dir.with_name(out_dir.name + ("_refined" if k == 1 else f"_refined{k}"))
     state = {"x": np.zeros((C, H, W)), "x_eps": np.zeros((C, H, W)), "scale": 1.0}
     hist = []
+    def sure_value(mu_smooth, mu_sparse):   # MC-SURE at a couple, reconstructions from x = 0
+        x, _, _, st = mdrex.run_bfgs(np.zeros((C, H, W)), y, mu_sparse, mu_smooth, ftol=args.rec_ftol, xtol=args.rec_xtol)
+        x_eps, _, _, st_eps = mdrex.run_bfgs(np.zeros((C, H, W)), y_eps, mu_sparse, mu_smooth, ftol=args.rec_ftol, xtol=args.rec_xtol)
+        D, gD = D_and_grad(x)
+        div = divergence(x, x_eps)
+        return x, x_eps, D, gD, div, D - N + 2 * div, st, st_eps
+
     def sure_and_sugar(theta):   # theta = log10(mu_smooth, mu_sparse)
         mu_smooth, mu_sparse = 10.0 ** theta
         for h in hist:   # couple already evaluated (restart of VMLMB from the best couple): no new reconstruction
@@ -314,12 +327,8 @@ def main(cfg):
                 return (best["sure"] + abs(best["sure"])) * state["scale"], best["grad_theta"] * state["scale"]
         print(f"\n=== evaluation {len(hist) + 1}: mu_smooth={mu_smooth:.4e} mu_sparse={mu_sparse:.4e}", flush=True)
         # each mu: reconstructions from x = 0 (as for the grids), so that MC-SURE is a deterministic function of mu
-        x, fx, gx, st = mdrex.run_bfgs(np.zeros((C, H, W)), y, mu_sparse, mu_smooth, ftol=args.rec_ftol, xtol=args.rec_xtol)
-        x_eps, _, _, st_eps = mdrex.run_bfgs(np.zeros((C, H, W)), y_eps, mu_sparse, mu_smooth, ftol=args.rec_ftol, xtol=args.rec_xtol)
+        x, x_eps, D, gD, div, sure, st, st_eps = sure_value(mu_smooth, mu_sparse)
         state["x"], state["x_eps"] = x, x_eps
-        D, gD = D_and_grad(x)
-        div = divergence(x, x_eps)
-        sure = D - N + 2 * div
         grad_F = lambda z: mdrex.objective(z, y, mu_sparse, mu_smooth)[1]
         grad_F_eps = lambda z: mdrex.objective(z, y_eps, mu_sparse, mu_smooth)[1]
         if not hist:   # quality of the finite-difference Hessian-vector products, once, at the first point
@@ -379,6 +388,35 @@ def main(cfg):
                  mu_opt=10.0 ** theta, success=status in (optm.FTEST_SATISFIED, optm.GTEST_SATISFIED, optm.XTEST_SATISFIED),
                  message=str(message), optimizer="vmlmb")
         return theta
+
+    if args.check:
+        # diagnostic, no minimization: reproducibility of MC-SURE at a couple (same mu evaluated again, then mu x (1+1e-6))
+        # and MC-SUGAR compared with central finite differences of MC-SURE along each log10(mu) axis
+        out_dir = out_dir.with_name(out_dir.name + "_check")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        tc = np.log10(np.array(args.check_mu if args.check_mu else 10.0 ** theta0, dtype=float))
+        f0, g0 = sure_and_sugar(tc)
+        f0, g0 = f0 / state["scale"], g0 / state["scale"]
+        rows = []
+        def ev(theta, label):
+            mu = 10.0 ** theta
+            _, _, D, _, div, s, st, st_eps = sure_value(*mu)
+            rows.append((label, *theta, D, 2 * div, s))
+            print(f"[check] {label}: log10 mu = {theta}, D {D:.2f}, 2 div {2 * div:.2f}, MC-SURE {s:.2f} "
+                  f"(status {st} / {st_eps})", flush=True)
+            np.savez(out_dir / "check.npz", center=tc, sure0=f0, sugar=g0,
+                     rows=np.array([r[1:] for r in rows]), labels=np.array([r[0] for r in rows]))
+            return s
+        reps = [f0] + [ev(tc, f"repeat {i + 1}") for i in range(args.check_repeats)]
+        reps.append(ev(tc + np.log10(1 + 1e-6), "mu x (1+1e-6)"))
+        print(f"[check] MC-SURE at the center: {np.array(reps)}, spread {np.ptp(reps):.2f}", flush=True)
+        for h in args.check_steps:
+            for a, name in enumerate(("mu_smooth", "mu_sparse")):
+                e = np.zeros(2); e[a] = h
+                fp, fm_ = ev(tc + e, f"+{h} {name}"), ev(tc - e, f"-{h} {name}")
+                print(f"[check] h = {h} decade, {name}: finite difference {(fp - fm_) / (2 * h):.1f}, MC-SUGAR {g0[a]:.1f}, "
+                      f"noise of the finite difference ~ {np.ptp(reps) / (2 * h):.1f}", flush=True)
+        sys.exit(0)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     theta = minimize(theta0)
