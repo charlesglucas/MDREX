@@ -50,6 +50,14 @@ parser.add_argument("--max-step", type=float, default=float("inf"),
                     help="trust region (decade): a point farther than --max-step from the best couple evaluated so far is not "
                          "evaluated (no reconstruction) and gets a large MC-SURE, so that the line search of VMLMB backtracks "
                          "(the quasi-Newton steps of VMLMB are not bounded, only its first step)")
+parser.add_argument("--gabs", type=float, default=0.0,
+                    help="absolute tolerance on the projected MC-SUGAR gradient (d MC-SURE / d log10 mu, not normalized) at the "
+                         "best couple: a stage is converged only below it (0: VMLMB tests only). In a narrow valley of MC-SURE, "
+                         "VMLMB stops on its variables-change test after a few backtracked steps while the gradient is "
+                         "still large; it is then restarted from the best couple (see --restarts)")
+parser.add_argument("--restarts", type=int, default=0,
+                    help="maximum number of restarts of VMLMB from the best couple while the projected gradient exceeds --gabs "
+                         "(within the --maxfun evaluations of the stage)")
 parser.add_argument("--bounds", type=float, nargs=4, default=[4, 10, 3, 9],
                     help="bounds of log10(mu_smooth) (2 values) and log10(mu_sparse) (2 values)")
 args, remaining = parser.parse_known_args()
@@ -294,6 +302,9 @@ def main(cfg):
     hist = []
     def sure_and_sugar(theta):   # theta = log10(mu_smooth, mu_sparse)
         mu_smooth, mu_sparse = 10.0 ** theta
+        for h in hist:   # couple already evaluated (restart of VMLMB from the best couple): no new reconstruction
+            if np.array_equal(np.log10([h["mu_smooth"], h["mu_sparse"]]), theta):
+                return h["sure"] * state["scale"], h["grad_theta"] * state["scale"]
         if hist and np.isfinite(args.max_step):
             best = min(hist, key=lambda h: h["sure"])
             dist = np.abs(theta - np.log10([best["mu_smooth"], best["mu_sparse"]])).max()
@@ -339,11 +350,31 @@ def main(cfg):
         # argument of optm.vmlmb is a single LineSearch object shared by all the calls, so that the reconstructions run
         # inside sure_and_sugar (run_bfgs -> optm.vmlmb) would overwrite the state of the outer line search (initial value,
         # step), which then never converges and keeps evaluating the same point.
-        theta, fth, gth, status = optm.vmlmb(sure_and_sugar, np.clip(theta_start, lower, upper), lower=lower, upper=upper,
-                                             maxeval=args.maxfun, lnsrch=optm.LineSearch(), ftol=args.ftol,
-                                             xtol=(args.xtol, 0.0), gtol=(0.0, args.gtol), verb=1, throwerrors=False)
-        message = optm.reason(status)
-        print("\nVMLMB:", message, " theta =", theta, " mu =", 10.0 ** theta, flush=True)
+        # Restarts (--restarts, --gabs): from the best couple evaluated so far, with a fresh quasi-Newton memory, while
+        # the projected gradient at this couple exceeds --gabs and evaluations remain.
+        theta, n0 = np.clip(theta_start, lower, upper), len(hist)
+        for r in range(args.restarts + 1):
+            theta, fth, gth, status = optm.vmlmb(sure_and_sugar, theta, lower=lower, upper=upper,
+                                                 maxeval=args.maxfun - (len(hist) - n0) + (1 if r > 0 else 0),
+                                                 lnsrch=optm.LineSearch(), ftol=args.ftol,
+                                                 xtol=(args.xtol, 0.0), gtol=(0.0, args.gtol), verb=1, throwerrors=False)
+            message = optm.reason(status)
+            print("\nVMLMB:", message, " theta =", theta, " mu =", 10.0 ** theta, flush=True)
+            best = min(hist[n0:], key=lambda h: h["sure"])
+            theta = np.log10([best["mu_smooth"], best["mu_sparse"]])
+            g = np.array(best["grad_theta"], dtype=float)
+            g[((theta <= lower + 1e-9) & (g > 0)) | ((theta >= upper - 1e-9) & (g < 0))] = 0.0   # projected gradient
+            print(f"[stage] best couple mu = {10.0 ** theta}, MC-SURE {best['sure']:.6e}, |projected MC-SUGAR| "
+                  f"{np.linalg.norm(g):.1f} (--gabs {args.gabs}), {len(hist) - n0}/{args.maxfun} evaluations", flush=True)
+            if args.gabs <= 0 or np.linalg.norm(g) <= args.gabs:
+                message = f"{message}; projected gradient {np.linalg.norm(g):.1f} <= gabs {args.gabs}" if args.gabs > 0 else message
+                status = optm.GTEST_SATISFIED if args.gabs > 0 else status
+                break
+            if len(hist) - n0 >= args.maxfun or r == args.restarts:
+                message = f"not converged: projected gradient {np.linalg.norm(g):.1f} > gabs {args.gabs}"
+                status = optm.TOO_MANY_EVALUATIONS
+                break
+            print(f"##### restart {r + 1} of VMLMB from the best couple", flush=True)
         np.savez(out_dir / "trajectory.npz", **{k: np.array([h[k] for h in hist]) for k in hist[0]}, x_last=state["x"],
                  mu_opt=10.0 ** theta, success=status in (optm.FTEST_SATISFIED, optm.GTEST_SATISFIED, optm.XTEST_SATISFIED),
                  message=str(message), optimizer="vmlmb")
