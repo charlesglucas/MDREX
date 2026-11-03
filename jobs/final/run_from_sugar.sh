@@ -8,11 +8,13 @@
 ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
 PY=$ROOT/.venv/bin/python
 #   4th argument (optional): refined stage, refined (default) or refined<k> (k-th fixed-point iteration), tag rhofix<k>
+#   SUGAR_TAG (env, default rhofixfp): MC-SUGAR series; rhofixcpu (CPU probe, sugar_cpu_chain.sh) -> tag rhofixcpu<k>
 kind=$1; shape=$2; flux=$3; stage=${4:-refined}
+SUGAR_TAG=${SUGAR_TAG:-rhofixfp}
 tag=$(echo $flux | sed 's/e-/em/')
-base=$ROOT/results/sugar/${shape}_alpha${tag}_angle0_rhofixfp
+base=$ROOT/results/sugar/${shape}_alpha${tag}_angle0_${SUGAR_TAG}
 traj=${base}_${stage}/trajectory.npz
-otag=rhofix${stage#refined}
+[ $SUGAR_TAG = rhofixfp ] && otag=rhofix${stage#refined} || otag=${SUGAR_TAG}${stage#refined}
 [ -e "$traj" ] || traj=$base/trajectory.npz
 read sm sp <<< $($PY -c "import numpy as np; m=np.load('$traj')['mu_opt']; print(f'{m[0]:.3g} {m[1]:.3g}')")
 echo "$kind $shape $flux: mu = ($sm, $sp) from $traj"
