@@ -1,5 +1,5 @@
-"""PSNR of the PCA ADI / ASDI images on the ground truth convolved by the PSF (rows "PCA ASDI" of the H_lambda x_lambda
-blocks of Table 1), with the conventions of disk_rec_comp.py (normalized channel-mean PSF, support: convolved ground
+"""PSNR of the PCA ADI / ASDI images on the ground truth convolved by the PSF (rows "PCA ASDI", first rows of the
+H_lambda x_lambda blocks of Table 1), with the conventions of disk_rec_comp.py (normalized channel-mean PSF, support: convolved ground
 truth > 4% of its maximum, mean +- std over the ten orientations).
 
 Input: selected_pca_<mode>_detailed_alpha_unc_aligned.fits, array (geometry, flux, orientation, channel, 1448, 1448) in
@@ -80,7 +80,9 @@ def main():
         for s, shape in enumerate(SHAPES):
             cells = " & ".join(f"\\modif{{${np.mean(p[k][j, :, s]):.2f} \\pm {np.std(p[k][j, :, s]):.2f}$}}"
                                for k in ["rexpaco", "rexpaco_supp"] for j in range(3))
-            print(f"% {shape}\n & & \\modif{{PCA {mode.upper()}}} & {cells} \\\\")
+            # first row of the H_lambda x_lambda block of each shape (before REXPACO and MD-REX)
+            print(f"% {shape}\n & \\multirow{{3}}{{*}}{{$\\mathbf{{H}}_{{\\lambda}}\\widehat{{\\mathbf{{x}}}}_{{\\lambda}}$}} & "
+                  f"\\modif{{PCA {mode.upper()}}} & {cells} \\\\")
 
 
 if __name__ == "__main__":
