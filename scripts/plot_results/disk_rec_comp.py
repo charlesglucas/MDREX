@@ -182,6 +182,12 @@ def main(cfg):
                        "spiral":         ["1.16e7_9.8e5", "8.2e6_3.06e5", "5.05e6_3.59e5"],
                        "circle":         ["9.24e6_1e6", "2.2e6_6.12e5", "1.64e6_5.06e5"]}
         sfx_shape = {"medium_ellipse": "_ftol0_rhofix2", "circle": "_ftol0_rhofix2"}
+    # TAG=ftol0_psnrmax (env): Table 2, couples maximizing the PSNR (whole image) at angle 0 on the half-decade grids
+    # (figures/grid_data_<shape>_<flux>_angle0_rhofixcpu.npz), jobs/final/table2_psnrmax.sh
+    if TAG == "ftol0_psnrmax":
+        MU_SELECTED = {"medium_ellipse": ["1e7_1e6", "1e6_1e6", "3e6_1e6"],
+                       "spiral":         ["3e7_3e5", "3e6_1e5", "3e6_1e5"],
+                       "circle":         ["3e7_3e5", "3e6_1e5", "3e6_3e4"]}
     flux_tags = ["1em6", "5em6", "1em5"]
     x_mdrex = np.zeros_like(x_gt_store)
     for (s, shape) in enumerate(["medium_ellipse", "spiral", "circle"]):
