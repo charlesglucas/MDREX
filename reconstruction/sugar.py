@@ -67,21 +67,36 @@ def hessian_vector_product(grad_F, x, v, rel_step=1e-3):
 
 
 def sugar_gradient(grad_F, grad_F_eps, x_hat, x_hat_eps, grad_D, g_delta, reg_grads, free_tol=0.0,
-                   cg_maxiter=30, cg_rtol=1e-3, verbose=False, hvp_step=1e-3):
+                   cg_maxiter=30, cg_rtol=1e-3, verbose=False, hvp_step=1e-3, split=False):
     """d SURE / d mu_i, i = (smooth, sparse). grad_F(x) / grad_F_eps(x): gradients of F at y and y + xi delta (current
-    mu); reg_grads(x) -> (grad R_smooth(x), grad R_sparse(x)); free variables: x > free_tol * max(x)."""
+    mu); reg_grads(x) -> (grad R_smooth(x), grad R_sparse(x)); free variables: x > free_tol * max(x).
+    split=True: derivative of 2 div computed as the difference of two solves with the same right-hand side g_delta,
+        d (2 div) / d mu_i = (H^{-1} g_delta)^T grad R_i(x_hat) - (H_eps^{-1} g_delta)^T grad R_i(x_hat_eps),
+    and derivative of D from its own solve, d D / d mu_i = - (H^{-1} grad D)^T grad R_i(x_hat) (3 linear solves). The two
+    terms of the derivative of 2 div scale as 1/xi and nearly cancel: with the same right-hand side and the same number
+    of CG iterations (cg_rtol = 0), the errors of the two solves are correlated and cancel too, whereas with the joint
+    right-hand side grad D - g_delta of u (split=False) they are independent. The two terms are returned in info."""
     free = x_hat > free_tol * x_hat.max()
     free_eps = x_hat_eps > free_tol * x_hat_eps.max()
-    u, it_u, res_u = conjugate_gradient(lambda v: hessian_vector_product(grad_F, x_hat, v, hvp_step), grad_D - g_delta, free,
-                                        cg_maxiter, cg_rtol, verbose)
-    w, it_w, res_w = conjugate_gradient(lambda v: hessian_vector_product(grad_F_eps, x_hat_eps, v, hvp_step), g_delta, free_eps,
-                                        cg_maxiter, cg_rtol, verbose)
-    R = reg_grads(x_hat)
-    R_eps = reg_grads(x_hat_eps)
-    grad = np.array([-np.dot(u.ravel(), np.where(free, R[i], 0).ravel())
-                     - np.dot(w.ravel(), np.where(free_eps, R_eps[i], 0).ravel()) for i in range(2)])
-    info = dict(cg_iter_u=it_u, cg_res_u=res_u, cg_iter_w=it_w, cg_res_w=res_w,
-                n_free=int(free.sum()), n_free_eps=int(free_eps.sum()))
+    hvp = lambda v: hessian_vector_product(grad_F, x_hat, v, hvp_step)
+    hvp_eps = lambda v: hessian_vector_product(grad_F_eps, x_hat_eps, v, hvp_step)
+    R = [np.where(free, r, 0).ravel() for r in reg_grads(x_hat)]
+    R_eps = [np.where(free_eps, r, 0).ravel() for r in reg_grads(x_hat_eps)]
+    w, it_w, res_w = conjugate_gradient(hvp_eps, g_delta, free_eps, cg_maxiter, cg_rtol, verbose)
+    if not split:
+        u, it_u, res_u = conjugate_gradient(hvp, grad_D - g_delta, free, cg_maxiter, cg_rtol, verbose)
+        grad = np.array([-np.dot(u.ravel(), R[i]) - np.dot(w.ravel(), R_eps[i]) for i in range(2)])
+        info = dict(cg_iter_u=it_u, cg_res_u=res_u, cg_iter_w=it_w, cg_res_w=res_w)
+    else:
+        u, it_u, res_u = conjugate_gradient(hvp, grad_D, free, cg_maxiter, cg_rtol, verbose)
+        w0, it_w0, res_w0 = conjugate_gradient(hvp, g_delta, free, cg_maxiter, cg_rtol, verbose)
+        a = np.array([np.dot(w0.ravel(), R[i]) for i in range(2)])       # 1/xi terms of d (2 div) / d mu
+        b = np.array([np.dot(w.ravel(), R_eps[i]) for i in range(2)])
+        dD = np.array([-np.dot(u.ravel(), R[i]) for i in range(2)])
+        grad = dD + a - b
+        info = dict(cg_iter_u=it_u, cg_res_u=res_u, cg_iter_w=it_w, cg_res_w=res_w, cg_iter_w0=it_w0, cg_res_w0=res_w0,
+                    dD=dD, d2div=a - b, d2div_a=a, d2div_b=b)
+    info.update(n_free=int(free.sum()), n_free_eps=int(free_eps.sum()))
     return grad, info
 
 

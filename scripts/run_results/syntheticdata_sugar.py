@@ -62,7 +62,11 @@ parser.add_argument("--check", action="store_true",
                     help="diagnostic instead of the minimization: MC-SURE evaluated again at the same couple (--check-mu, "
                          "default --mu0) and MC-SUGAR compared with central finite differences (--check-steps, decade)")
 parser.add_argument("--check-mu", type=float, nargs=2, default=None)
-parser.add_argument("--check-steps", type=float, nargs="+", default=[0.05, 0.15])
+parser.add_argument("--check-steps", type=float, nargs="*", default=[0.05, 0.15])
+parser.add_argument("--check-cg", type=int, nargs="*", default=[],
+                    help="--check: MC-SUGAR at the center (joint and split formulas) for these numbers of CG iterations")
+parser.add_argument("--sugar-split", action="store_true",
+                    help="MC-SUGAR with the split formula (3 solves, correlated errors of the 1/xi terms of d 2div / d mu)")
 parser.add_argument("--check-repeats", type=int, default=2)
 parser.add_argument("--bounds", type=float, nargs=4, default=[4, 10, 3, 9],
                     help="bounds of log10(mu_smooth) (2 values) and log10(mu_sparse) (2 values)")
@@ -335,7 +339,8 @@ def main(cfg):
             for t in hvp_symmetry_test(grad_F, x, x > 0):
                 print(f"[HVP test] rel_step {t['rel_step']:.0e}: asymmetry {t['asym']:.3e}, v^T H v {t['vHv']:.3e}", flush=True)
         g_mu, info = sugar_gradient(grad_F, grad_F_eps, x, x_eps, gD, g_delta, reg_grads,
-                                    cg_maxiter=args.cg_maxiter, cg_rtol=args.cg_rtol, verbose=True, hvp_step=args.hvp_step)
+                                    cg_maxiter=args.cg_maxiter, cg_rtol=args.cg_rtol, verbose=True, hvp_step=args.hvp_step,
+                                    split=args.sugar_split)
         g_theta = g_mu * np.array([mu_smooth, mu_sparse]) * np.log(10)               # d SURE / d log10(mu)
         mse, psnr, psnr_supp = quality(x)
         rec = dict(mu_smooth=mu_smooth, mu_sparse=mu_sparse, sure=sure, data_term=D, div=div, grad_mu=g_mu,
@@ -395,6 +400,29 @@ def main(cfg):
         out_dir = out_dir.with_name(out_dir.name + "_check")
         out_dir.mkdir(parents=True, exist_ok=True)
         tc = np.log10(np.array(args.check_mu if args.check_mu else 10.0 ** theta0, dtype=float))
+        if args.check_cg:
+            # MC-SUGAR at the center, joint (u = H^{-1}(grad D - g_delta)) and split (3 solves) formulas, for several
+            # numbers of CG iterations: the terms of the split formula are printed in d / d log10(mu)
+            mu = 10.0 ** tc
+            x, x_eps, D, gD, div, s, st, st_eps = sure_value(*mu)
+            print(f"[check] center: log10 mu = {tc}, D {D:.2f}, 2 div {2 * div:.2f}, MC-SURE {s:.2f}", flush=True)
+            grad_F = lambda z: mdrex.objective(z, y, mu[1], mu[0])[1]
+            grad_F_eps = lambda z: mdrex.objective(z, y_eps, mu[1], mu[0])[1]
+            jac = mu * np.log(10)
+            res = []
+            for k in args.check_cg:
+                for split in (False, True):
+                    g, info = sugar_gradient(grad_F, grad_F_eps, x, x_eps, gD, g_delta, reg_grads, cg_maxiter=k,
+                                             cg_rtol=args.cg_rtol, verbose=False, hvp_step=args.hvp_step, split=split)
+                    line = f"[check] CG {k}, {'split' if split else 'joint'}: MC-SUGAR {g * jac}"
+                    if split:
+                        line += (f", d D {info['dD'] * jac}, d 2div {info['d2div'] * jac} = {info['d2div_a'] * jac} - "
+                                 f"{info['d2div_b'] * jac}")
+                    print(line + f", CG residuals { {c: info[c] for c in info if c.startswith('cg_res')} }", flush=True)
+                    res.append([k, split, *(g * jac)])
+                    np.savez(out_dir / "check_cg.npz", center=tc, rows=np.array(res, dtype=float))
+        if not args.check_steps and not args.check_repeats:
+            sys.exit(0)
         f0, g0 = sure_and_sugar(tc)
         f0, g0 = f0 / state["scale"], g0 / state["scale"]
         rows = []
