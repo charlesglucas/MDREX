@@ -78,11 +78,11 @@ def main():
         p = R.compute_psnr(gt_conv, x, x)   # the two method slots hold the same images
         print(f"\n% PCA {mode.upper()}, H x: whole image then support, alpha = 1e-6, 5e-6, 1e-5")
         for s, shape in enumerate(SHAPES):
-            cells = " & ".join(f"\\modif{{${np.mean(p[k][j, :, s]):.2f} \\pm {np.std(p[k][j, :, s]):.2f}$}}"
+            cells = " & ".join(f"${np.mean(p[k][j, :, s]):.2f} \\pm {np.std(p[k][j, :, s]):.2f}$"
                                for k in ["rexpaco", "rexpaco_supp"] for j in range(3))
             # first row of the H_lambda x_lambda block of each shape (before REXPACO and MD-REX)
             print(f"% {shape}\n & \\multirow{{3}}{{*}}{{$\\mathbf{{H}}_{{\\lambda}}\\widehat{{\\mathbf{{x}}}}_{{\\lambda}}$}} & "
-                  f"\\modif{{PCA {mode.upper()}}} & {cells} \\\\")
+                  f"PCA {mode.upper()} & {cells} \\\\")
 
 
 if __name__ == "__main__":
