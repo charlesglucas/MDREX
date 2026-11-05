@@ -83,6 +83,15 @@ def jacobi_preconditioner(hvp, reg_hess, free, n_probes=4, seed=0):
     return np.where(free, reg_diag + c, 1.0), c
 
 
+def hessian_vector_product(grad_F, x, v, rel_step=1e-3):
+    """Central finite difference H v ~ (grad_F(x + h v) - grad_F(x - h v)) / (2 h), h relative to the size of x."""
+    v_norm = np.linalg.norm(v)
+    if v_norm == 0:
+        return np.zeros_like(v)
+    h = rel_step * max(np.linalg.norm(x), 1e-30) / v_norm
+    return (grad_F(x + h * v).astype(np.float64) - grad_F(x - h * v).astype(np.float64)) / (2 * h)
+
+
 def sugar_gradient(grad_F, grad_F_eps, x_hat, x_hat_eps, grad_D, g_delta, reg_grads, free_tol=0.0,
                    cg_maxiter=30, cg_rtol=1e-3, verbose=False, hvp_step=1e-3, split=False, reg_hess=None,
                    snapshots=()):
