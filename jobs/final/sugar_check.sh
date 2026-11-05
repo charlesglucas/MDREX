@@ -4,6 +4,7 @@
 # (0.05 and 0.15 decade on each axis). Results: results/sugar/<shape>_alpha<flux>_angle0_rhofixcpu_check/check.npz
 # CHECK_OPTS (env): replaces these default checks, e.g. CHECK_OPTS="--check-steps --check-repeats 0 --check-cg 20 40 80 160
 #   --cg-rtol 0" (MC-SUGAR at the center, joint and split formulas, fixed numbers of CG iterations)
+# CHECK_NAME (env): suffix of the job name (default "cg" if CHECK_OPTS is set), e.g. CHECK_NAME=pcg
 #   bash sugar_check.sh <shape> <flux> <mu_smooth> <mu_sparse> [<shape> <flux> <mu_smooth> <mu_sparse> ...]
 ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
 PY=$ROOT/.venv/bin/python
@@ -12,6 +13,6 @@ OPTS="--angle 0 --hvp-step 1e-2 --normalize --cg-maxiter 80 --rec-ftol 0 --rec-x
 while [ $# -ge 4 ]; do
   shape=$1; flux=$2; sm=$3; sp=$4; shift 4
   tag=$(echo $flux | sed 's/e-/em/')
-  oarsub -l "gpu=1,walltime=24:00:00" -p "$P" -n "sugarcheck${CHECK_OPTS:+cg}_${shape}_${tag}" \
+  oarsub -l "gpu=1,walltime=24:00:00" -p "$P" -n "sugarcheck${CHECK_NAME:-${CHECK_OPTS:+cg}}_${shape}_${tag}" \
     "cd $ROOT && CUDA_VISIBLE_DEVICES=0 $PY scripts/run_results/syntheticdata_sugar.py --flux $flux --shape $shape $OPTS --check --check-mu $sm $sp $CHECK_OPTS"
 done

@@ -63,6 +63,9 @@ parser.add_argument("--check", action="store_true",
                          "default --mu0) and MC-SUGAR compared with central finite differences (--check-steps, decade)")
 parser.add_argument("--check-mu", type=float, nargs=2, default=None)
 parser.add_argument("--check-steps", type=float, nargs="*", default=[0.05, 0.15])
+parser.add_argument("--precond", action="store_true",
+                    help="Jacobi preconditioner of the CG solves: exact diagonal of the Hessian of mu_smooth R_smooth "
+                         "+ mean diagonal of the data term (reconstruction/sugar.py, jacobi_preconditioner)")
 parser.add_argument("--check-cg", type=int, nargs="*", default=[],
                     help="--check: MC-SUGAR at the center (joint and split formulas) for these numbers of CG iterations")
 parser.add_argument("--sugar-split", action="store_true",
@@ -241,7 +244,7 @@ def main(cfg):
     # ------------------------------------------------------------
     sys.path.insert(0, str(ROOT / "scripts/plot_results"))
     import disk_rec_sure_fixedW as M
-    from reconstruction.sugar import sugar_gradient, hvp_symmetry_test
+    from reconstruction.sugar import sugar_gradient, hvp_symmetry_test, edge_preserving_hess
 
     fm, to_patches, centered = M.load_forward_model(device)
     with torch.no_grad():
@@ -279,6 +282,11 @@ def main(cfg):
             (g,) = torch.autograd.grad(R(xt), xt)
             out.append(g.detach().cpu().numpy())
         return out
+
+    def reg_hess(mu_smooth):   # Hessian of the regularization for the Jacobi preconditioner (--precond), else None
+        if not args.precond:
+            return None
+        return lambda x: edge_preserving_hess(x, mu_smooth, mdrex.l2_l1_edge_preserving_2d)
 
     def quality(x):
         with torch.no_grad():
@@ -340,7 +348,7 @@ def main(cfg):
                 print(f"[HVP test] rel_step {t['rel_step']:.0e}: asymmetry {t['asym']:.3e}, v^T H v {t['vHv']:.3e}", flush=True)
         g_mu, info = sugar_gradient(grad_F, grad_F_eps, x, x_eps, gD, g_delta, reg_grads,
                                     cg_maxiter=args.cg_maxiter, cg_rtol=args.cg_rtol, verbose=True, hvp_step=args.hvp_step,
-                                    split=args.sugar_split)
+                                    split=args.sugar_split, reg_hess=reg_hess(mu_smooth))
         g_theta = g_mu * np.array([mu_smooth, mu_sparse]) * np.log(10)               # d SURE / d log10(mu)
         mse, psnr, psnr_supp = quality(x)
         rec = dict(mu_smooth=mu_smooth, mu_sparse=mu_sparse, sure=sure, data_term=D, div=div, grad_mu=g_mu,
@@ -410,17 +418,21 @@ def main(cfg):
             grad_F_eps = lambda z: mdrex.objective(z, y_eps, mu[1], mu[0])[1]
             jac = mu * np.log(10)
             res = []
-            for k in args.check_cg:
-                for split in (False, True):
-                    g, info = sugar_gradient(grad_F, grad_F_eps, x, x_eps, gD, g_delta, reg_grads, cg_maxiter=k,
-                                             cg_rtol=args.cg_rtol, verbose=False, hvp_step=args.hvp_step, split=split)
-                    line = f"[check] CG {k}, {'split' if split else 'joint'}: MC-SUGAR {g * jac}"
+            ks = sorted(args.check_cg)
+            for split in (False, True):   # one run of CG per linear system, gradient at each number of iterations
+                path = sugar_gradient(grad_F, grad_F_eps, x, x_eps, gD, g_delta, reg_grads, cg_maxiter=ks[-1],
+                                      cg_rtol=args.cg_rtol, verbose=False, hvp_step=args.hvp_step, split=split,
+                                      reg_hess=reg_hess(mu[0]), snapshots=ks)
+                for k, g, info in path:
+                    line = f"[check] CG {k}{' precond' if args.precond else ''}, {'split' if split else 'joint'}: MC-SUGAR {g * jac}"
                     if split:
                         line += (f", d D {info['dD'] * jac}, d 2div {info['d2div'] * jac} = {info['d2div_a'] * jac} - "
                                  f"{info['d2div_b'] * jac}")
+                    if "precond_c" in info:
+                        line += f", precond c {info['precond_c']:.3e}, max/min diag {info['precond_ratio']:.3e}"
                     print(line + f", CG residuals { {c: info[c] for c in info if c.startswith('cg_res')} }", flush=True)
                     res.append([k, split, *(g * jac)])
-                    np.savez(out_dir / "check_cg.npz", center=tc, rows=np.array(res, dtype=float))
+                np.savez(out_dir / f"check_cg{'_precond' if args.precond else ''}.npz", center=tc, rows=np.array(res, dtype=float))
         if not args.check_steps and not args.check_repeats:
             sys.exit(0)
         f0, g0 = sure_and_sugar(tc)
