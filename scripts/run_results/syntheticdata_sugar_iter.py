@@ -83,6 +83,10 @@ parser.add_argument("--sugar-split", action="store_true",
 parser.add_argument("--check-repeats", type=int, default=2)
 parser.add_argument("--abs-grad", action="store_true",
                     help="reconstructions with the autograd gradient of sum|x| (0 at x = 0), as run_bfgs (default: gradient of sum(x))")
+parser.add_argument("--sugar-mode", choices=["implicit", "iterative"], default="implicit",
+                    help="MC-SUGAR of the minimization: implicit (CG on H u = b, reconstruction/sugar.py, with the gradient of "
+                         "sum(x): the reconstructions are then stationary and the CG converges in < 80 iterations) or "
+                         "iterative (tangents of vmlmb_diff, frozen L-BFGS metric: inaccurate, check jobs of 2026-11-06)")
 parser.add_argument("--central", action="store_true",
                     help="central finite differences for the Hessian-vector products of the tangents (default one-sided)")
 parser.add_argument("--full-metric", action="store_true",
@@ -386,10 +390,17 @@ def main(cfg):
                 return (best["sure"] + abs(best["sure"])) * state["scale"], best["grad_theta"] * state["scale"]
         print(f"\n=== evaluation {len(hist) + 1}: mu_smooth={mu_smooth:.4e} mu_sparse={mu_sparse:.4e}", flush=True)
         # each mu: reconstructions from x = 0 (as for the grids), so that MC-SURE is a deterministic function of mu
-        x, x_eps, D, gD, div, sure, st, st_eps = sure_value(mu_smooth, mu_sparse, tangents=True)
+        iterative = args.sugar_mode == "iterative"
+        x, x_eps, D, gD, div, sure, st, st_eps = sure_value(mu_smooth, mu_sparse, tangents=iterative)
         state["x"], state["x_eps"] = x, x_eps
         X, X_eps, ix, ie = state["tangents"]
-        g_mu, info = sugar_iterative(gD, g_delta, X, X_eps)   # iterative differentiation of the two reconstructions
+        if iterative:   # iterative differentiation of the two reconstructions
+            g_mu, info = sugar_iterative(gD, g_delta, X, X_eps)
+        else:   # implicit differentiation at the (stationary) reconstructions, gradient of sum(x)
+            g_mu, info = sugar_gradient(lambda z: objective(z, y, mu_smooth, mu_sparse)[1],
+                                        lambda z: objective(z, y_eps, mu_smooth, mu_sparse)[1], x, x_eps, gD, g_delta,
+                                        lambda z: tuple(dgrad_mu(z)), cg_maxiter=args.cg_maxiter, cg_rtol=args.cg_rtol,
+                                        verbose=False, hvp_step=args.hvp_step)
         info.update(evals=ix["evals"], evals_tan=ix["evals_tan"], evals_eps=ie["evals"], evals_tan_eps=ie["evals_tan"],
                     pg_ratio=ix["pg_ratio"], pg_ratio_eps=ie["pg_ratio"])
         g_theta = g_mu * np.array([mu_smooth, mu_sparse]) * np.log(10)               # d SURE / d log10(mu)
