@@ -12,6 +12,12 @@
 #       -> results/sugar/<shape>_alpha<..>_angle0_sugariter[_refined, _refined2]/trajectory.npz
 # MC-SUGAR of MODE=opt: implicit (CG, default of syntheticdata_sugar_iter.py; validated by the check jobs of 2026-11-06:
 # within 3-5% of the finite differences) with TAG=sugarimp; EXTRA="--sugar-mode iterative" for the tangents (inaccurate).
+#   MODE=refine ITER=<k> bash sugar_iter.sh <shape> <flux> 0 0 [...]
+#       continuation of the fixed point: refined MC-SURE iteration k from the couple of <tag>_refined<k-1> (--refined
+#       --refined-iter k), then --outer 2 more -> <tag>_refined<k>, ... (mu arguments unused); BOUNDS (env) overrides --bounds
+#   MODE=grid GS="<log10 mu_smooth ...>" GP="<log10 mu_sparse ...>" NAME=<n> bash sugar_iter.sh <shape> <flux> 0 0
+#       MSE / PSNR of the reconstructions of y (gradient of sum(x)) on the grid GS x GP
+#       -> results/sugar/<shape>_alpha<..>_angle0_<tag>_grid/grid_<n>.npz
 # EXTRA (env): additional options, e.g. EXTRA="--abs-grad" (gradient of sum|x| as run_bfgs) with TAG=sugariterabs.
 ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
 PY=$ROOT/.venv/bin/python
@@ -24,10 +30,14 @@ while [ $# -ge 4 ]; do
   if [ "${MODE:-check}" = check ]; then
     OPTS="$BASE --check --check-mu $sm $sp --check-steps 0.05 0.15 --check-repeats 1 --check-cg 80 320 640 --cg-rtol 0"
     name=sugariterchk_${shape}_${tag}; wall=36
+  elif [ "$MODE" = grid ]; then
+    OPTS="$BASE --grid-smooth $GS --grid-sparse $GP --grid-name ${NAME:-0}"
+    name=sugargrid_${shape}_${tag}_${NAME:-0}; wall=${WALL:-10}
   else
-    OPTS="$BASE --mu0 $sm $sp --bounds 6 9 4.4771 7.4771 --maxfun 20 --xtol 0.02 --ftol 0 --gtol 0 --gabs 100 \
+    OPTS="$BASE --mu0 $sm $sp --bounds ${BOUNDS:-6 9 4.4771 7.4771} --maxfun 20 --xtol 0.02 --ftol 0 --gtol 0 --gabs 100 \
           --restarts 3 --max-step 0.5 --outer 2 --outer-tol 0.1 --cg-maxiter 200 --cg-rtol 1e-4"
     name=sugariteropt_${shape}_${tag}; wall=168
+    if [ "$MODE" = refine ]; then OPTS="$OPTS --refined --refined-iter $ITER"; name=sugarref${ITER}_${shape}_${tag}; fi
   fi
   oarsub -l "gpu=1,walltime=$wall:00:00" -p "$P" -n "$name" \
     "cd $ROOT && CUDA_VISIBLE_DEVICES=0 $PY scripts/run_results/syntheticdata_sugar_iter.py --flux $flux --shape $shape $OPTS" \

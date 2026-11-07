@@ -92,6 +92,11 @@ parser.add_argument("--central", action="store_true",
 parser.add_argument("--full-metric", action="store_true",
                     help="tangents of the L-BFGS memory propagated too (default: metric frozen in the derivative; unstable)")
 parser.add_argument("--rec-verb", type=int, default=10, help="print every --rec-verb iterations of the reconstructions")
+parser.add_argument("--grid-smooth", type=float, nargs="*", default=None,
+                    help="grid mode (no minimization): log10 mu_smooth values; with --grid-sparse, reconstruction of y from x = 0 "
+                         "at each couple and its MSE / PSNR -> <out>_grid/grid_<grid-name>.npz")
+parser.add_argument("--grid-sparse", type=float, nargs="*", default=None, help="grid mode: log10 mu_sparse values")
+parser.add_argument("--grid-name", type=str, default="0", help="grid mode: suffix of the output file (job splitting)")
 parser.add_argument("--bounds", type=float, nargs=4, default=[4, 10, 3, 9],
                     help="bounds of log10(mu_smooth) (2 values) and log10(mu_sparse) (2 values)")
 args, remaining = parser.parse_known_args()
@@ -455,6 +460,26 @@ def main(cfg):
                  mu_opt=10.0 ** theta, success=status in (optm.FTEST_SATISFIED, optm.GTEST_SATISFIED, optm.XTEST_SATISFIED),
                  message=str(message), optimizer="vmlmb")
         return theta
+
+    if args.grid_smooth:
+        # MSE / PSNR of the reconstructions (gradient of sum(x) unless --abs-grad) on a grid of couples, to locate the
+        # MSE optimum of the corrected problem and compare it with the couples of the MC-SURE minimization
+        out_dir = out_dir.with_name(out_dir.name + "_grid")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        rows = []
+        for ts in args.grid_smooth:
+            for tp in args.grid_sparse:
+                x, st, _, info = reconstruct(y, 10.0 ** ts, 10.0 ** tp, False, "")
+                mse, psnr, psnr_supp = quality(x)
+                rows.append([ts, tp, mse, psnr, psnr_supp, info["pg_ratio"], info["evals"]])
+                print(f"[grid] log10 mu = ({ts:.3f}, {tp:.3f})  [MSE] {mse:.4e}  [PSNR] {psnr:.2f} / {psnr_supp:.2f}  "
+                      f"(status {st}, pg_ratio {info['pg_ratio']:.2e})", flush=True)
+                np.savez(out_dir / f"grid_{args.grid_name}.npz", rows=np.array(rows, dtype=float),
+                         columns=np.array(["log10_mu_smooth", "log10_mu_sparse", "mse", "psnr", "psnr_supp", "pg_ratio",
+                                           "evals"]))
+        best = min(rows, key=lambda r: r[2])
+        print(f"[grid] min MSE {best[2]:.4e} at mu = ({10 ** best[0]:.4e}, {10 ** best[1]:.4e})", flush=True)
+        sys.exit(0)
 
     if args.check:
         # diagnostic, no minimization: reproducibility of MC-SURE at a couple (same mu evaluated again, then mu x (1+1e-6))
