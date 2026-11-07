@@ -210,6 +210,11 @@ class MDREX:
         # evaluation on the residual y - A x (differentiated or not according to exomild_engine.DETACH_RHO)
         self.fixed_rho = True
         self.rho_cache = {}          # data key -> coefficients in call order (a few data sets: y, y + xi delta)
+        # sparse term mu_sparse sum(x) (= sum|x| on x >= 0, the lower bound of VMLMB): its gradient is mu_sparse at
+        # x = 0. True -> sum|x| as before 2026-11-07, whose autograd gradient is 0 at x = 0 (sign(0) = 0): a pixel at 0
+        # then looks free to VMLMB and the gradient jumps by mu_sparse when it becomes positive, so that the
+        # reconstructions stop with a projected gradient ~1/10 of its initial norm, on a non-stationary point
+        self.sparse_abs = False
 
         # SURE handlers
         self.to_patches = None
@@ -367,7 +372,7 @@ class MDREX:
         return torch.sum(torch.sqrt(grad_sq + epsilon**2))
     
     def l2_l1_sparse_2d(self, x):
-        return torch.sum(torch.abs(x))
+        return torch.sum(torch.abs(x)) if self.sparse_abs else torch.sum(x)
 
     def fit_params_noweight(self, x):
         xp = self.to_patches.forward(x, self.lbda)

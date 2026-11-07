@@ -18,18 +18,19 @@ else
 fi
 shape=$1; flux=$2; nj=${3:-6}
 tag=$(echo $flux | sed 's/e-/em/')
-dir=$ROOT/results/grids_111111111111/grid_sure_${shape}_alpha${tag}_angle0_rhofix
+TAG=${TAG:-rhofix}   # (env) e.g. TAG=sumx: sparse term sum(x) of MDREX since 2026-11-07
+dir=$ROOT/results/grids_111111111111/grid_sure_${shape}_alpha${tag}_angle0_$TAG
 cmds=(); k=0
 # GRID_SMOOTH / GRID_SPARSE (env, space-separated): other grid (e.g. fine grid around the minima), same folder
 for sm in ${GRID_SMOOTH:-1e6 3e6 1e7 3e7 1e8 3e8 1e9}; do
   for sp in ${GRID_SPARSE:-3e4 1e5 3e5 1e6 3e6 1e7 3e7}; do
     f=$dir/musmooth$(awk "BEGIN{printf \"%.1f\", $sm}")_musparse$(awk "BEGIN{printf \"%.1f\", $sp}").npz
     [ -e "$f" ] && continue
-    cmds[$((k % nj))]="${cmds[$((k % nj))]} CUDA_VISIBLE_DEVICES=0 timeout 4h $PY $ROOT/scripts/run_results/syntheticdata_sure_gpu.py --mu-smooth $sm --mu-sparse $sp --flux $flux --shape $shape --angle 0 --tag rhofix --ftol 0 --xtol 1e-10;"
+    cmds[$((k % nj))]="${cmds[$((k % nj))]} CUDA_VISIBLE_DEVICES=0 timeout 4h $PY $ROOT/scripts/run_results/syntheticdata_sure_gpu.py --mu-smooth $sm --mu-sparse $sp --flux $flux --shape $shape --angle 0 --tag $TAG --ftol 0 --xtol 1e-10;"
     k=$((k + 1))
   done
 done
 for i in $(seq 0 $((nj - 1))); do
   [ -n "${cmds[$i]}" ] && oarsub -l "gpu=1,walltime=48:00:00" -p "${PROPS[$((i % 2))]}" \
-    -n "gridrf_${shape}_${tag}_$i" "cd $ROOT && ${cmds[$i]}" | grep -o "OAR_JOB_ID=[0-9]*"
+    -n "grid${TAG#rhofix}_${shape}_${tag}_$i" "cd $ROOT && ${cmds[$i]}" | grep -o "OAR_JOB_ID=[0-9]*"
 done

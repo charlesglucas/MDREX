@@ -226,6 +226,7 @@ def main(cfg):
     # ------------------------------------------------------------
 
     mdrex = MDREX(y=y, rot=rot, psf=psf_crop, mask=mask, lbda=lbda, model_state=model_state, **cfg_model)
+    mdrex.sparse_abs = args.abs_grad
 
     def mahalanobis_mse(x_gt, x_tensor_opt):
         residual_gt = y - mdrex.forward_model(x_gt)
@@ -312,12 +313,9 @@ def main(cfg):
 
     def objective(z, yy, mu_smooth, mu_sparse):
         # MDREX.objective, sparse term as mu_sparse sum(x) (same function on x >= 0, gradient mu_sparse at x = 0)
+        # (since 2026-11-07 in MDREX itself: mdrex.sparse_abs = False; --abs-grad -> sparse_abs = True, former term)
         f, g = mdrex.objective(z, yy, mu_sparse, mu_smooth)
-        g = np.asarray(g, dtype=np.float64)
-        if not args.abs_grad:
-            f = f + mu_sparse * float(np.sum(z) - np.sum(np.abs(z)))
-            g = g + mu_sparse * (1.0 - np.sign(z))
-        return f, g
+        return f, np.asarray(g, dtype=np.float64)
 
     def dgrad_mu(z):   # d grad F / d (mu_smooth, mu_sparse) at fixed x
         r_smooth, r_sparse = reg_grads(z)
