@@ -65,6 +65,11 @@ parser.add_argument("--gabs", type=float, default=0.0,
                          "best couple: a stage is converged only below it (0: VMLMB tests only). In a narrow valley of MC-SURE, "
                          "VMLMB stops on its variables-change test after a few backtracked steps while the gradient is "
                          "still large; it is then restarted from the best couple (see --restarts)")
+parser.add_argument("--srel", type=float, default=0.0,
+                    help="stagnation test of a stage: stop when the best MC-SURE of the stage has decreased by less than "
+                         "--srel (relative) over its last --sstall evaluations (0: off). In the flat valleys of MC-SURE "
+                         "(high fluxes) the absolute test --gabs is never met and the stage otherwise runs to --maxfun")
+parser.add_argument("--sstall", type=int, default=3, help="window (evaluations) of the stagnation test --srel")
 parser.add_argument("--restarts", type=int, default=0,
                     help="maximum number of restarts of VMLMB from the best couple while the projected gradient exceeds --gabs "
                          "(within the --maxfun evaluations of the stage)")
@@ -120,6 +125,10 @@ from astropy.io import fits
 from models import get_model
 
 from reconstruction.mdrex import MDREX
+
+class StageStalled(Exception):
+    """Raised by sure_and_sugar when the stagnation test (--srel) of the current stage is satisfied."""
+
 
 @hydra.main(config_path="../../conf", config_name="config")
 def main(cfg):
@@ -361,7 +370,14 @@ def main(cfg):
         # inverse shrinkage covariance of the residual of its reconstruction (from x = 0), fixed during the minimization
         k = args.refined_iter
         pilot_dir = out_dir if k == 1 else out_dir.with_name(out_dir.name + ("_refined" if k == 2 else f"_refined{k - 1}"))
-        mu_pilot = np.load(pilot_dir / "trajectory.npz", allow_pickle=True)["mu_opt"]
+        traj = np.load(pilot_dir / "trajectory.npz", allow_pickle=True)
+        if "mu_opt" in traj:
+            mu_pilot = traj["mu_opt"]
+        else:   # stage interrupted before its end: best couple evaluated so far
+            i = int(np.argmin(traj["sure"]))
+            mu_pilot = np.array([traj["mu_smooth"][i], traj["mu_sparse"][i]])
+            print(f"Refined MC-SURE: {pilot_dir.name} interrupted, pilot = best of its {len(traj['sure'])} evaluations",
+                  flush=True)
         print(f"Refined MC-SURE, iteration {k}: pilot from {pilot_dir.name}", flush=True)
         print(f"Refined MC-SURE: pilot mu = ({mu_pilot[0]:.4e}, {mu_pilot[1]:.4e})", flush=True)
         x_pilot = reconstruct(y, mu_pilot[0], mu_pilot[1], False, " pilot")[0]
@@ -418,6 +434,12 @@ def main(cfg):
         print(f"[MC-SURE] {sure:.6e}  [MC-SUGAR d/dlog10mu] {g_theta}  [MSE] {mse:.4e}  [PSNR] {psnr:.2f} / {psnr_supp:.2f}  "
               f"[SUGAR iter] {info}", flush=True)
         np.savez(out_dir / "trajectory.npz", **{k: np.array([h[k] for h in hist]) for k in hist[0]}, x_last=x)
+        hs = [h["sure"] for h in hist[state.get("n0", 0):]]
+        if args.srel > 0 and len(hs) > args.sstall:   # stagnation test (--srel, --sstall)
+            before, after = min(hs[:-args.sstall]), min(hs)
+            if before - after <= args.srel * abs(before):
+                raise StageStalled(f"MC-SURE stalled: relative decrease {(before - after) / abs(before):.1e} <= srel "
+                                   f"{args.srel} over the last {args.sstall} evaluations")
         return sure * state["scale"], g_theta * state["scale"]
 
     b = args.bounds
@@ -432,12 +454,18 @@ def main(cfg):
         # Restarts (--restarts, --gabs): from the best couple evaluated so far, with a fresh quasi-Newton memory, while
         # the projected gradient at this couple exceeds --gabs and evaluations remain.
         theta, n0 = np.clip(theta_start, lower, upper), len(hist)
+        state["n0"] = n0
         for r in range(args.restarts + 1):
-            theta, fth, gth, status = optm.vmlmb(sure_and_sugar, theta, lower=lower, upper=upper,
-                                                 maxeval=args.maxfun - (len(hist) - n0) + (1 if r > 0 else 0),
-                                                 lnsrch=optm.LineSearch(), ftol=args.ftol,
-                                                 xtol=(args.xtol, 0.0), gtol=(0.0, args.gtol), verb=1, throwerrors=False)
-            message = optm.reason(status)
+            stalled = None
+            try:
+                theta, fth, gth, status = optm.vmlmb(sure_and_sugar, theta, lower=lower, upper=upper,
+                                                     maxeval=args.maxfun - (len(hist) - n0) + (1 if r > 0 else 0),
+                                                     lnsrch=optm.LineSearch(), ftol=args.ftol,
+                                                     xtol=(args.xtol, 0.0), gtol=(0.0, args.gtol), verb=1, throwerrors=False)
+                message = optm.reason(status)
+            except StageStalled as e:   # VMLMB interrupted by the stagnation test
+                stalled, status = str(e), optm.FTEST_SATISFIED
+                message = stalled
             print("\nVMLMB:", message, " theta =", theta, " mu =", 10.0 ** theta, flush=True)
             best = min(hist[n0:], key=lambda h: h["sure"])
             theta = np.log10([best["mu_smooth"], best["mu_sparse"]])
@@ -448,6 +476,9 @@ def main(cfg):
             if args.gabs <= 0 or np.linalg.norm(g) <= args.gabs:
                 message = f"{message}; projected gradient {np.linalg.norm(g):.1f} <= gabs {args.gabs}" if args.gabs > 0 else message
                 status = optm.GTEST_SATISFIED if args.gabs > 0 else status
+                break
+            if stalled:
+                print(f"[stage] {stalled}: stage stopped", flush=True)
                 break
             if len(hist) - n0 >= args.maxfun or r == args.restarts:
                 message = f"not converged: projected gradient {np.linalg.norm(g):.1f} > gabs {args.gabs}"
@@ -543,7 +574,14 @@ def main(cfg):
     base = out_dir.name.split("_refined")[0]
     k0 = args.refined_iter if args.refined else 0
     path_theta = [theta]
-    for k in range(k0 + 1, k0 + 1 + args.outer):
+    n_outer = args.outer
+    if args.refined:   # continuation of the fixed point (MODE=refine): move of this stage from its pilot
+        step = np.abs(theta - theta0).max()
+        print(f"##### fixed-point iteration {k0}: couple moved by {step:.3f} decade", flush=True)
+        if step < args.outer_tol:
+            print(f"##### fixed point reached (< {args.outer_tol} decade)", flush=True)
+            n_outer = 0
+    for k in range(k0 + 1, k0 + 1 + n_outer):
         # covariance re-estimated on the residual of the reconstruction at the couple found, then MC-SURE minimized again
         mu = 10.0 ** theta
         print(f"\n##### fixed-point iteration {k}: pilot mu = ({mu[0]:.4e}, {mu[1]:.4e})", flush=True)
