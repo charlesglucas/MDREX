@@ -121,13 +121,16 @@ def load_forward_model(device):
 
 
 def shrinkage_cov_inv(pc):
-    """Inverse of the shrinkage covariance of ParamsGaussianHandler; pc: centered patches (L, T, f)."""
+    """Inverse of the shrinkage covariance of Algorithm 1 (as in the objective, engine._params_gaussian); pc: centered
+    patches (L, T, f), T = C x T_frames samples (both wavelengths pooled)."""
     L, T, f = pc.shape
     S = pc.transpose(1, 2) @ pc / T
     tr_S2 = torch.diagonal(S**2, dim1=-2, dim2=-1).sum(dim=-1)
     tr2_S = torch.diagonal(S, dim1=-2, dim2=-1).sum(dim=-1)**2
     tr_SS = torch.diagonal(S @ S, dim1=-2, dim2=-1).sum(dim=-1)
-    rho = torch.clip((tr_SS + tr2_S - 2 * tr_S2) / ((T // 2 + 1) * (tr_SS - tr_S2)), 0, 1).view(L, 1, 1)
+    # denominator (T |Lambda| + 1) of the paper = (number of samples + 1); before 2026-11-10: (T // 2 + 1) = T_frames + 1,
+    # i.e. rho about twice too large compared with the reconstruction (series sugarimp and before)
+    rho = torch.clip((tr_SS + tr2_S - 2 * tr_S2) / ((T + 1) * (tr_SS - tr_S2)), 0, 1).view(L, 1, 1)
     C_hat = (1 - rho) * S + rho * torch.diag_embed(torch.diagonal(S, dim1=-2, dim2=-1))
     return torch.linalg.inv(C_hat)
 
@@ -141,7 +144,7 @@ def fixed_metric_terms(path, files, mu_smooth_vals, mu_sparse_vals, device, DE=N
     """Data term with fixed metric w_ref (default W_REF) and MSE with fixed W_gt, cached in the results
     folder. DE (2 * divergence) is needed for w_ref = "pilot" (SURE with C^y to find mu_0)."""
     w_ref = W_REF if w_ref is None else w_ref
-    cache = path / f"sure_fixedW_{w_ref}.npz"
+    cache = path / f"sure_fixedW_{w_ref}_rho2T.npz"   # _rho2T: shrinkage (T |Lambda| + 1) (old caches without suffix)
     if cache.exists():
         c = np.load(cache)
         if list(c["mu_smooth"]) == mu_smooth_vals and list(c["mu_sparse"]) == mu_sparse_vals:
@@ -187,7 +190,7 @@ def refined_sure_iterated(path, files, mu_smooth_vals, mu_sparse_vals, DE, SURE_
     """Iterated refined MC-SURE: starting from mu_0 = argmin SURE_y, the metric is re-estimated on the residual
     y - A x_hat(mu_k) and mu_{k+1} = argmin(D_k - N + 2 div), until mu_{k+1} = mu_k. Returns the SURE grid at the
     fixed point and the path [mu_0, mu_1, ...] (indices (k, j)). Cached in the results folder."""
-    cache = path / ("sure_refined.npz" if max_iter == 1 else f"sure_refined_iterated{max_iter}.npz")
+    cache = path / ("sure_refined_rho2T.npz" if max_iter == 1 else f"sure_refined_iterated{max_iter}_rho2T.npz")
     if cache.exists():
         c = np.load(cache)
         if list(c["mu_smooth"]) == mu_smooth_vals and list(c["mu_sparse"]) == mu_sparse_vals:

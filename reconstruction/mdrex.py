@@ -111,7 +111,7 @@ class ParamsGaussianHandler:
             tr_SS = torch.diagonal(S_hat @ S_hat, dim1=-2, dim2=-1).sum(dim=-1)
 
             num = tr_SS + tr2_S - 2 * tr_S2
-            den = (T_t + 1) * (tr_SS - tr_S2)
+            den = (T + 1) * (tr_SS - tr_S2)   # T = C x T_frames samples: (T |Lambda| + 1) of the paper (was T_t + 1)
 
             if self.rho is None:
                 with torch.no_grad():
