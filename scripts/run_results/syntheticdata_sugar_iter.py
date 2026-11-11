@@ -102,6 +102,9 @@ parser.add_argument("--grid-smooth", type=float, nargs="*", default=None,
                          "at each couple and its MSE / PSNR -> <out>_grid/grid_<grid-name>.npz")
 parser.add_argument("--grid-sparse", type=float, nargs="*", default=None, help="grid mode: log10 mu_sparse values")
 parser.add_argument("--grid-name", type=str, default="0", help="grid mode: suffix of the output file (job splitting)")
+parser.add_argument("--repeats", type=int, nargs=12, default=[1] * 12,
+                    help="active terms of the data term, in the order p8 (s1, s2, s4), p16 (...), p32 (...), p64 (...) "
+                         "(patch size p, symmetry s); default: the 12 terms")
 parser.add_argument("--bounds", type=float, nargs=4, default=[4, 10, 3, 9],
                     help="bounds of log10(mu_smooth) (2 values) and log10(mu_sparse) (2 values)")
 args, remaining = parser.parse_known_args()
@@ -194,7 +197,7 @@ def main(cfg):
     ## Data-fidelity term
     cfg_model = cfg.model
     # cfg_model.repeats = [1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0]
-    cfg_model.repeats = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    cfg_model.repeats = list(args.repeats)
     cfg_model.use_dataparallel = False
     cfg_model.batch_size = 256 #None
     cfg_model.n_channels = 2
@@ -202,7 +205,7 @@ def main(cfg):
     ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/exomild_H2/ckpt/ckpt_40000.pt"
     print(f"Loading checkpoint {ckpt_path}")
     # new_repeats = [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0]
-    new_repeats = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    new_repeats = list(args.repeats)
     keep_indices = [i for i, v in enumerate(new_repeats) if v == 1]
     print("Conserved blocks :", keep_indices)
     state = torch.load(ckpt_path, map_location=device)["net"]
@@ -501,6 +504,7 @@ def main(cfg):
                 x, st, _, info = reconstruct(y, 10.0 ** ts, 10.0 ** tp, False, "")
                 mse, psnr, psnr_supp = quality(x)
                 rows.append([ts, tp, mse, psnr, psnr_supp, info["pg_ratio"], info["evals"]])
+                np.savez(out_dir / f"x_{ts:.3f}_{tp:.3f}.npz", x=np.asarray(x, dtype=np.float32))   # for post-processing
                 print(f"[grid] log10 mu = ({ts:.3f}, {tp:.3f})  [MSE] {mse:.4e}  [PSNR] {psnr:.2f} / {psnr_supp:.2f}  "
                       f"(status {st}, pg_ratio {info['pg_ratio']:.2e})", flush=True)
                 np.savez(out_dir / f"grid_{args.grid_name}.npz", rows=np.array(rows, dtype=float),
