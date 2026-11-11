@@ -45,6 +45,7 @@ from utils.rotation import BatchRotationOperator
 from models import get_model
 
 from reconstruction.mdrex import MDREX
+from reconstruction.load_exomild import remap_learned_projections
 
 from astropy.io import fits
 from pathlib import Path
@@ -162,6 +163,9 @@ def main(cfg):
     model.load_state_dict(state_cleaned, strict=False)
     model_state = model.state_dict()
     del model
+    # learned projections D of the checkpoint, moved to the rank of their term in this model (the D keys
+    # removed above have the ranks of the training configuration, which differ from those of this one)
+    model_state = remap_learned_projections(ckpt_path, cfg_model.repeats, model_state, learned=True)
 
     # ------------------------------------------------------------
     # 3. Ground truth loading

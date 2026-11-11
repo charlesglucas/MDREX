@@ -102,6 +102,8 @@ parser.add_argument("--grid-smooth", type=float, nargs="*", default=None,
                          "at each couple and its MSE / PSNR -> <out>_grid/grid_<grid-name>.npz")
 parser.add_argument("--grid-sparse", type=float, nargs="*", default=None, help="grid mode: log10 mu_sparse values")
 parser.add_argument("--grid-name", type=str, default="0", help="grid mode: suffix of the output file (job splitting)")
+parser.add_argument("--proj", choices=["learned", "random"], default="learned",
+                    help="projections D of the terms: learned (checkpoint, terms absent from it random) or all random")
 parser.add_argument("--repeats", type=int, nargs=12, default=[1] * 12,
                     help="active terms of the data term, in the order p8 (s1, s2, s4), p16 (...), p32 (...), p64 (...) "
                          "(patch size p, symmetry s); default: the 12 terms")
@@ -128,6 +130,7 @@ from astropy.io import fits
 from models import get_model
 
 from reconstruction.mdrex import MDREX
+from reconstruction.load_exomild import remap_learned_projections
 
 class StageStalled(Exception):
     """Raised by sure_and_sugar when the stagnation test (--srel) of the current stage is satisfied."""
@@ -232,6 +235,9 @@ def main(cfg):
     model.load_state_dict(state_cleaned, strict=False)
     model_state = model.state_dict()
     del model
+    # learned projections D of the checkpoint, moved to the rank of their term in this model (the D keys
+    # removed above have the ranks of the training configuration, which differ from those of this one)
+    model_state = remap_learned_projections(ckpt_path, cfg_model.repeats, model_state, learned=args.proj == "learned")
 
     # ------------------------------------------------------------
     # 3. Ground truth loading
