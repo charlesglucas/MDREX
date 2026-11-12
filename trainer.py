@@ -185,7 +185,8 @@ class Trainer:
         if val_dataloader:
             self.run_val(val_dataloader, step=i)
         self.run_detection(step=i)
-        self.run_charac(step=i)
+        if hasattr(self, "run_charac"):   # not implemented: the final checkpoint was never saved
+            self.run_charac(step=i)
         self.save_ckpt(txt=f"{i}")
         self.save_error_register()
 
