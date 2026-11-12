@@ -113,6 +113,8 @@ parser.add_argument("--objtest", type=float, nargs=2, default=None,
                     help="log10 (mu_smooth, mu_sparse): is the reconstruction the minimizer? objective at x_hat, at the "
                          "ground truth and at x_hat with the true axisymmetric part, then reconstruction started from "
                          "the ground truth")
+parser.add_argument("--frozen", action="store_true",
+                    help="with --objtest (already run): data term with the statistics frozen on a reference image")
 parser.add_argument("--bounds", type=float, nargs=4, default=[4, 10, 3, 9],
                     help="bounds of log10(mu_smooth) (2 values) and log10(mu_sparse) (2 values)")
 args, remaining = parser.parse_known_args()
@@ -529,6 +531,64 @@ def main(cfg):
                   f"MSE {quality(z)[0]:.4e}", flush=True)
             return F
 
+        out_dir = out_dir.with_name(out_dir.name + "_objtest")
+        saved = out_dir / f"objtest_{ts:.3f}_{tp:.3f}.npz"
+        if args.frozen and saved.exists():
+            # Data term with the statistics (temporal mean, covariance) of a reference image instead of those refitted
+            # on the residual of the evaluated image: does the re-estimation make the objective prefer x_hat?
+            #   refit      : mean and covariance of y - A x (the objective)
+            #   C(ref)     : covariance of y - A x_ref, mean refitted on y - A x (temporal centering kept)
+            #   m, C(ref)  : mean and covariance of y - A x_ref (no centering of the evaluated residual)
+            import models.exomild.engine as E
+            z = np.load(saved)
+            x_hat = z["x_hat"].astype(np.float64)
+            imgs = {"x_hat": x_hat, "ground truth": g_np,
+                    "x_hat with the true axi part": np.maximum(x_hat - axi(x_hat) + axi(g_np), 0.0),
+                    "ground truth with the axi part of x_hat": np.maximum(g_np - axi(g_np) + axi(x_hat), 0.0)}
+            refs = {"gt": g_np, "x_hat": x_hat}
+            cols = ["refit"] + [f"{k}({r})" for r in refs for k in ("C", "m, C")]
+            tot = {n: dict.fromkeys(cols, 0.0) for n in imgs}
+            store = mdrex._fixed_rho(y)
+            res = lambda u: (y - mdrex.forward_model(torch.tensor(u, dtype=torch.float32, device=device))).to(mdrex.dtype)
+            n_terms = len(mdrex.exomild.all_terms)
+            nll = lambda term, d, prm: -torch.sum(term.get_log_likelihood(d, lbda, prm), dtype=torch.float64).item() / n_terms
+            i0 = 0
+            with torch.no_grad():
+                for it, term in enumerate(mdrex.exomild.all_terms):
+                    def fit(d):   # shrinkage coefficients of this term replayed (fixed rho, as in the objective)
+                        E.RHO_STATE = {"mode": "replay", "store": store, "i": i0}
+                        try:
+                            prm = term.fit_params(d, lbda)
+                            return prm, E.RHO_STATE["i"]
+                        finally:
+                            E.RHO_STATE = None
+                    p_ref = {}
+                    for r, xr in refs.items():
+                        p_ref[r], i1 = fit(res(xr))
+                    for n, u in imgs.items():
+                        d = res(u)
+                        p_u, _ = fit(d)
+                        tot[n]["refit"] += nll(term, d, p_u)
+                        for r in refs:
+                            tot[n][f"C({r})"] += nll(term, d, {**p_ref[r], "mean": p_u["mean"]})
+                            tot[n][f"m, C({r})"] += nll(term, d, p_ref[r])
+                        del p_u, d
+                    del p_ref
+                    torch.cuda.empty_cache()
+                    i0 = i1
+                    print(f"[frozen] term {it + 1}/{n_terms} done", flush=True)
+            assert i0 == len(store)
+            print("[frozen] data term minus its value at the ground truth (negative: preferred to the ground truth)")
+            print("[frozen] " + " " * 42 + "".join(f"{c:>16s}" for c in cols))
+            for n in imgs:
+                print(f"[frozen] {n:42s}" + "".join(f"{tot[n][c] - tot['ground truth'][c]:16.4e}" for c in cols), flush=True)
+            print("[frozen] absolute at the ground truth:      " + "".join(f"{tot['ground truth'][c]:16.8e}" for c in cols))
+            reg = {n: (ms * mdrex.l2_l1_edge_preserving_2d(torch.tensor(u, dtype=torch.float64, device=device)).item()
+                       + mp * mdrex.l2_l1_sparse_2d(torch.tensor(u, dtype=torch.float64, device=device)).item()) for n, u in imgs.items()}
+            print("[frozen] regularization minus its value at the ground truth: "
+                  + "  ".join(f"{n}: {reg[n] - reg['ground truth']:.4e}" for n in imgs), flush=True)
+            sys.exit(0)
+
         x_hat = reconstruct(y, ms, mp, False, " from 0")[0]
         F_hat = parts(x_hat, "x_hat (from x = 0)")
         F_gt = parts(g_np, "ground truth")
@@ -539,7 +599,6 @@ def main(cfg):
         d = np.linalg.norm(x_from_gt - x_hat) / np.linalg.norm(x_hat)
         print(f"[objtest] F(x_hat) - F(x_gt) = {F_hat - F_gt:.4e}; F(from x_gt) - F(from 0) = {F_from_gt - F_hat:.4e}; "
               f"||x(from x_gt) - x(from 0)|| / ||x(from 0)|| = {d:.3e}", flush=True)
-        out_dir = out_dir.with_name(out_dir.name + "_objtest")
         out_dir.mkdir(parents=True, exist_ok=True)
         np.savez(out_dir / f"objtest_{ts:.3f}_{tp:.3f}.npz", x_hat=x_hat.astype(np.float32), x_from_gt=x_from_gt.astype(np.float32))
         sys.exit(0)
