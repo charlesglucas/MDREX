@@ -13,6 +13,10 @@ parser.add_argument("--tag", type=str, default="", help="Suffix of the output fo
 parser.add_argument("--xtol", type=float, default=1e-6, help="Relative tolerance of VMLMB on the variables (default 1e-6)")
 parser.add_argument("--ftol", type=float, default=1e-8, help="Relative tolerance of VMLMB on the objective (default 1e-8); "
                     "results with another value are saved in a folder suffixed _ftol<value>")
+parser.add_argument("--ckpt", type=str, default=None,
+                    help="ExoMILD checkpoint (default exomild_H2, 6 terms); its config.yaml (two levels up) gives the terms it contains")
+parser.add_argument("--repeats", type=int, nargs=12, default=[1] * 12,
+                    help="active terms p8/p16/p32/p64 x s1/s2/s4 (default: the 12)")
 parser.add_argument("--flux", type=float, default=None, choices=[1e-6, 5e-6, 1e-5], help="Only this contrast (default: the 3 "
                     "contrasts); results saved in a folder suffixed _alpha<1em6|5em6|1em5>, other contrasts left at zero")
 args, remaining = parser.parse_known_args()
@@ -126,15 +130,15 @@ def main(cfg):
     # cfg_model.repeats = [1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0]
     # cfg_model.repeats = [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0]
     # cfg_model.repeats = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    cfg_model.repeats = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    cfg_model.repeats = list(args.repeats)
     cfg_model.use_dataparallel = False
     cfg_model.batch_size = 256 # None
     cfg_model.n_channels = 2
     # ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/1_asdi/2024-11-09_20-10-01/banger_ms_bs16_lr5e-4_unetnormal_aug_111_100_100_100_seed5/ckpt/ckpt_40000.pt"
-    ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/exomild_H2/ckpt/ckpt_40000.pt"
+    ckpt_path = pathlib.Path(args.ckpt) if args.ckpt else ROOT / "checkpoints_calib_exomild/checkpoints/exomild_H2/ckpt/ckpt_40000.pt"
     print(f"Loading checkpoint {ckpt_path}")
     # new_repeats = [1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0]
-    new_repeats = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    new_repeats = list(args.repeats)
     # new_repeats = [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0]
     # new_repeats = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     keep_indices = [i for i, v in enumerate(new_repeats) if v == 1]

@@ -18,12 +18,13 @@
 #   MODE=grid GS="<log10 mu_smooth ...>" GP="<log10 mu_sparse ...>" NAME=<n> bash sugar_iter.sh <shape> <flux> 0 0
 #       MSE / PSNR of the reconstructions of y (gradient of sum(x)) on the grid GS x GP
 #       -> results/sugar/<shape>_alpha<..>_angle0_<tag>_grid/grid_<n>.npz
+# CKPT (env): ExoMILD checkpoint (default exomild_H2). ANTERIOR (env): job id this one waits for.
 # EXTRA (env): additional options, e.g. EXTRA="--abs-grad" (gradient of sum|x| as run_bfgs) with TAG=sugariterabs.
 ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
 PY=$ROOT/.venv/bin/python
 P="cluster IN ('vercors10','vercors11','vercors12','vercors13')"
 TAG=${TAG:-sugarimp}
-BASE="--angle 0 --hvp-step 1e-2 --normalize --rec-ftol 0 --rec-xtol 1e-10 --tag $TAG $EXTRA"
+BASE="--angle 0 --hvp-step 1e-2 --normalize --rec-ftol 0 --rec-xtol 1e-10 --tag $TAG ${CKPT:+--ckpt $CKPT} $EXTRA"
 while [ $# -ge 4 ]; do
   shape=$1; flux=$2; sm=$3; sp=$4; shift 4
   tag=$(echo $flux | sed 's/e-/em/')
@@ -39,7 +40,7 @@ while [ $# -ge 4 ]; do
     name=sugariteropt_${shape}_${tag}; wall=168
     if [ "$MODE" = refine ]; then OPTS="$OPTS --refined --refined-iter $ITER"; name=sugarref${ITER}_${shape}_${tag}; fi
   fi
-  oarsub -l "gpu=1,walltime=$wall:00:00" -p "$P" -n "$name" \
+  oarsub -l "gpu=1,walltime=$wall:00:00" -p "$P" -n "$name" ${ANTERIOR:+-a $ANTERIOR} \
     "cd $ROOT && CUDA_VISIBLE_DEVICES=0 $PY scripts/run_results/syntheticdata_sugar_iter.py --flux $flux --shape $shape $OPTS" \
     | grep -o "OAR_JOB_ID=[0-9]*" | sed "s/^/$name: /"
 done

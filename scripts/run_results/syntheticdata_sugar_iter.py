@@ -102,6 +102,8 @@ parser.add_argument("--grid-smooth", type=float, nargs="*", default=None,
                          "at each couple and its MSE / PSNR -> <out>_grid/grid_<grid-name>.npz")
 parser.add_argument("--grid-sparse", type=float, nargs="*", default=None, help="grid mode: log10 mu_sparse values")
 parser.add_argument("--grid-name", type=str, default="0", help="grid mode: suffix of the output file (job splitting)")
+parser.add_argument("--ckpt", type=str, default=None,
+                    help="ExoMILD checkpoint (default exomild_H2, 6 terms); its config.yaml (two levels up) gives the terms it contains")
 parser.add_argument("--proj", choices=["learned", "random"], default="learned",
                     help="projections D of the terms: learned (checkpoint, terms absent from it random) or all random")
 parser.add_argument("--repeats", type=int, nargs=12, default=[1] * 12,
@@ -205,7 +207,7 @@ def main(cfg):
     cfg_model.batch_size = 256 #None
     cfg_model.n_channels = 2
     # ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/1_asdi/2024-11-09_20-10-01/banger_ms_bs16_lr5e-4_unetnormal_aug_111_100_100_100_seed5/ckpt/ckpt_40000.pt"
-    ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/exomild_H2/ckpt/ckpt_40000.pt"
+    ckpt_path = pathlib.Path(args.ckpt) if args.ckpt else ROOT / "checkpoints_calib_exomild/checkpoints/exomild_H2/ckpt/ckpt_40000.pt"
     print(f"Loading checkpoint {ckpt_path}")
     # new_repeats = [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0]
     new_repeats = list(args.repeats)
