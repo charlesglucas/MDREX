@@ -109,6 +109,10 @@ parser.add_argument("--proj", choices=["learned", "random"], default="learned",
 parser.add_argument("--repeats", type=int, nargs=12, default=[1] * 12,
                     help="active terms of the data term, in the order p8 (s1, s2, s4), p16 (...), p32 (...), p64 (...) "
                          "(patch size p, symmetry s); default: the 12 terms")
+parser.add_argument("--objtest", type=float, nargs=2, default=None,
+                    help="log10 (mu_smooth, mu_sparse): is the reconstruction the minimizer? objective at x_hat, at the "
+                         "ground truth and at x_hat with the true axisymmetric part, then reconstruction started from "
+                         "the ground truth")
 parser.add_argument("--bounds", type=float, nargs=4, default=[4, 10, 3, 9],
                     help="bounds of log10(mu_smooth) (2 values) and log10(mu_sparse) (2 values)")
 args, remaining = parser.parse_known_args()
@@ -341,13 +345,13 @@ def main(cfg):
         r_smooth, r_sparse = reg_grads(z)
         return np.array([r_smooth, r_sparse if args.abs_grad else np.ones_like(z)])
 
-    def reconstruct(yy, mu_smooth, mu_sparse, tangents=True, label=""):
+    def reconstruct(yy, mu_smooth, mu_sparse, tangents=True, label="", x0=None):
         # VMLMB from x = 0 (as run_bfgs: lower bound 0, mem 5, ftol / xtol of the reconstructions), with the tangents
         # d x / d (mu_smooth, mu_sparse) if tangents
         fg = lambda z: objective(z, yy, mu_smooth, mu_sparse)
         dg = dgrad_mu if tangents else (lambda z: np.zeros((0,) + z.shape))
         print(f"[rec{label}] mu_smooth={mu_smooth:.4e} mu_sparse={mu_sparse:.4e} tangents={tangents}", flush=True)
-        x, f, g, st, X, info = vmlmb_diff(fg, np.zeros((C, H, W)), dg, lower=0.0, ftol=args.rec_ftol, xtol=args.rec_xtol,
+        x, f, g, st, X, info = vmlmb_diff(fg, np.zeros((C, H, W)) if x0 is None else x0, dg, lower=0.0, ftol=args.rec_ftol, xtol=args.rec_xtol,
                                           gtol=1e-5, hvp_step=args.hvp_step, central=args.central,
                                           freeze_metric=not args.full_metric, verb=args.rec_verb)
         free = optm.unblocked_variables(x, 0.0, None, g)
@@ -500,6 +504,45 @@ def main(cfg):
                  mu_opt=10.0 ** theta, success=status in (optm.FTEST_SATISFIED, optm.GTEST_SATISFIED, optm.XTEST_SATISFIED),
                  message=str(message), optimizer="vmlmb")
         return theta
+
+    if args.objtest:
+        # Is a poor reconstruction a failure of the minimization or of the objective? If F(x_hat) < F(x_gt) and the
+        # reconstruction started from x_gt leaves it for (about) x_hat, the algorithm does its job and the objective
+        # prefers x_hat; if F(x_gt) < F(x_hat), or the start from x_gt ends lower, the minimization is at fault.
+        ts, tp = args.objtest
+        ms, mp = 10.0 ** ts, 10.0 ** tp
+        yy_, xx_ = np.mgrid[:H, :W]
+        rr = np.rint(np.hypot(yy_ - 126.5, xx_ - 126.5)).astype(int)
+        cnt = np.bincount(rr.ravel())
+        axi = lambda z: np.stack([(np.bincount(rr.ravel(), c.ravel()) / np.maximum(cnt, 1))[rr] for c in z])
+        g_np = x_gt.cpu().numpy().astype(np.float64)
+
+        def parts(z, lab):
+            data = objective(z, y, 0.0, 0.0)[0]
+            zt = torch.tensor(z, dtype=torch.float64, device=device)
+            r_sm, r_sp = mdrex.l2_l1_edge_preserving_2d(zt).item(), mdrex.l2_l1_sparse_2d(zt).item()
+            F = data + ms * r_sm + mp * r_sp
+            e = z - g_np
+            ps = lambda u: -20 * np.log10(np.linalg.norm(u) / np.linalg.norm(g_np))
+            print(f"[objtest] {lab:34s} F {F:.8e}  data {data:.8e}  mu_smooth R_smooth {ms * r_sm:.4e}  "
+                  f"mu_sparse R_sparse {mp * r_sp:.4e}  PSNR {ps(e):.2f}  (non-axi {ps(e - axi(e)):.2f}, axi {ps(axi(e)):.2f})  "
+                  f"MSE {quality(z)[0]:.4e}", flush=True)
+            return F
+
+        x_hat = reconstruct(y, ms, mp, False, " from 0")[0]
+        F_hat = parts(x_hat, "x_hat (from x = 0)")
+        F_gt = parts(g_np, "ground truth")
+        parts(np.maximum(x_hat - axi(x_hat) + axi(g_np), 0.0), "x_hat with the true axi part")
+        parts(np.maximum(g_np - axi(g_np) + axi(x_hat), 0.0), "ground truth with the axi part of x_hat")
+        x_from_gt = reconstruct(y, ms, mp, False, " from x_gt", x0=g_np.copy())[0]
+        F_from_gt = parts(x_from_gt, "x_hat (from the ground truth)")
+        d = np.linalg.norm(x_from_gt - x_hat) / np.linalg.norm(x_hat)
+        print(f"[objtest] F(x_hat) - F(x_gt) = {F_hat - F_gt:.4e}; F(from x_gt) - F(from 0) = {F_from_gt - F_hat:.4e}; "
+              f"||x(from x_gt) - x(from 0)|| / ||x(from 0)|| = {d:.3e}", flush=True)
+        out_dir = out_dir.with_name(out_dir.name + "_objtest")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        np.savez(out_dir / f"objtest_{ts:.3f}_{tp:.3f}.npz", x_hat=x_hat.astype(np.float32), x_from_gt=x_from_gt.astype(np.float32))
+        sys.exit(0)
 
     if args.grid_smooth:
         # MSE / PSNR of the reconstructions (gradient of sum(x) unless --abs-grad) on a grid of couples, to locate the

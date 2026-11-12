@@ -31,6 +31,9 @@ while [ $# -ge 4 ]; do
   if [ "${MODE:-check}" = check ]; then
     OPTS="$BASE --check --check-mu $sm $sp --check-steps 0.05 0.15 --check-repeats 1 --check-cg 80 320 640 --cg-rtol 0"
     name=sugariterchk_${shape}_${tag}; wall=36
+  elif [ "$MODE" = objtest ]; then   # <mu_smooth> <mu_sparse> given in log10: see --objtest
+    OPTS="$BASE --objtest $sm $sp"
+    name=objtest_${shape}_${tag}; wall=12
   elif [ "$MODE" = grid ]; then
     OPTS="$BASE --grid-smooth $GS --grid-sparse $GP --grid-name ${NAME:-0}"
     name=sugargrid_${shape}_${tag}_${NAME:-0}; wall=${WALL:-10}
