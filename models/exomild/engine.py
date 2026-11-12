@@ -2132,7 +2132,8 @@ class EngineSpatial(nn.Module):
         C_inv = bg_params["C_inv"]
         # C_inv = C_inv.expand(-1, -1, CT, -1, -1, -1)
         # (bs, bsp, Tm, G, fsp, fsp)
-        bs, bsp, Tm, G, fsp, _ = C_inv.shape
+        # Tm of the mean kept (per-frame mean of the per-lambda temporal mean: Tm = CT); C_inv is shared by the frames
+        bs, bsp, _, G, fsp, _ = C_inv.shape
         # print(f"{C_inv.shape=}")
         # breakpoint()
 
