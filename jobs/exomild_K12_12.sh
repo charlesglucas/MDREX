@@ -1,6 +1,6 @@
 #!/bin/bash
 # ExoMILD with the 12 terms (p8/p16/p32/p64 x s1/s2/s4) trained with the code of this repository (engine used by MD-REX);
-# GPU >= 45 GB (24 GB: out of memory); same settings as exomild_H2_12 but K12 observations (dual_filter DB_K12, validation / detection observation in K12); outputs in data/run/train/<date>/exomild_K12_12
+# GPU >= 45 GB (24 GB: out of memory); same settings as exomild_H2_12 but K12 observations (dual_filter DB_K12, validation observation in K12; the detection evaluation keeps its four H23 observations, hardcoded in detection/utils.py); outputs in data/run/train/<date>/exomild_K12_12
 C=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes
 R=$C/EXMILDPACO
 DB=$R/data/db_new
@@ -18,6 +18,5 @@ oarsub -l "gpu=1,walltime=40:00:00" -p "gpu_mem >= 45000" -n "exomild_K12_12" \
     model.repeats=[1,1,1,1,1,1,1,1,1,1,1,1] \
     data.train.dataset_params_train.filter_obs_params.dual_filter=DB_K12 \
     data.train.dataset_params_val.filter_obs_params.dual_filter=DB_K12 \
-    data.train.dataset_params_val.filter_obs_params.obs_id=$VAL data.detection.obs_id=$VAL \
-    data.detection.dataset_params.filter_obs_params.dual_filter=DB_K12 \
+    data.train.dataset_params_val.filter_obs_params.obs_id=$VAL \
     data.train.dataset_params_train.path_db=$DB data.train.dataset_params_val.path_db=$DB data.detection.dataset_params.path_db=$DB"
