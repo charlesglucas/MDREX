@@ -32,6 +32,7 @@ def load_split(path_db, **filter_obs_params):
 
 FILTERS = ["DB_H23", "DB_K12", "DB_Y23", "DB_J23", "BB_H", "DB_NDH23"]
 LBDAS_IRDIS = [1.593, 1.667]
+LBDAS_FILTER = {"DB_H23": [1.593, 1.667], "DB_K12": [2.110, 2.251], "DB_J23": [1.19, 1.273], "BB_H": [1.625, 1.625]}
 
 
 class LMDBDataset(Dataset):
@@ -547,9 +548,12 @@ class LMDBDataset(Dataset):
                 idx_clip = idx
             channel_idx = [channel_idx]
 
-        lbda = np.array([LBDAS_IRDIS[c] for c in channel_idx])
-
         obs_id = self.all_clips.iloc[idx_clip].obs_id
+        # wavelengths of the dual band of the observation (before 2026-11-13: H23 for every observation)
+        if not hasattr(self, "_lbdas_obs"):
+            self._lbdas_obs = {o: LBDAS_FILTER.get(str(f).strip(), LBDAS_IRDIS)
+                               for o, f in zip(self.df_global.obs_id, self.df_global.infrared_filter)}
+        lbda = np.array([self._lbdas_obs.get(obs_id, LBDAS_IRDIS)[c] for c in channel_idx])
         frame_idx = self.all_clips.iloc[idx_clip].frame_idx
         quality = self.all_clips.iloc[idx_clip].frame_quality
         idx_obs = self.obs_unique.index(obs_id)
