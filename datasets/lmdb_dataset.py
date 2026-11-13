@@ -290,7 +290,9 @@ class LMDBDataset(Dataset):
                 mask_split_na = self.df_global.split.isna()
                 df_na = self.df_global[mask_split_na]
                 print(df_na[["obs_id", "split"]].to_string())
-                breakpoint()
+                # observations without a split (e.g. K12: HD_95086__2016-05-30) are left out instead of stopping
+                print(f"[LMDBDataset] {int(mask_split_na.sum())} observation(s) without split: dropped")
+                self.df_global = self.df_global[~mask_split_na]
             assert not self.df_global.split.isna().any()
             print(f"N observations: {len(self.df_global)}")
             print(
