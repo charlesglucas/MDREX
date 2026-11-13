@@ -115,6 +115,8 @@ parser.add_argument("--objtest", type=float, nargs=2, default=None,
                          "the ground truth")
 parser.add_argument("--frozen", action="store_true",
                     help="with --objtest (already run): data term with the statistics frozen on a reference image")
+parser.add_argument("--star", type=str, default="HIP_72192/2015-06-11",
+                    help="observation the disk is injected in: <star>/<date> under data/nuisances")
 parser.add_argument("--bounds", type=float, nargs=4, default=[4, 10, 3, 9],
                     help="bounds of log10(mu_smooth) (2 values) and log10(mu_sparse) (2 values)")
 args, remaining = parser.parse_known_args()
@@ -149,14 +151,8 @@ def main(cfg):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Load only selected frames
-    path_folder = ROOT / "data/nuisances/HIP_72192/2015-06-11/IRDIS/data"
-    path_frame = ROOT / "data/nuisances/HIP_72192/2015-06-11/IRDIS/frame_selection_vector/"
-    hdul = fits.open(path_frame / "ird_sortframes_vector_dc-IRD_FRAME_SELECTION_VECTOR-frame_selection_vector.fits")
-    frames = hdul[0].data
-
-    # Indices of frames to keep
-    frames = np.asarray(frames).reshape(-1)
-    idx = np.where(frames == 1)[0]
+    # observation the disk is injected in: data/nuisances/<star>/<date> (--star, default HIP 72192, K12)
+    path_folder = ROOT / "data/nuisances" / args.star / "IRDIS/data"
 
     ## Load data
     inputs = load_folder(path_folder=path_folder, use_centered=False, channel_sortframes=0, channel_idx=None,)
@@ -193,7 +189,9 @@ def main(cfg):
     
     # Load coronograph mask
     path_coronograph = ROOT / "data/coronograph"
-    k1k2_path = os.path.join(path_coronograph,"sphere_irdis_k1_k2_coronagraph_transmission_map.fits")
+    band = "h2_h3" if float(lbda.max()) < 2.0 else "k1_k2"   # transmission map of the dual band of the observation
+    print(f"[data] {args.star}: lambda = {lbda.flatten().tolist()}, T = {T}, transmission map {band}", flush=True)
+    k1k2_path = os.path.join(path_coronograph, f"sphere_irdis_{band}_coronagraph_transmission_map.fits")
     with fits.open(k1k2_path, memmap=False) as hdul:
             mask = np.array(hdul[0].data, dtype=np.float32)
     deltaH = (mask.shape[1] - H) // 2; deltaW = (mask.shape[2] - W) // 2; 
@@ -300,7 +298,7 @@ def main(cfg):
     from reconstruction.sugar import sugar_gradient, hvp_symmetry_test, edge_preserving_hess
     from reconstruction.sugar_iterative import vmlmb_diff, sugar_iterative
 
-    fm, to_patches, centered = M.load_forward_model(device)
+    fm, to_patches, centered = M.load_forward_model(device, rot=rot, psf_crop=psf_crop, mask=mask, lbda=lbda)
     with torch.no_grad():
         C_inv_y = M.shrinkage_cov_inv(centered(to_patches(y)))                 # metric of MC-SURE (from the data)
         C_inv_gt = M.shrinkage_cov_inv(centered(to_patches(y - fm(x_gt))))    # oracle metric of the MSE

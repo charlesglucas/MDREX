@@ -66,7 +66,7 @@ def sci_colorbar(cbar, nbins=4, decimals=2):
 # Forward model and patch statistics (same as reconstruction/mdrex.py)
 # ------------------------------------------------------------
 
-def load_forward_model(device):
+def _default_observation(device):
     path_folder = ROOT / "data/nuisances/HIP_72192/2015-06-11/IRDIS/data"
     rot = fits.getdata(path_folder / "ird_convert_recenter_dc_IRD_SCIENCE_PARA_ROTATION_CUBE_rotnth.fits").flatten()
     psf = fits.getdata(path_folder / "ird_sortframes_dc-IRD_SCIENCE_PSF_MASTER_CUBE-median_unsat.fits")
@@ -97,6 +97,17 @@ def load_forward_model(device):
     mask = torch.tensor(mask[:, deltaH:deltaH+H, deltaH:deltaH+H], device=device)  # (C, H, W)
     batch_rotation = BatchRotationOperator(device=device, in_size=H, out_size=H, mode="bicubic", zero_init=True)
     rot = rot.expand(C, -1)  # (C, T)
+    return rot, psf_crop, mask, lbda, C, T, H, batch_rotation
+
+
+def load_forward_model(device, rot=None, psf_crop=None, mask=None, lbda=None):
+    """Default: HIP 72192 (K12). Another observation: pass its rot (C, T), psf_crop (C, 1, k, k), mask (C, H, W) and
+    lbda (1, C) as built by scripts/run_results/syntheticdata_sugar_iter.py."""
+    if rot is not None:
+        C, T, H = rot.shape[0], rot.shape[1], mask.shape[-1]
+        batch_rotation = BatchRotationOperator(device=device, in_size=H, out_size=H, mode="bicubic", zero_init=True)
+    else:
+        rot, psf_crop, mask, lbda, C, T, H, batch_rotation = _default_observation(device)
 
     def forward_model(x):  # (C, H, W) -> (1, C, T, H, W)
         im = x.unsqueeze(0).expand(T, -1, -1, -1).permute(1, 0, 2, 3)  # (C, T, H, W)
