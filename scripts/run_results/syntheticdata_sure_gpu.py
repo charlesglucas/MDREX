@@ -20,6 +20,8 @@ parser.add_argument("--double", action="store_true", help="reconstructions and M
 parser.add_argument("--redo-div", type=str, default=None,
                     help="existing result file: its reconstruction x_hat is kept and only MC-SURE (perturbed reconstruction, "
                          "Monte Carlo vector drawn on the CPU) is recomputed")
+parser.add_argument("--ckpt", type=str, default=None, help="ExoMILD checkpoint whose learned projections are loaded "
+                    "(default: exomild_H2, projections left random as in the grids of 2026-10/11)")
 parser.add_argument("--tag", type=str, default="", help="Suffix of the output folder, e.g. gradC -> grid_sure_<shape>_alpha<flux>_gradC")
 args, remaining = parser.parse_known_args()
 # Remove parsed args so Hydra doesn't complain.
@@ -120,7 +122,7 @@ def main(cfg):
     cfg_model.batch_size = 256 #None
     cfg_model.n_channels = 2
     # ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/1_asdi/2024-11-09_20-10-01/banger_ms_bs16_lr5e-4_unetnormal_aug_111_100_100_100_seed5/ckpt/ckpt_40000.pt"
-    ckpt_path = ROOT / "checkpoints_calib_exomild/checkpoints/exomild_H2/ckpt/ckpt_40000.pt"
+    ckpt_path = pathlib.Path(args.ckpt) if args.ckpt else ROOT / "checkpoints_calib_exomild/checkpoints/exomild_H2/ckpt/ckpt_40000.pt"
     print(f"Loading checkpoint {ckpt_path}")
     # new_repeats = [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0]
     new_repeats = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
@@ -150,6 +152,9 @@ def main(cfg):
     model.load_state_dict(state_cleaned, strict=False)
     model_state = model.state_dict()
     del model
+    # learned projections D of the checkpoint (--ckpt), by term; without --ckpt: random, as before 2026-11-11
+    from reconstruction.load_exomild import remap_learned_projections
+    model_state = remap_learned_projections(ckpt_path, cfg_model.repeats, model_state, learned=args.ckpt is not None)
 
     # ------------------------------------------------------------
     # 3. Ground truth loading
