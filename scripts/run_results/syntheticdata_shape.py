@@ -19,6 +19,8 @@ parser.add_argument("--repeats", type=int, nargs=12, default=[1] * 12,
                     help="active terms p8/p16/p32/p64 x s1/s2/s4 (default: the 12)")
 parser.add_argument("--flux", type=float, default=None, choices=[1e-6, 5e-6, 1e-5], help="Only this contrast (default: the 3 "
                     "contrasts); results saved in a folder suffixed _alpha<1em6|5em6|1em5>, other contrasts left at zero")
+parser.add_argument("--star", type=str, default="HIP_72192/2015-06-11",
+                    help="observation the disks are injected in: <star>/<date> under data/nuisances")
 args, remaining = parser.parse_known_args()
 # Remove parsed args so Hydra doesn't complain.
 sys.argv = [sys.argv[0]] + remaining
@@ -69,14 +71,8 @@ def main(cfg):
     # ------------------------------------------------------------
     
     # Load only selected frames
-    path_folder = ROOT / "data/nuisances/HIP_72192/2015-06-11/IRDIS/data"
-    path_frame = ROOT / "data/nuisances/HIP_72192/2015-06-11/IRDIS/frame_selection_vector/"
-    hdul = fits.open(path_frame / "ird_sortframes_vector_dc-IRD_FRAME_SELECTION_VECTOR-frame_selection_vector.fits")
-    frames = hdul[0].data
-
-    # Indices of frames to keep
-    frames = np.asarray(frames).reshape(-1)
-    idx = np.where(frames == 1)[0]
+    # observation the disks are injected in: data/nuisances/<star>/<date> (--star, default HIP 72192, K12)
+    path_folder = ROOT / "data/nuisances" / args.star / "IRDIS/data"
 
     ## Load data
     inputs = load_folder(path_folder=path_folder, use_centered=False, channel_sortframes=0, channel_idx=None,)
@@ -113,7 +109,9 @@ def main(cfg):
     
     # Load coronograph mask
     path_coronograph = ROOT / "data/coronograph"
-    k1k2_path = os.path.join(path_coronograph,"sphere_irdis_k1_k2_coronagraph_transmission_map.fits")
+    band = "h2_h3" if float(lbda.max()) < 2.0 else "k1_k2"   # transmission map of the dual band of the observation
+    print(f"[data] {args.star}: lambda = {lbda.flatten().tolist()}, T = {T}, transmission map {band}", flush=True)
+    k1k2_path = os.path.join(path_coronograph, f"sphere_irdis_{band}_coronagraph_transmission_map.fits")
     with fits.open(k1k2_path, memmap=False) as hdul:
         mask = np.array(hdul[0].data, dtype=np.float32)
     deltaH = (mask.shape[1] - H) // 2; deltaW = (mask.shape[2] - W) // 2; 

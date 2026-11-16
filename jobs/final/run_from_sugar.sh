@@ -8,7 +8,7 @@
 ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
 PY=$ROOT/.venv/bin/python
 #   4th argument (optional): refined stage, refined (default) or refined<k> (k-th fixed-point iteration), tag rhofix<k>
-#   CKPT (env): ExoMILD checkpoint (default exomild_H2)
+#   CKPT (env): ExoMILD checkpoint (default exomild_H2); STAR (env): <star>/<date> under data/nuisances (default HIP 72192)
 #   SUGAR_TAG (env, default rhofixfp): MC-SUGAR series; rhofixcpu (CPU probe, sugar_cpu_chain.sh) -> tag rhofixcpu<k>
 kind=$1; shape=$2; flux=$3; stage=${4:-refined}
 SUGAR_TAG=${SUGAR_TAG:-rhofixfp}
@@ -34,7 +34,7 @@ echo "$kind $shape $flux: mu = ($sm, $sp) from $traj"
 cd $ROOT
 if [ $kind = table1 ]; then
   CUDA_VISIBLE_DEVICES=0 $PY scripts/run_results/syntheticdata_shape.py --mu-smooth $sm --mu-sparse $sp --shape $shape \
-    --flux $flux --ftol 0 --xtol 1e-10 --tag $otag ${CKPT:+--ckpt $CKPT}
+    --flux $flux --ftol 0 --xtol 1e-10 --tag $otag ${CKPT:+--ckpt $CKPT} ${STAR:+--star $STAR}
 else
   CUDA_VISIBLE_DEVICES=0 $PY scripts/run_results/syntheticdata_distributions.py --mu-smooth $sm --mu-sparse $sp \
     --shape $shape --ftol 0 --xtol 1e-10 --tag $otag
