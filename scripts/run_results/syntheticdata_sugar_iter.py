@@ -117,6 +117,14 @@ parser.add_argument("--frozen", action="store_true",
                     help="with --objtest (already run): data term with the statistics frozen on a reference image")
 parser.add_argument("--star", type=str, default="HIP_72192/2015-06-11",
                     help="observation the disk is injected in: <star>/<date> under data/nuisances")
+parser.add_argument("--gsure", choices=["perturb", "eval"], default=None,
+                    help="weighted GSURE (Eldar 2009) on the grid --grid-smooth x --grid-sparse, x_hat read from "
+                         "<out>_grid/: 'perturb' reconstructs x_hat(y + eps delta) -> <out>_gsure/xeps_<ts>_<tp>.npz; "
+                         "'eval' computes GSURE and the oracle weighted MSE (x_hat - x)^T W (x_hat - x) in the space of x")
+parser.add_argument("--gsure-eps", type=float, default=0.1, help="step of the GSURE perturbation (fraction of the noise)")
+parser.add_argument("--gsure-kappa", type=float, nargs="*", default=[1e-1, 1e-2, 1e-3, 1e-4],
+                    help="tau / lambda_max(G) of the weight W = G (G + tau I)^-1")
+parser.add_argument("--gsure-cg", type=int, default=1000, help="maximum CG iterations of the (G + tau I) solves")
 parser.add_argument("--bounds", type=float, nargs=4, default=[4, 10, 3, 9],
                     help="bounds of log10(mu_smooth) (2 values) and log10(mu_sparse) (2 values)")
 args, remaining = parser.parse_known_args()
@@ -599,6 +607,112 @@ def main(cfg):
               f"||x(from x_gt) - x(from 0)|| / ||x(from 0)|| = {d:.3e}", flush=True)
         out_dir.mkdir(parents=True, exist_ok=True)
         np.savez(out_dir / f"objtest_{ts:.3f}_{tp:.3f}.npz", x_hat=x_hat.astype(np.float32), x_from_gt=x_from_gt.astype(np.float32))
+        sys.exit(0)
+
+    if args.gsure:
+        # Weighted GSURE (Eldar 2009): risk in the space of x (that of the PSNR) instead of the data space of MC-SURE.
+        # Linear model z = Q y = L x + n, Q = centered(to_patches(.)) (temporal centering: the static speckle and the
+        # axisymmetric part of x drop out), L = Q A, n ~ N(0, C) with the fixed metric C^-1 = C_inv_y of MC-SURE.
+        # G = L^T C^-1 L is singular (axisymmetric part, frequencies cut by the PSF, coronagraph): only a projected risk
+        # can be estimated. Weight W = G (G + tau I)^-1 (= projector on range(L^T) as tau -> 0, regularized so that the
+        # PSF is not inverted): with x_tau = (G + tau I)^-1 L^T C^-1 z = W x + B w, B = (G + tau I)^-1 L^T C^-1 Q,
+        #   E (x_hat - x)^T W (x_hat - x) = E [x_hat^T W x_hat - 2 x_hat^T x_tau + 2 tr(J Sigma B^T)] + x^T W x,
+        # J = d x_hat / d y, Sigma = covariance of the noise in y. Monte Carlo: delta ~ N(0, Sigma), m = B delta,
+        # tr(J Sigma B^T) ~ m^T (x_hat(y + eps delta) - x_hat(y)) / eps. delta: random mixtures of the centered frames
+        # of each channel, i.e. N(0, S_c x I_T) given the data (S_c: sample covariance of the frames of channel c).
+        grid_dir = out_dir.with_name(out_dir.name + "_grid")
+        gs_dir = out_dir.with_name(out_dir.name + "_gsure")
+        gs_dir.mkdir(parents=True, exist_ok=True)
+        gen_g = torch.Generator(device="cpu").manual_seed(args.seed + 1)
+        with torch.no_grad():
+            r0 = (y - y.mean(dim=2, keepdim=True))[0]                                   # (C, T, H, W)
+            mix = (torch.randn((C, T, T), generator=gen_g, dtype=torch.float32) / np.sqrt(T)).to(device)
+            dlt = torch.einsum("cts,cshw->cthw", mix, r0).unsqueeze(0)                 # (1, C, T, H, W)
+            del r0
+        nm = lambda ts, tp: f"{ts:.3f}_{tp:.3f}"
+        if args.gsure == "perturb":
+            y_g = y + args.gsure_eps * dlt
+            for ts in args.grid_smooth:
+                for tp in args.grid_sparse:
+                    f = gs_dir / f"xeps_{nm(ts, tp)}.npz"
+                    if f.exists():
+                        continue
+                    x_e, st, _, info = reconstruct(y_g, 10.0 ** ts, 10.0 ** tp, False, " gsure")
+                    np.savez(f, x=np.asarray(x_e, dtype=np.float32), status=str(st), eps=args.gsure_eps)
+                    print(f"[gsure] ({ts:.3f}, {tp:.3f}) x_hat(y + eps delta) saved (status {st})", flush=True)
+            sys.exit(0)
+
+        Cinv = C_inv_y
+        Lop = lambda v: centered(to_patches(fm(v)))
+        Cm = lambda z: torch.einsum("lfg,ltg->ltf", Cinv, z)
+
+        def Lt(z):   # adjoint of the linear operator L by automatic differentiation
+            with torch.enable_grad():
+                v = torch.zeros((C, H, W), dtype=torch.float32, device=device, requires_grad=True)
+                (g,) = torch.autograd.grad(Lop(v), v, grad_outputs=z.detach())
+            return g.detach().double()
+
+        def Gop(v):
+            with torch.no_grad():
+                z = Cm(Lop(v.float()))
+            return Lt(z)
+
+        def cg(Aop, b, rtol=1e-6):
+            xk = torch.zeros_like(b); rk = b.clone(); p = rk.clone(); rs = (rk * rk).sum(); b2 = rs.clone()
+            for k in range(args.gsure_cg):
+                Ap = Aop(p); a = rs / (p * Ap).sum()
+                xk += a * p; rk -= a * Ap; rs_new = (rk * rk).sum()
+                if rs_new <= rtol ** 2 * b2:
+                    break
+                p = rk + (rs_new / rs) * p; rs = rs_new
+            return xk, k + 1, float((rs_new / b2).sqrt())
+
+        with torch.no_grad():
+            b_y = Lt(Cm(centered(to_patches(y))))
+            b_d = Lt(Cm(centered(to_patches(dlt))))
+        v = torch.randn((C, H, W), generator=gen_g, dtype=torch.float64).to(device)
+        for _ in range(30):   # largest eigenvalue of G (power iteration)
+            w = Gop(v); lam = float(w.norm() / v.norm()); v = w / w.norm()
+        print(f"[gsure] lambda_max(G) = {lam:.4e}", flush=True)
+
+        couples = [(ts, tp) for ts in args.grid_smooth for tp in args.grid_sparse
+                   if (grid_dir / f"x_{nm(ts, tp)}.npz").exists() and (gs_dir / f"xeps_{nm(ts, tp)}.npz").exists()]
+        X = {c: torch.tensor(np.load(grid_dir / f"x_{nm(*c)}.npz")["x"], dtype=torch.float64, device=device) for c in couples}
+        XE = {c: torch.tensor(np.load(gs_dir / f"xeps_{nm(*c)}.npz")["x"], dtype=torch.float64, device=device) for c in couples}
+        Q3 = {c: quality(X[c].float().cpu().numpy()) for c in couples}   # (data-space MSE, PSNR, PSNR support)
+        xg = x_gt.double()
+        out = {"couples": np.array(couples), "psnr": np.array([Q3[c][1] for c in couples]),
+               "psnr_supp": np.array([Q3[c][2] for c in couples]), "mse_data": np.array([Q3[c][0] for c in couples]),
+               "mse_x": np.array([float(((X[c] - xg) ** 2).sum()) for c in couples]), "kappa": np.array(args.gsure_kappa),
+               "lambda_max": lam}
+        print(f"[gsure] {len(couples)} couples", flush=True)
+        for kap in args.gsure_kappa:
+            tau = kap * lam
+            Aop = lambda u: Gop(u) + tau * u
+            x_tau, it1, r1 = cg(Aop, b_y)
+            m, it2, r2 = cg(Aop, b_d)
+            Wx, it3, r3 = cg(Aop, Gop(xg))
+            xWx = float((xg * Wx).sum())
+            print(f"[gsure] kappa {kap:.0e}: CG {it1} / {it2} / {it3} iterations (residuals {r1:.1e} {r2:.1e} {r3:.1e}); "
+                  f"x^T W x / x^T x = {xWx / float((xg * xg).sum()):.3f}; ||x_tau - W x|| / ||W x|| = "
+                  f"{float((x_tau - Wx).norm() / Wx.norm()):.3f}", flush=True)
+            orc, gsu, div = [], [], []
+            for c in couples:
+                Wxh = cg(Aop, Gop(X[c]))[0]
+                q = float((X[c] * Wxh).sum())
+                d = float((m * (XE[c] - X[c])).sum()) / args.gsure_eps
+                orc.append(q - 2 * float((X[c] * Wx).sum()) + xWx)
+                gsu.append(q - 2 * float((X[c] * x_tau).sum()) + 2 * d + xWx)
+                div.append(2 * d)
+                print(f"[gsure] kappa {kap:.0e} ({c[0]:.3f}, {c[1]:.3f}): PSNR {Q3[c][1]:.2f} / {Q3[c][2]:.2f}  "
+                      f"oracle W-MSE {orc[-1]:.4e}  GSURE {gsu[-1]:.4e}  (2 div {2 * d:.4e})", flush=True)
+            out[f"oracle_{kap:.0e}"], out[f"gsure_{kap:.0e}"], out[f"div2_{kap:.0e}"] = map(np.array, (orc, gsu, div))
+            out[f"xWx_{kap:.0e}"] = xWx
+            i_o, i_g, i_p = int(np.argmin(orc)), int(np.argmin(gsu)), int(np.argmax(out["psnr"]))
+            print(f"[gsure] kappa {kap:.0e}: min oracle W-MSE at {couples[i_o]} (PSNR {out['psnr'][i_o]:.2f}), "
+                  f"min GSURE at {couples[i_g]} (PSNR {out['psnr'][i_g]:.2f}), max PSNR at {couples[i_p]} "
+                  f"({out['psnr'][i_p]:.2f})", flush=True)
+            np.savez(gs_dir / "gsure_eval.npz", **out)
         sys.exit(0)
 
     if args.grid_smooth:

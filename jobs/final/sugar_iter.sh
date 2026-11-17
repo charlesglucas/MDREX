@@ -34,6 +34,9 @@ while [ $# -ge 4 ]; do
   elif [ "$MODE" = objtest ]; then   # <mu_smooth> <mu_sparse> given in log10: see --objtest
     OPTS="$BASE --objtest $sm $sp"
     name=objtest_${shape}_${tag}; wall=12
+  elif [ "$MODE" = gsure ]; then   # GSTEP=perturb (x_hat(y + eps delta) on GS x GP) or eval (GSURE vs oracle W-MSE)
+    OPTS="$BASE --gsure ${GSTEP:-perturb} --grid-smooth $GS --grid-sparse $GP"
+    name=gsure${GSTEP:-perturb}_${shape}_${tag}_${NAME:-0}; wall=${WALL:-10}
   elif [ "$MODE" = grid ]; then
     OPTS="$BASE --grid-smooth $GS --grid-sparse $GP --grid-name ${NAME:-0}"
     name=sugargrid_${shape}_${tag}_${NAME:-0}; wall=${WALL:-10}
