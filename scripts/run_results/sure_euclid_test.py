@@ -63,7 +63,8 @@ for r in rows:
             e = QAxh - QAx
             # mu-dependent part of SURE - oracle = 2 div_MC - 2 w^T P Q A x_hat: Monte Carlo divergence vs its target
             res[k].append((sure, float((e * Pk(e)).sum()), float((2 / eps) * (Qd * Pk(QAxe - QAxh)).sum()),
-                           float(2 * (w * Pk(QAxh)).sum())))
+                           float(2 * (w * Pk(QAxh)).sum()),
+                           float((QAxh * Pk(QAx)).sum() / (QAx * Pk(QAx)).sum()), float(2 * (w * Pk(QAx)).sum())))
     cpl.append((r[0], r[1], r[3]))
 cpl = np.array(cpl)
 print(f"== {shape} {flux}: {len(cpl)} couples, max PSNR at ({cpl[np.argmax(cpl[:, 2]), 0]:.2f}, "
@@ -77,3 +78,7 @@ for k in P:
           f"{np.corrcoef(np.argsort(np.argsort(a[:, 0])), np.argsort(np.argsort(a[:, 1])))[0, 1]:.2f}", flush=True)
     print(f"          2 div_MC spread {np.ptp(a[:, 2]):.3e}, 2 w^T P QAx_hat spread {np.ptp(a[:, 3]):.3e}, their difference "
           f"spread {np.ptp(a[:, 2] - a[:, 3]):.3e}, correlation {np.corrcoef(a[:, 2], a[:, 3])[0, 1]:.2f}", flush=True)
+    pred = a[:, 4] * a[:, 5]   # c(mu) * 2 w^T P Q A x: part of the noise term carried by the reconstructed disk itself
+    print(f"          c(mu) = <QAx_hat, QAx>_P / |QAx|_P^2 in [{a[:, 4].min():.2f}, {a[:, 4].max():.2f}]; 2 w^T P QAx = "
+          f"{a[0, 5]:.3e}; c(mu) * 2 w^T P QAx: spread {np.ptp(pred):.3e}, share of the variance of the noise term "
+          f"{1 - np.var(a[:, 3] - pred) / np.var(a[:, 3]):.2f}", flush=True)
