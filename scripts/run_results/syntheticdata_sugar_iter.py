@@ -670,10 +670,6 @@ def main(cfg):
         with torch.no_grad():
             b_y = Lt(Cm(centered(to_patches(y))))
             b_d = Lt(Cm(centered(to_patches(dlt))))
-        v = torch.randn((C, H, W), generator=gen_g, dtype=torch.float64).to(device)
-        for _ in range(30):   # largest eigenvalue of G (power iteration)
-            w = Gop(v); lam = float(w.norm() / v.norm()); v = w / w.norm()
-        print(f"[gsure] lambda_max(G) = {lam:.4e}", flush=True)
 
         couples = [(ts, tp) for ts in args.grid_smooth for tp in args.grid_sparse
                    if (grid_dir / f"x_{nm(ts, tp)}.npz").exists() and (gs_dir / f"xeps_{nm(ts, tp)}.npz").exists()]
@@ -683,36 +679,51 @@ def main(cfg):
         xg = x_gt.double()
         out = {"couples": np.array(couples), "psnr": np.array([Q3[c][1] for c in couples]),
                "psnr_supp": np.array([Q3[c][2] for c in couples]), "mse_data": np.array([Q3[c][0] for c in couples]),
-               "mse_x": np.array([float(((X[c] - xg) ** 2).sum()) for c in couples]), "kappa": np.array(args.gsure_kappa),
-               "lambda_max": lam}
+               "mse_x": np.array([float(((X[c] - xg) ** 2).sum()) for c in couples]),
+               "mse_mean": np.array([float(((X[c].mean(0) - xg[0]) ** 2).sum()) for c in couples]),
+               "kappa": np.array(args.gsure_kappa)}
         print(f"[gsure] {len(couples)} couples", flush=True)
-        for kap in args.gsure_kappa:
-            tau = kap * lam
-            Aop = lambda u: Gop(u) + tau * u
-            x_tau, it1, r1 = cg(Aop, b_y)
-            m, it2, r2 = cg(Aop, b_d)
-            Wx, it3, r3 = cg(Aop, Gop(xg))
-            xWx = float((xg * Wx).sum())
-            print(f"[gsure] kappa {kap:.0e}: CG {it1} / {it2} / {it3} iterations (residuals {r1:.1e} {r2:.1e} {r3:.1e}); "
-                  f"x^T W x / x^T x = {xWx / float((xg * xg).sum()):.3f}; ||x_tau - W x|| / ||W x|| = "
-                  f"{float((x_tau - Wx).norm() / Wx.norm()):.3f}", flush=True)
-            orc, gsu, div = [], [], []
-            for c in couples:
-                Wxh = cg(Aop, Gop(X[c]))[0]
-                q = float((X[c] * Wxh).sum())
-                d = float((m * (XE[c] - X[c])).sum()) / args.gsure_eps
-                orc.append(q - 2 * float((X[c] * Wx).sum()) + xWx)
-                gsu.append(q - 2 * float((X[c] * x_tau).sum()) + 2 * d + xWx)
-                div.append(2 * d)
-                print(f"[gsure] kappa {kap:.0e} ({c[0]:.3f}, {c[1]:.3f}): PSNR {Q3[c][1]:.2f} / {Q3[c][2]:.2f}  "
-                      f"oracle W-MSE {orc[-1]:.4e}  GSURE {gsu[-1]:.4e}  (2 div {2 * d:.4e})", flush=True)
-            out[f"oracle_{kap:.0e}"], out[f"gsure_{kap:.0e}"], out[f"div2_{kap:.0e}"] = map(np.array, (orc, gsu, div))
-            out[f"xWx_{kap:.0e}"] = xWx
-            i_o, i_g, i_p = int(np.argmin(orc)), int(np.argmin(gsu)), int(np.argmax(out["psnr"]))
-            print(f"[gsure] kappa {kap:.0e}: min oracle W-MSE at {couples[i_o]} (PSNR {out['psnr'][i_o]:.2f}), "
-                  f"min GSURE at {couples[i_g]} (PSNR {out['psnr'][i_g]:.2f}), max PSNR at {couples[i_p]} "
-                  f"({out['psnr'][i_p]:.2f})", flush=True)
-            np.savez(gs_dir / "gsure_eval.npz", **out)
+
+        # two spaces: "2ch" = x with its 2 channels (operator G); "mean" = gray object u (x = (u, u), as the ground
+        # truth), estimator u_hat = mean of the channels of x_hat (the image of the PSNR): G_u = R^T G R, R u = (u, u),
+        # R^T = sum over the channels; same reconstructions and same Monte Carlo probe
+        spaces = {"2ch": (Gop, b_y, b_d, xg, X, XE),
+                  "mean": (lambda u: Gop(u.unsqueeze(0).expand(C, -1, -1)).sum(0), b_y.sum(0), b_d.sum(0), xg[0],
+                           {c: X[c].mean(0) for c in couples}, {c: XE[c].mean(0) for c in couples})}
+        for sp, (Gs, by, bd, xs, Xs, XEs) in spaces.items():
+            v = torch.randn(xs.shape, generator=gen_g, dtype=torch.float64).to(device)
+            for _ in range(30):   # largest eigenvalue of G (power iteration)
+                w = Gs(v); lam = float(w.norm() / v.norm()); v = w / w.norm()
+            print(f"[gsure {sp}] lambda_max(G) = {lam:.4e}", flush=True)
+            out[f"lambda_max_{sp}"] = lam
+            for kap in args.gsure_kappa:
+                tau = kap * lam
+                Aop = lambda u: Gs(u) + tau * u
+                x_tau, it1, r1 = cg(Aop, by)
+                m, it2, r2 = cg(Aop, bd)
+                Wx, it3, r3 = cg(Aop, Gs(xs))
+                xWx = float((xs * Wx).sum())
+                print(f"[gsure {sp}] kappa {kap:.0e}: CG {it1} / {it2} / {it3} iterations (residuals {r1:.1e} {r2:.1e} "
+                      f"{r3:.1e}); x^T W x / x^T x = {xWx / float((xs * xs).sum()):.3f}; ||x_tau - W x|| / ||W x|| = "
+                      f"{float((x_tau - Wx).norm() / Wx.norm()):.3f}", flush=True)
+                orc, gsu, div = [], [], []
+                for c in couples:
+                    Wxh = cg(Aop, Gs(Xs[c]))[0]
+                    q = float((Xs[c] * Wxh).sum())
+                    d = float((m * (XEs[c] - Xs[c])).sum()) / args.gsure_eps
+                    orc.append(q - 2 * float((Xs[c] * Wx).sum()) + xWx)
+                    gsu.append(q - 2 * float((Xs[c] * x_tau).sum()) + 2 * d + xWx)
+                    div.append(2 * d)
+                    print(f"[gsure {sp}] kappa {kap:.0e} ({c[0]:.3f}, {c[1]:.3f}): PSNR {Q3[c][1]:.2f} / {Q3[c][2]:.2f}  "
+                          f"oracle W-MSE {orc[-1]:.4e}  GSURE {gsu[-1]:.4e}  (2 div {2 * d:.4e})", flush=True)
+                k = f"{sp}_{kap:.0e}"
+                out[f"oracle_{k}"], out[f"gsure_{k}"], out[f"div2_{k}"] = map(np.array, (orc, gsu, div))
+                out[f"xWx_{k}"] = xWx
+                i_o, i_g, i_p = int(np.argmin(orc)), int(np.argmin(gsu)), int(np.argmax(out["psnr"]))
+                print(f"[gsure {sp}] kappa {kap:.0e}: min oracle W-MSE at {couples[i_o]} (PSNR {out['psnr'][i_o]:.2f}), "
+                      f"min GSURE at {couples[i_g]} (PSNR {out['psnr'][i_g]:.2f}), max PSNR at {couples[i_p]} "
+                      f"({out['psnr'][i_p]:.2f})", flush=True)
+                np.savez(gs_dir / "gsure_eval.npz", **out)
         sys.exit(0)
 
     if args.grid_smooth:
