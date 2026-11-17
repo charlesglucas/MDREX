@@ -18,13 +18,14 @@ import disk_rec_sure_fixedW as M
 dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.backends.mkldnn.enabled = False   # CPU conv2d of the front-end fails with oneDNN
 shape, flux = sys.argv[1], float(sys.argv[2]); ft = f"{flux:.0e}".replace("e-0", "em")
+angle = int(sys.argv[3]) if len(sys.argv) > 3 else 0   # injection angle of the disk (another noise realization)
 seed, eps = 42, 0.1
 fm, to_patches, centered = M.load_forward_model(dev)    # HIP 72192, K12
 inp = load_folder(path_folder=ROOT / "data/nuisances/HIP_72192/2015-06-11/IRDIS/data", use_centered=False,
                   channel_sortframes=0, channel_idx=None)
 y0 = torch.tensor(inp["y"].astype(np.float32), device=dev).unsqueeze(0)
 C, T = y0.shape[1], y0.shape[2]
-g = flux * fits.getdata(ROOT / f"data/synthetic_disks/{shape}/hid_fake_disk_image_{shape}_0degrees.fits").astype(np.float32)[513-128:513+128, 513-128:513+128]
+g = flux * fits.getdata(ROOT / f"data/synthetic_disks/{shape}/hid_fake_disk_image_{shape}_{angle}degrees.fits").astype(np.float32)[513-128:513+128, 513-128:513+128]
 xg = torch.tensor(g, device=dev).unsqueeze(0).repeat(C, 1, 1)
 Q = lambda v: centered(to_patches(v)).double()
 with torch.no_grad():
@@ -45,8 +46,8 @@ for kap in [0.01, 0.1, 1.0, 10.0]:
     Pm = (U / (lam + nu).unsqueeze(-2)) @ U.transpose(-1, -2) * (lam.mean(-1) + nu.squeeze(-1)).view(-1, 1, 1)
     P[f"k{kap:g}"] = (lambda M_: (lambda u: torch.einsum("lfg,ltg->ltf", M_, u)))(Pm)
 
-G = ROOT / f"results/sugar/{shape}_alpha{ft}_angle0_K12f_grid"
-GS = ROOT / f"results/sugar/{shape}_alpha{ft}_angle0_K12f_gsure"
+G = ROOT / f"results/sugar/{shape}_alpha{ft}_angle{angle}_K12f_grid"
+GS = ROOT / f"results/sugar/{shape}_alpha{ft}_angle{angle}_K12f_gsure"
 rows = np.load(G / "grid_0.npz")["rows"]
 res = {k: [] for k in P}
 cpl = []
@@ -67,7 +68,7 @@ for r in rows:
                            float((QAxh * Pk(QAx)).sum() / (QAx * Pk(QAx)).sum()), float(2 * (w * Pk(QAx)).sum())))
     cpl.append((r[0], r[1], r[3]))
 cpl = np.array(cpl)
-print(f"== {shape} {flux}: {len(cpl)} couples, max PSNR at ({cpl[np.argmax(cpl[:, 2]), 0]:.2f}, "
+print(f"== {shape} {flux} angle {angle}: {len(cpl)} couples, max PSNR at ({cpl[np.argmax(cpl[:, 2]), 0]:.2f}, "
       f"{cpl[np.argmax(cpl[:, 2]), 1]:.2f}) {cpl[:, 2].max():.2f} dB")
 for k in P:
     a = np.array(res[k]); io, isu = np.argmin(a[:, 1]), np.argmin(a[:, 0])
