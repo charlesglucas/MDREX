@@ -34,6 +34,7 @@ with torch.no_grad():
     mix = (torch.randn((C, T, T), generator=gen, dtype=torch.float32) / np.sqrt(T)).to(dev)
     dlt = torch.einsum("cts,cshw->cthw", mix, r0).unsqueeze(0)
     z, Qd, QAx = Q(y), Q(dlt), Q(fm(xg))
+    w = Q(y0)                                                               # true noise (synthetic data)
     Cinv = M.shrinkage_cov_inv(centered(to_patches(y))).double()           # metric C_y^-1 of MC-SURE
 P = {"euclid": lambda u: u, "mahal": lambda u: torch.einsum("lfg,ltg->ltf", Cinv, u)}
 # intermediate metrics (C + nu I)^-1, nu = kappa * tr(C_l) / 64: from Mahalanobis (kappa -> 0) to Euclidean (kappa -> inf)
@@ -60,7 +61,9 @@ for r in rows:
             res_ = z - QAxh
             sure = float((res_ * Pk(res_)).sum() + (2 / eps) * (Qd * Pk(QAxe - QAxh)).sum())
             e = QAxh - QAx
-            res[k].append((sure, float((e * Pk(e)).sum())))
+            # mu-dependent part of SURE - oracle = 2 div_MC - 2 w^T P Q A x_hat: Monte Carlo divergence vs its target
+            res[k].append((sure, float((e * Pk(e)).sum()), float((2 / eps) * (Qd * Pk(QAxe - QAxh)).sum()),
+                           float(2 * (w * Pk(QAxh)).sum())))
     cpl.append((r[0], r[1], r[3]))
 cpl = np.array(cpl)
 print(f"== {shape} {flux}: {len(cpl)} couples, max PSNR at ({cpl[np.argmax(cpl[:, 2]), 0]:.2f}, "
@@ -72,3 +75,5 @@ for k in P:
           f"({cpl[isu, 0]:.2f}, {cpl[isu, 1]:.2f}) PSNR {cpl[isu, 2]:.2f} | SURE - oracle: spread {np.ptp(off):.3e} "
           f"vs oracle spread {np.ptp(a[:, 1]):.3e}; Spearman(SURE, oracle) "
           f"{np.corrcoef(np.argsort(np.argsort(a[:, 0])), np.argsort(np.argsort(a[:, 1])))[0, 1]:.2f}", flush=True)
+    print(f"          2 div_MC spread {np.ptp(a[:, 2]):.3e}, 2 w^T P QAx_hat spread {np.ptp(a[:, 3]):.3e}, their difference "
+          f"spread {np.ptp(a[:, 2] - a[:, 3]):.3e}, correlation {np.corrcoef(a[:, 2], a[:, 3])[0, 1]:.2f}", flush=True)
