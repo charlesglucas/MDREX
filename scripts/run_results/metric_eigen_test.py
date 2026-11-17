@@ -20,6 +20,7 @@ from inference.inference import load_folder
 import disk_rec_sure_fixedW as M
 
 dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+torch.backends.mkldnn.enabled = False   # CPU conv2d of the front-end fails with oneDNN ("could not create a primitive")
 fm, to_patches, centered = M.load_forward_model(dev)    # HIP 72192, K12
 inp = load_folder(path_folder=ROOT / "data/nuisances/HIP_72192/2015-06-11/IRDIS/data", use_centered=False,
                   channel_sortframes=0, channel_idx=None)
