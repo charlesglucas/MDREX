@@ -63,10 +63,12 @@ def derotate(img, angle_deg, center=(126.5, 126.5)):
     return affine_transform(img, R, offset=c - R @ c, order=3)
 
 
-def compute_psnr(x_gt, x_rexpaco, x_mdrex, support_threshold=0.04):
+def compute_psnr(x_gt, x_rexpaco, x_mdrex, support_threshold=0.5):
     """PSNR = -20 log10(N-RMSE) on the whole image and on the support, for every (flux, angle, shape).
     Support: x_gt > support_threshold * max(x_gt), a threshold RELATIVE to the maximum of the disk, so that
-    the support is the same for the three contrasts (0.04 = former absolute threshold 2e-7 at alpha = 5e-6).
+    the support is the same for the three contrasts. 0.5 (half maximum, since 2026-11-17): the ellipse and the circle
+    are uniform (any threshold gives the disk), the spiral has a smooth profile and its support at 50 % keeps the arms
+    (72 % of the flux); before: 0.04 (former absolute threshold 2e-7 at alpha = 5e-6).
     Returns a dict of (3, 10, 3) arrays."""
     nrmse = {k: np.zeros((3, 10, 3), dtype=np.float32)
              for k in ["rexpaco", "mdrex", "rexpaco_supp", "mdrex_supp"]}
@@ -225,7 +227,7 @@ def main(cfg):
                      "{\\bf Comparison of performances.} PSNR (whole image and support) averaged over parallactic "
                      "angles for MD-REX and REXPACO, computed on the reconstructions $\\widehat{\\mathbf{x}}_{\\lambda}$ and on "
                      "the reconstructions convolved by the PSF $\\mathbf{H}_{\\lambda}\\widehat{\\mathbf{x}}_{\\lambda}$; the support is the set of "
-                     "pixels where the ground truth exceeds 4\\% of its maximum. The hyperparameters of MD-REX are selected by "
+                     "pixels where the ground truth exceeds 50\\% of its maximum. The hyperparameters of MD-REX are selected by "
                      "refined MC-SUGAR at the first parallactic angle for each geometry and contrast, and kept for the other angles. "
                      "The best method is in bold.")
     for shape, mus in MU_SELECTED.items():

@@ -378,7 +378,7 @@ def main(cfg):
             xt = torch.tensor(x, dtype=torch.float32, device=device)
             mse = M.mahalanobis(centered(to_patches(Ax_gt - fm(xt))), C_inv_gt)
         g, xm = x_gt.mean(0).cpu().numpy(), x.mean(0)
-        supp = g > 0.04 * g.max()
+        supp = g > 0.5 * g.max()   # support at half maximum (0.04 before 2026-11-17)
         e = xm - g
         return mse, -20 * np.log10(np.linalg.norm(e) / np.linalg.norm(g)), \
             -20 * np.log10(np.linalg.norm(e[supp]) / np.linalg.norm(g[supp]))
