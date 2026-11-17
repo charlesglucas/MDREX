@@ -36,6 +36,13 @@ with torch.no_grad():
     z, Qd, QAx = Q(y), Q(dlt), Q(fm(xg))
     Cinv = M.shrinkage_cov_inv(centered(to_patches(y))).double()           # metric C_y^-1 of MC-SURE
 P = {"euclid": lambda u: u, "mahal": lambda u: torch.einsum("lfg,ltg->ltf", Cinv, u)}
+# intermediate metrics (C + nu I)^-1, nu = kappa * tr(C_l) / 64: from Mahalanobis (kappa -> 0) to Euclidean (kappa -> inf)
+with torch.no_grad():
+    lam, U = torch.linalg.eigh(torch.linalg.inv(Cinv))
+for kap in [0.01, 0.1, 1.0, 10.0]:
+    nu = kap * lam.mean(-1, keepdim=True)
+    Pm = (U / (lam + nu).unsqueeze(-2)) @ U.transpose(-1, -2) * (lam.mean(-1) + nu.squeeze(-1)).view(-1, 1, 1)
+    P[f"k{kap:g}"] = (lambda M_: (lambda u: torch.einsum("lfg,ltg->ltf", M_, u)))(Pm)
 
 G = ROOT / f"results/sugar/{shape}_alpha{ft}_angle0_K12f_grid"
 GS = ROOT / f"results/sugar/{shape}_alpha{ft}_angle0_K12f_gsure"
@@ -65,5 +72,3 @@ for k in P:
           f"({cpl[isu, 0]:.2f}, {cpl[isu, 1]:.2f}) PSNR {cpl[isu, 2]:.2f} | SURE - oracle: spread {np.ptp(off):.3e} "
           f"vs oracle spread {np.ptp(a[:, 1]):.3e}; Spearman(SURE, oracle) "
           f"{np.corrcoef(np.argsort(np.argsort(a[:, 0])), np.argsort(np.argsort(a[:, 1])))[0, 1]:.2f}", flush=True)
-    for (ts, tp, p), (s, o) in zip(cpl, a):
-        print(f"     ({ts:.2f}, {tp:.2f}) PSNR {p:5.2f}  oracle {o:.4e}  SURE-const {s:.4e}")
