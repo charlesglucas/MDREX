@@ -215,6 +215,9 @@ class MDREX:
         # then looks free to VMLMB and the gradient jumps by mu_sparse when it becomes positive, so that the
         # reconstructions stop with a projected gradient ~1/10 of its initial norm, on a non-stationary point
         self.sparse_abs = False
+        # epsilon of the edge-preserving term sqrt(mean_c |grad x|^2 + eps^2) (absolute, in units of x): l2 (quadratic)
+        # regime for |grad x| << eps, l1 (TV) regime for |grad x| >> eps
+        self.tv_eps = 1e-6
 
         # SURE handlers
         self.to_patches = None
@@ -363,7 +366,8 @@ class MDREX:
         return im.unsqueeze(0) # (1, C, T, H, W)
 
     ## Regularization terms
-    def l2_l1_edge_preserving_2d(self, x, epsilon=1e-6): 
+    def l2_l1_edge_preserving_2d(self, x, epsilon=None):
+        epsilon = self.tv_eps if epsilon is None else epsilon
         # x : (C, H, W) 
         dx = x[:, :-1, 1:] - x[:, :-1, :-1]  # (C, H-1, W-1) 
         dy = x[:, 1:, :-1] - x[:, :-1, :-1]  # (C, H-1, W-1) 
