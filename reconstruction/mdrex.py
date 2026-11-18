@@ -302,6 +302,54 @@ class MDREX:
         wf = w.reshape(L, N)
         return 0.5 * (mz * wf).sum() - 0.5 * K * torch.log(wf).sum() + 0.5 * N * logdet
 
+    def _lite_nll_spec(self, diff, y):
+        """REXPACO-lite with spectral covariance (REXPACO ASDI, Flasseur et al. 2024, Eqs. 5-12): for each patch l and
+        frame t, the K x C residual V_{l,t} (K pixels, C channels) is N(M_l, sigma2_{l,t} C_spec_l (x) C_spat_l), M_l the
+        mean per pixel and channel (weights 1 / sigma2), C_spat (K x K) shrunk towards its diagonal (rho fixed on y),
+        C_spec (C x C, trace C), sigma2 = 1 unless lite["robust"] > 0. Joint estimation by lite["flipflop"] alternations
+        (flip-flop, Lu & Zimmerman 2005), unrolled and differentiated. Data term
+        1/2 sum_{l,t} [tr(C_spat^-1 Z C_spec^-1 Z^T) / sigma2 + K C log sigma2 + C log|C_spat| + K log|C_spec|]."""
+        q = self._lite_patches(diff)                                  # (L, C, T, K)
+        L, C, T, K = q.shape
+        V = q.permute(0, 2, 3, 1)                                     # (L, T, K, C)
+        key = self._data_key(y)
+        if key not in self.lite_rho:
+            with torch.no_grad():
+                q0 = self._lite_patches(y.to(self.dtype))
+                q0 = (q0 - q0.mean(dim=2, keepdim=True)).reshape(L, C * T, K)
+                S0 = q0.transpose(1, 2) @ q0 / (C * T)
+                d0 = torch.diagonal(S0, dim1=-2, dim2=-1)
+                tr_S2, tr2_S, tr_SS = (d0 ** 2).sum(-1), d0.sum(-1) ** 2, (S0 * S0).sum((-2, -1))
+                self.lite_rho = {key: torch.clip((tr_SS + tr2_S - 2 * tr_S2) / ((C * T + 1) * (tr_SS - tr_S2)), 0, 1).view(L, 1, 1)}
+        rho = self.lite_rho[key]
+        n_rob, n_ff = int(self.lite.get("robust", 0)), int(self.lite.get("flipflop", 3))
+        eyeC = torch.eye(C, dtype=q.dtype, device=q.device)
+        w = torch.ones((L, T, 1, 1), dtype=q.dtype, device=q.device)  # 1 / sigma2
+        Cspec = eyeC.expand(L, C, C)
+        for it in range(n_rob + 1):
+            M = (w * V).sum(dim=1, keepdim=True) / w.sum(dim=1, keepdim=True)
+            Z = V - M                                                 # (L, T, K, C)
+            for _ in range(n_ff):
+                Ps = torch.linalg.inv(Cspec)                          # (L, C, C)
+                S = torch.einsum("ltkc,lcd,ltjd->lkj", Z * w, Ps, Z) / (T * C)
+                d = torch.diagonal(S, dim1=-2, dim2=-1)
+                Csp = (1 - rho) * S + rho * torch.diag_embed(d)
+                Lsp = torch.linalg.cholesky(Csp)
+                Y = torch.cholesky_solve(Z.reshape(L, T * K, C).reshape(L, T, K, C).permute(0, 2, 1, 3).reshape(L, K, T * C), Lsp)
+                Y = Y.reshape(L, K, T, C).permute(0, 2, 1, 3)        # C_spat^-1 Z, (L, T, K, C)
+                G = torch.einsum("ltkc,ltkd->lcd", Z * w, Y) / (T * K)
+                Cspec = G * (C / torch.diagonal(G, dim1=-2, dim2=-1).sum(-1)).view(L, 1, 1)   # trace C
+            Ps = torch.linalg.inv(Cspec)
+            mz = torch.einsum("ltkc,lcd,ltkd->lt", Z, Ps, Y)          # tr(C_spat^-1 Z C_spec^-1 Z^T)
+            if it < n_rob:
+                s2 = mz / (K * C)
+                s2 = torch.clamp(s2, min=1e-6 * s2.detach().median(dim=1, keepdim=True).values)
+                w = (1 / s2).reshape(L, T, 1, 1)
+        logdet_sp = 2 * torch.log(torch.diagonal(Lsp, dim1=-2, dim2=-1)).sum(-1)       # (L,)
+        logdet_sc = torch.logdet(Cspec)                                                  # (L,)
+        wf = w.reshape(L, T)
+        return 0.5 * ((mz * wf).sum() - K * C * torch.log(wf).sum() + T * (C * logdet_sp + K * logdet_sc).sum())
+
     def objective(self, x_disc, y, mu_sparse, mu_smooth):
         if self.lite is not None:
             return self._objective(x_disc, y, mu_sparse, mu_smooth)
@@ -333,7 +381,7 @@ class MDREX:
             phi = 0.0
             grad_diff = torch.zeros_like(diff_leaf)
             if self.lite is not None:
-                nll = self._lite_nll(diff_leaf, y)
+                nll = (self._lite_nll_spec if self.lite.get("spec") else self._lite_nll)(diff_leaf, y)
                 (grad_diff,) = torch.autograd.grad(nll, diff_leaf)
                 phi = float(nll.detach().double())
             for term in ([] if self.lite is not None else self.exomild.all_terms):

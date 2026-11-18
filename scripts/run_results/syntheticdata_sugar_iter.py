@@ -130,6 +130,8 @@ parser.add_argument("--lite", type=int, nargs=2, default=None, metavar=("PATCH",
                          "projection) instead of the ExoMILD terms; regularization, optimizer, SURE / SUGAR unchanged")
 parser.add_argument("--lite-robust", type=int, default=0,
                     help="with --lite: robust per-frame weights (REXPACO), number of fixed-point iterations (0: off)")
+parser.add_argument("--lite-spec", action="store_true",
+                    help="with --lite: spectral covariance (C_spec x C_spat, REXPACO ASDI), joint flip-flop estimation")
 parser.add_argument("--tv-eps", type=float, default=1e-6,
                     help="epsilon of the edge-preserving term (absolute; 1e-6 = value of all the series before 2026-11-18)")
 parser.add_argument("--bounds", type=float, nargs=4, default=[4, 10, 3, 9],
@@ -268,9 +270,9 @@ def main(cfg):
     mdrex.sparse_abs = args.abs_grad
     mdrex.tv_eps = args.tv_eps
     if args.lite:
-        mdrex.lite = {"patch": args.lite[0], "stride": args.lite[1], "robust": args.lite_robust}
+        mdrex.lite = {"patch": args.lite[0], "stride": args.lite[1], "robust": args.lite_robust, "spec": args.lite_spec}
         print(f"[model] REXPACO-lite data term: patches {args.lite[0]} x {args.lite[0]}, stride {args.lite[1]}, robust "
-              f"per-frame weights: {args.lite_robust} iterations", flush=True)
+              f"per-frame weights: {args.lite_robust} iterations, spectral covariance: {args.lite_spec}", flush=True)
 
     def mahalanobis_mse(x_gt, x_tensor_opt):
         residual_gt = y - mdrex.forward_model(x_gt)
