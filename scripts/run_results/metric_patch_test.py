@@ -67,20 +67,23 @@ for shape, flux in zip(args[::2], args[1::2]):
             r0 = (y - y.mean(dim=2, keepdim=True))[0]
             mix = torch.randn((C, T, T), generator=gen, dtype=torch.float32) / np.sqrt(T)
             dlt = torch.einsum("cts,cshw->cthw", mix, r0).unsqueeze(0)
-            sure = []
+            sure, orc_y = [], []
             Cy = {p: cov_inv(patches(y, p))[0] for p in PS}
             zq = {p: patches(y, p) for p in PS}; dq = {p: patches(dlt, p) for p in PS}
             for r in rows:
                 xh = torch.tensor(np.load(G / f"x_{r[0]:.3f}_{r[1]:.3f}.npz")["x"].astype(np.float32))
                 xe = torch.tensor(np.load(GS / f"xeps_{r[0]:.3f}_{r[1]:.3f}.npz")["x"].astype(np.float32))
                 ah, ae = fm(xh), fm(xe)
-                v = []
+                v, o = [], []
+                eq = fm(xh - xg)
                 for p in PS:
                     rq, aq = zq[p] - patches(ah, p), patches(ae, p) - patches(ah, p)
                     v.append(float(torch.einsum("ltf,lfg,ltg->", rq, Cy[p], rq) +
                                    (2 / 0.1) * torch.einsum("ltf,lfg,ltg->", dq[p], Cy[p], aq)))
-                sure.append(v)
-        sure = np.array(sure)
+                    e_ = patches(eq, p)
+                    o.append(float(torch.einsum("ltf,lfg,ltg->", e_, Cy[p], e_)))   # oracle MSE in the SAME metric C_y
+                sure.append(v); orc_y.append(o)
+        sure, orc_y = np.array(sure), np.array(orc_y)
     print(f"== {shape} {flux}: max PSNR at ({rows[ip, 0]:.2f}, {rows[ip, 1]:.2f}) {rows[ip, 3]:.2f} dB", flush=True)
     for k, p in enumerate(PS):
         i = int(np.argmin(res[:, k]))
@@ -88,4 +91,7 @@ for shape, flux in zip(args[::2], args[1::2]):
               f"MSE(PSNR max) / MSE(min) = {res[ip, k] / res[i, k]:.3f}"
               + ("" if sure is None else f" | min MC-SURE at ({rows[int(np.argmin(sure[:, k])), 0]:.2f}, "
                  f"{rows[int(np.argmin(sure[:, k])), 1]:.2f}) PSNR {rows[int(np.argmin(sure[:, k])), 3]:.2f} dB, Spearman(SURE, MSE) "
-                 f"{np.corrcoef(np.argsort(np.argsort(sure[:, k])), np.argsort(np.argsort(res[:, k])))[0, 1]:.2f}"), flush=True)
+                 f"{np.corrcoef(np.argsort(np.argsort(sure[:, k])), np.argsort(np.argsort(res[:, k])))[0, 1]:.2f}; same metric C_y: min "
+                 f"oracle at ({rows[int(np.argmin(orc_y[:, k])), 0]:.2f}, {rows[int(np.argmin(orc_y[:, k])), 1]:.2f}) PSNR "
+                 f"{rows[int(np.argmin(orc_y[:, k])), 3]:.2f} dB, Spearman(SURE, oracle C_y) "
+                 f"{np.corrcoef(np.argsort(np.argsort(sure[:, k])), np.argsort(np.argsort(orc_y[:, k])))[0, 1]:.2f}"), flush=True)
