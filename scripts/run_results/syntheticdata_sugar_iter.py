@@ -137,6 +137,8 @@ parser.add_argument("--robust-check", type=float, nargs=2, default=None,
                     help="log10 (mu_smooth, mu_sparse): at the K12f grid reconstruction of this couple, data term and gradient of "
                          "the original ExoMILD code, of MDREX._robust_term with 0 iterations (must match) and with 3 "
                          "iterations (finite-difference check)")
+parser.add_argument("--drop-frames", type=int, nargs="*", default=[],
+                    help="frames (0-based) removed from the observation before the injection of the disk (outliers)")
 parser.add_argument("--lite-spec", action="store_true",
                     help="with --lite: spectral covariance (C_spec x C_spat, REXPACO ASDI), joint flip-flop estimation")
 parser.add_argument("--tv-eps", type=float, default=1e-6,
@@ -185,6 +187,11 @@ def main(cfg):
     lbda = inputs["lbdas"].astype(np.float32)
     rot = inputs["rot"].astype(np.float32)
     psf = inputs["psf"].astype(np.float32)
+    if args.drop_frames:   # outlier frames removed (e.g. frame 13 of HIP 72192: residual rms 45 to 187 robust sigmas)
+        keep = np.setdiff1d(np.arange(T), args.drop_frames)
+        y, rot = y[:, keep], np.asarray(rot).reshape(-1)[keep]
+        C, T, H, W = y.shape
+        print(f"[data] frames {args.drop_frames} removed: T = {T}", flush=True)
     
     # Convert to torch tensors
     y = torch.tensor(y, device=device).unsqueeze(0) # (b, C, T, H, W)
