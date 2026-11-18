@@ -1,7 +1,10 @@
 """Does the patch size of the data-space metric change the couple chosen by the MSE?
 Oracle Mahalanobis MSE sum_l sum_t d^T C_l^-1 d, d = centered(patches_p(A (x_hat - x_gt))), C_l = shrinkage covariance
-of the nuisance (as C_inv_gt of syntheticdata_sugar_iter.py), for patch sizes p = 8 (MC-SURE, the grids), 16, 32,
-on the K12f grids (angle 0, HIP 72192). Argmin compared with the PSNR maximum.
+of the nuisance (as C_inv_gt of syntheticdata_sugar_iter.py), for patch sizes p = 8 (MC-SURE, the grids), 13 (REXPACO), 16, 32,
+on the K12f grids (angle 0, HIP 72192). Argmin compared with the PSNR maximum. Where the GSURE perturbations exist
+(<case>_K12f_gsure/xeps_*.npz, probe delta of --gsure perturb), also MC-SURE with the metric C_y^-1 of patch size p:
+  SURE_p = ||z - Q_p A x_hat||^2_{C_y^-1} + (2 / eps) (Q_p delta)^T C_y^-1 Q_p A (x_hat(y + eps delta) - x_hat(y)) + const.
+With p = 13, the 19 x 19 patches cover the central 247 x 247 pixels.
   python scripts/run_results/metric_patch_test.py spiral 5e-6 [medium_ellipse 5e-6 ...]
 """
 import pathlib, sys
@@ -36,7 +39,7 @@ def cov_inv(pc):     # shrinkage covariance (M.shrinkage_cov_inv), float64
     rho = torch.clip((tr_SS + tr2_S - 2 * tr_S2) / ((Tn + 1) * (tr_SS - tr_S2)), 0, 1).view(L, 1, 1)
     return torch.linalg.inv((1 - rho) * S + rho * torch.diag_embed(d)), float(rho.mean())
 
-PS = [8, 16, 32]
+PS = [int(v) for v in __import__('os').environ.get('PS', '8 13 16 32').split()]
 with torch.no_grad():
     CI = {p: cov_inv(patches(y0, p)) for p in PS}
 for p in PS:
@@ -54,8 +57,35 @@ for shape, flux in zip(args[::2], args[1::2]):
             e = fm(torch.tensor(x - g[None]))
             res.append([float(torch.einsum("ltf,lfg,ltg->", patches(e, p), CI[p][0], patches(e, p))) for p in PS])
     res = np.array(res); ip = int(np.argmax(rows[:, 3]))
+    GS = ROOT / f"results/sugar/{shape}_alpha{ft}_angle0_K12f_gsure"
+    sure = None
+    if all((GS / f"xeps_{r[0]:.3f}_{r[1]:.3f}.npz").exists() for r in rows):
+        with torch.no_grad():
+            xg = torch.tensor(g).unsqueeze(0).repeat(C, 1, 1)
+            y = fm(xg) + y0
+            gen = torch.Generator(device="cpu").manual_seed(43)          # probe of --gsure (seed + 1)
+            r0 = (y - y.mean(dim=2, keepdim=True))[0]
+            mix = torch.randn((C, T, T), generator=gen, dtype=torch.float32) / np.sqrt(T)
+            dlt = torch.einsum("cts,cshw->cthw", mix, r0).unsqueeze(0)
+            sure = []
+            Cy = {p: cov_inv(patches(y, p))[0] for p in PS}
+            zq = {p: patches(y, p) for p in PS}; dq = {p: patches(dlt, p) for p in PS}
+            for r in rows:
+                xh = torch.tensor(np.load(G / f"x_{r[0]:.3f}_{r[1]:.3f}.npz")["x"].astype(np.float32))
+                xe = torch.tensor(np.load(GS / f"xeps_{r[0]:.3f}_{r[1]:.3f}.npz")["x"].astype(np.float32))
+                ah, ae = fm(xh), fm(xe)
+                v = []
+                for p in PS:
+                    rq, aq = zq[p] - patches(ah, p), patches(ae, p) - patches(ah, p)
+                    v.append(float(torch.einsum("ltf,lfg,ltg->", rq, Cy[p], rq) +
+                                   (2 / 0.1) * torch.einsum("ltf,lfg,ltg->", dq[p], Cy[p], aq)))
+                sure.append(v)
+        sure = np.array(sure)
     print(f"== {shape} {flux}: max PSNR at ({rows[ip, 0]:.2f}, {rows[ip, 1]:.2f}) {rows[ip, 3]:.2f} dB", flush=True)
     for k, p in enumerate(PS):
         i = int(np.argmin(res[:, k]))
         print(f"   patch {p:2d}: min Mahalanobis MSE at ({rows[i, 0]:.2f}, {rows[i, 1]:.2f}) PSNR {rows[i, 3]:.2f} dB; "
-              f"MSE(PSNR max) / MSE(min) = {res[ip, k] / res[i, k]:.3f}", flush=True)
+              f"MSE(PSNR max) / MSE(min) = {res[ip, k] / res[i, k]:.3f}"
+              + ("" if sure is None else f" | min MC-SURE at ({rows[int(np.argmin(sure[:, k])), 0]:.2f}, "
+                 f"{rows[int(np.argmin(sure[:, k])), 1]:.2f}) PSNR {rows[int(np.argmin(sure[:, k])), 3]:.2f} dB, Spearman(SURE, MSE) "
+                 f"{np.corrcoef(np.argsort(np.argsort(sure[:, k])), np.argsort(np.argsort(res[:, k])))[0, 1]:.2f}"), flush=True)
