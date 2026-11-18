@@ -263,14 +263,14 @@ class MDREX:
         """REXPACO-lite data term: one Gaussian per patch (no learned projection), mean per channel constant in time,
         spatial covariance shared by the two channels (samples = frames x channels) shrunk towards its diagonal with
         the coefficient rho fixed on the data y (Algorithm 1). Means and covariances are re-estimated on diff = y - A x
-        and differentiated (as the ExoMILD terms). Returns sum over patches and samples of 1/2 (z^T C^-1 z + log|C|)."""
-        q = self._lite_patches(diff)
-        q = q - q.mean(dim=2, keepdim=True)
+        and differentiated (as the ExoMILD terms). Returns sum over patches and samples of 1/2 (z^T C^-1 z + log|C|).
+        lite["robust"] = n > 0: robust per-frame weights as in REXPACO (compound Gaussian, Flasseur et al. 2021, 2024):
+        Cov(v_{l,s}) = sigma2_{l,s} C_l for each patch l and sample s (frame, channel); mean (weights 1 / sigma2),
+        covariance and scales estimated jointly by n fixed-point iterations from sigma2 = 1 (unrolled, differentiated);
+        data term 1/2 sum (z^T C^-1 z / sigma2 + K log sigma2 + log|C|)."""
+        q = self._lite_patches(diff)                                  # (L, C, T, K)
         L, C, T, K = q.shape
-        q = q.reshape(L, C * T, K)
         N = C * T
-        S = q.transpose(1, 2) @ q / N
-        d = torch.diagonal(S, dim1=-2, dim2=-1)
         key = self._data_key(y)
         if key not in self.lite_rho:
             with torch.no_grad():
@@ -281,12 +281,26 @@ class MDREX:
                 tr_S2, tr2_S, tr_SS = (d0 ** 2).sum(-1), d0.sum(-1) ** 2, (S0 * S0).sum((-2, -1))
                 self.lite_rho = {key: torch.clip((tr_SS + tr2_S - 2 * tr_S2) / ((N + 1) * (tr_SS - tr_S2)), 0, 1).view(L, 1, 1)}
         rho = self.lite_rho[key]
-        Ch = (1 - rho) * S + rho * torch.diag_embed(d)
-        Lc = torch.linalg.cholesky(Ch)
-        z = torch.cholesky_solve(q.transpose(1, 2), Lc)              # C^-1 q^T, (L, K, N)
-        maha = (q.transpose(1, 2) * z).sum()
+        n_rob = int(self.lite.get("robust", 0))
+        w = torch.ones((L, C, T, 1), dtype=q.dtype, device=q.device)  # 1 / sigma2
+        for it in range(n_rob + 1):
+            m = (w * q).sum(dim=2, keepdim=True) / w.sum(dim=2, keepdim=True)   # weighted mean per channel
+            zc = (q - m).reshape(L, N, K)
+            ww = w.reshape(L, N, 1)
+            S = (zc * ww).transpose(1, 2) @ zc / N
+            d = torch.diagonal(S, dim1=-2, dim2=-1)
+            Ch = (1 - rho) * S + rho * torch.diag_embed(d)
+            Lc = torch.linalg.cholesky(Ch)
+            mz = (zc.transpose(1, 2) * torch.cholesky_solve(zc.transpose(1, 2), Lc)).sum(dim=1)   # z^T C^-1 z, (L, N)
+            if it < n_rob:
+                s2 = mz / K
+                s2 = torch.clamp(s2, min=1e-6 * s2.detach().median(dim=1, keepdim=True).values)
+                w = (1 / s2).reshape(L, C, T, 1)
         logdet = 2 * torch.log(torch.diagonal(Lc, dim1=-2, dim2=-1)).sum()
-        return 0.5 * maha + 0.5 * N * logdet
+        if n_rob == 0:
+            return 0.5 * mz.sum() + 0.5 * N * logdet
+        wf = w.reshape(L, N)
+        return 0.5 * (mz * wf).sum() - 0.5 * K * torch.log(wf).sum() + 0.5 * N * logdet
 
     def objective(self, x_disc, y, mu_sparse, mu_smooth):
         if self.lite is not None:
