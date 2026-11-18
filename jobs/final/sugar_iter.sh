@@ -43,7 +43,7 @@ while [ $# -ge 4 ]; do
   else
     OPTS="$BASE --mu0 $sm $sp --bounds ${BOUNDS:-6 9 4.4771 7.4771} --maxfun 20 --xtol 0.02 --ftol 0 --gtol 0 --gabs 100 \
           --srel 1e-5 --sstall 3 --restarts 3 --max-step 0.5 --outer ${OUTER:-2} --outer-tol 0.1 --cg-maxiter 200 --cg-rtol 1e-4"
-    name=sugariteropt_${shape}_${tag}; wall=168
+    name=sugariteropt_${shape}_${tag}; wall=${WALL:-168}
     if [ "$MODE" = refine ]; then OPTS="$OPTS --refined --refined-iter $ITER"; name=sugarref${ITER}_${shape}_${tag}; fi
   fi
   oarsub -l "gpu=1,walltime=$wall:00:00" -p "$P" -n "$name" ${ANTERIOR:+-a $ANTERIOR} \
