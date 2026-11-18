@@ -130,6 +130,13 @@ parser.add_argument("--lite", type=int, nargs=2, default=None, metavar=("PATCH",
                          "projection) instead of the ExoMILD terms; regularization, optimizer, SURE / SUGAR unchanged")
 parser.add_argument("--lite-robust", type=int, default=0,
                     help="with --lite: robust per-frame weights (REXPACO), number of fixed-point iterations (0: off)")
+parser.add_argument("--robust", type=int, default=None,
+                    help="MD-REX with robust per-frame weights in the ExoMILD terms (compound Gaussian, REXPACO): number "
+                         "of fixed-point iterations (0: same Gaussian term recomputed by MDREX._robust_term, check)")
+parser.add_argument("--robust-check", type=float, nargs=2, default=None,
+                    help="log10 (mu_smooth, mu_sparse): at the K12f grid reconstruction of this couple, data term and gradient of "
+                         "the original ExoMILD code, of MDREX._robust_term with 0 iterations (must match) and with 3 "
+                         "iterations (finite-difference check)")
 parser.add_argument("--lite-spec", action="store_true",
                     help="with --lite: spectral covariance (C_spec x C_spat, REXPACO ASDI), joint flip-flop estimation")
 parser.add_argument("--tv-eps", type=float, default=1e-6,
@@ -269,6 +276,9 @@ def main(cfg):
     mdrex = MDREX(y=y, rot=rot, psf=psf_crop, mask=mask, lbda=lbda, model_state=model_state, **cfg_model)
     mdrex.sparse_abs = args.abs_grad
     mdrex.tv_eps = args.tv_eps
+    if args.robust is not None:
+        mdrex.robust = args.robust
+        print(f"[model] MD-REX with robust per-frame weights: {args.robust} fixed-point iterations", flush=True)
     if args.lite:
         mdrex.lite = {"patch": args.lite[0], "stride": args.lite[1], "robust": args.lite_robust, "spec": args.lite_spec}
         print(f"[model] REXPACO-lite data term: patches {args.lite[0]} x {args.lite[0]}, stride {args.lite[1]}, robust "
@@ -621,6 +631,25 @@ def main(cfg):
               f"||x(from x_gt) - x(from 0)|| / ||x(from 0)|| = {d:.3e}", flush=True)
         out_dir.mkdir(parents=True, exist_ok=True)
         np.savez(out_dir / f"objtest_{ts:.3f}_{tp:.3f}.npz", x_hat=x_hat.astype(np.float32), x_from_gt=x_from_gt.astype(np.float32))
+        sys.exit(0)
+
+    if args.robust_check:
+        ts, tp = args.robust_check
+        xg = np.load(out_dir.with_name(out_dir.name.replace(TAG, "K12f") + "_grid") / f"x_{ts:.3f}_{tp:.3f}.npz")["x"].astype(np.float64)
+        res = {}
+        for r in (None, 0, 3):
+            mdrex.robust = r
+            f, g = mdrex.objective(xg, y, 0.0, 0.0)
+            res[r] = (f, np.asarray(g, dtype=np.float64))
+            print(f"[robust-check] robust {r}: data term {f:.8e}, |grad| {np.linalg.norm(res[r][1]):.6e}", flush=True)
+        g0, g1 = res[None][1], res[0][1]
+        print(f"[robust-check] original vs robust 0: relative difference of the data term {abs(res[0][0] - res[None][0]) / abs(res[None][0]):.3e}, "
+              f"of the gradient {np.linalg.norm(g1 - g0) / np.linalg.norm(g0):.3e}", flush=True)
+        mdrex.robust = 3
+        v = np.random.default_rng(0).standard_normal(xg.shape) * 1e-2 * np.abs(xg).max()
+        for h in (1e-2, 1e-3):
+            fp, fm_ = mdrex.objective(xg + h * v, y, 0.0, 0.0)[0], mdrex.objective(xg - h * v, y, 0.0, 0.0)[0]
+            print(f"[robust-check] robust 3, step {h:g}: finite difference {(fp - fm_) / (2 * h):.6e}, gradient {np.sum(res[3][1] * v):.6e}", flush=True)
         sys.exit(0)
 
     if args.gsure:

@@ -221,6 +221,11 @@ class MDREX:
         # "REXPACO-lite" data term instead of the ExoMILD terms (None: MD-REX): dict(patch=9, stride=4), see _lite_nll
         self.lite = None
         self.lite_rho = {}
+        # robust per-frame weights in the ExoMILD terms (compound Gaussian as in REXPACO): number of fixed-point
+        # iterations (0 = data term of the ExoMILD terms recomputed here without weights; None = original code path)
+        self.robust = None
+        self.robust_rho = {}
+        self.robust_chunk = 1024
 
         # SURE handlers
         self.to_patches = None
@@ -350,8 +355,74 @@ class MDREX:
         wf = w.reshape(L, T)
         return 0.5 * ((mz * wf).sum() - K * C * torch.log(wf).sum() + T * (C * logdet_sp + K * logdet_sc).sum())
 
+    @staticmethod
+    def _robust_nll_feats(f, rho, n_rob, C):
+        """Compound-Gaussian data term on features f (P patches, N = T x C samples ordered (t, c), F features):
+        Cov(f_{p,s}) = sigma2_{p,s} C_p, mean per channel (weights 1 / sigma2), C_p shrunk towards its diagonal (rho
+        fixed), sigma2 by n_rob fixed-point iterations from 1 (unrolled). Returns
+        1/2 sum (z^T C^-1 z / sigma2 + F log sigma2 + log|C|); n_rob = 0: the Gaussian term of the ExoMILD engine."""
+        P, N, F = f.shape
+        Tf = N // C
+        f4 = f.view(P, Tf, C, F)
+        w = torch.ones((P, Tf, C, 1), dtype=f.dtype, device=f.device)
+        for it in range(n_rob + 1):
+            m = (w * f4).sum(dim=1, keepdim=True) / w.sum(dim=1, keepdim=True)
+            z = (f4 - m).reshape(P, N, F)
+            S = (z * w.reshape(P, N, 1)).transpose(1, 2) @ z / N
+            d = torch.diagonal(S, dim1=-2, dim2=-1)
+            Lc = torch.linalg.cholesky((1 - rho) * S + rho * torch.diag_embed(d))
+            mz = (z.transpose(1, 2) * torch.cholesky_solve(z.transpose(1, 2), Lc)).sum(dim=1)   # (P, N)
+            if it < n_rob:
+                s2 = mz / F
+                s2 = torch.clamp(s2, min=1e-6 * s2.detach().median(dim=1, keepdim=True).values)
+                w = (1 / s2).reshape(P, Tf, C, 1)
+        wf = w.reshape(P, N)
+        logdet = 2 * torch.log(torch.diagonal(Lc, dim1=-2, dim2=-1)).sum()
+        return 0.5 * ((mz * wf).sum() - F * torch.log(wf).sum() + N * logdet)
+
+    def _robust_term(self, k, term, diff, y):
+        """Data term of ExoMILD term k with robust per-frame weights, and its gradient w.r.t. diff (patches processed
+        by chunks of self.robust_chunk: the statistics are per patch, so the chunking is exact)."""
+        C = diff.shape[1]
+        with torch.enable_grad():
+            xp_full = term.to_patches(diff, lbda=self.lbda)            # (bsp, T*C, S, K), samples ordered (t, c)
+        bsp, N, S_, K = xp_full.shape
+        feats = lambda xp: term.engine.features_pipeline(xp.reshape(1, xp.shape[0], N, S_ * K), idx=None,
+                                                          with_jacobian=False)[0][0]   # (P, N, F)
+        key = (self._data_key(y), k)
+        if key not in self.robust_rho:
+            if len(self.robust_rho) >= 48:
+                self.robust_rho.pop(next(iter(self.robust_rho)))
+            with torch.no_grad():
+                xp0 = term.to_patches(y.to(self.dtype), lbda=self.lbda)
+                rhos = []
+                for i in range(0, bsp, self.robust_chunk):
+                    f0 = feats(xp0[i:i + self.robust_chunk])
+                    P, _, F = f0.shape
+                    z0 = (f0.view(P, N // C, C, F) - f0.view(P, N // C, C, F).mean(1, keepdim=True)).reshape(P, N, F)
+                    S0 = z0.transpose(1, 2) @ z0 / N
+                    d0 = torch.diagonal(S0, dim1=-2, dim2=-1)
+                    tr_S2, tr2_S, tr_SS = (d0 ** 2).sum(-1), d0.sum(-1) ** 2, (S0 * S0).sum((-2, -1))
+                    rhos.append(torch.clip((tr_SS + tr2_S - 2 * tr_S2) / ((N + 1) * (tr_SS - tr_S2)), 0, 1))
+                self.robust_rho[key] = torch.cat(rhos).view(-1, 1, 1)
+                del xp0
+        rho = self.robust_rho[key]
+        xp_leaf = xp_full.detach().requires_grad_(True)
+        g_xp = torch.zeros_like(xp_leaf)
+        val = 0.0
+        for i in range(0, bsp, self.robust_chunk):
+            with torch.enable_grad():
+                nll = self._robust_nll_feats(feats(xp_leaf[i:i + self.robust_chunk]), rho[i:i + self.robust_chunk],
+                                             int(self.robust), C)
+                (g,) = torch.autograd.grad(nll, xp_leaf)
+            g_xp += g
+            val += float(nll.detach().double())
+            del nll, g
+        (g_diff,) = torch.autograd.grad(xp_full, diff, grad_outputs=g_xp)
+        return val, g_diff
+
     def objective(self, x_disc, y, mu_sparse, mu_smooth):
-        if self.lite is not None:
+        if self.lite is not None or self.robust is not None:
             return self._objective(x_disc, y, mu_sparse, mu_smooth)
         if not self.fixed_rho:
             return self._objective(x_disc, y, mu_sparse, mu_smooth)
@@ -384,7 +455,13 @@ class MDREX:
                 nll = (self._lite_nll_spec if self.lite.get("spec") else self._lite_nll)(diff_leaf, y)
                 (grad_diff,) = torch.autograd.grad(nll, diff_leaf)
                 phi = float(nll.detach().double())
-            for term in ([] if self.lite is not None else self.exomild.all_terms):
+            if self.lite is None and self.robust is not None:
+                for k, term in enumerate(self.exomild.all_terms):
+                    v, g = self._robust_term(k, term, diff_leaf, y)
+                    grad_diff += g / n_terms
+                    phi += v / n_terms
+                    del g
+            for term in ([] if (self.lite is not None or self.robust is not None) else self.exomild.all_terms):
                 p = term.fit_params(diff_leaf, self.lbda)
                 ll = term.get_log_likelihood(diff_leaf, self.lbda, p)
                 phi_term = torch.sum(-ll) / n_terms
