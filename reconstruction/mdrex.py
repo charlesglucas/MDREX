@@ -218,6 +218,9 @@ class MDREX:
         # epsilon of the edge-preserving term sqrt(mean_c |grad x|^2 + eps^2) (absolute, in units of x): l2 (quadratic)
         # regime for |grad x| << eps, l1 (TV) regime for |grad x| >> eps
         self.tv_eps = 1e-6
+        # "REXPACO-lite" data term instead of the ExoMILD terms (None: MD-REX): dict(patch=9, stride=4), see _lite_nll
+        self.lite = None
+        self.lite_rho = {}
 
         # SURE handlers
         self.to_patches = None
@@ -246,7 +249,48 @@ class MDREX:
             torch.cuda.empty_cache()
         return self.rho_cache[key]
 
+    def _lite_patches(self, x):
+        """(1, C, T, H, W) -> (L, C, T, K) wavelength-aligned patches of size lite["patch"], stride lite["stride"]."""
+        p, st = self.lite["patch"], self.lite["stride"]
+        if self.to_patches is None:
+            self.to_patches = PatchesHandler()
+        z = self.to_patches.wavelength_align(x, self.lbda)           # (1, C, T, H, W)
+        _, C, T, H, W = z.shape
+        q = F.unfold(z.reshape(C * T, 1, H, W), kernel_size=p, stride=st)   # (C*T, K, L)
+        return q.view(C, T, p * p, -1).permute(3, 0, 1, 2)          # (L, C, T, K)
+
+    def _lite_nll(self, diff, y):
+        """REXPACO-lite data term: one Gaussian per patch (no learned projection), mean per channel constant in time,
+        spatial covariance shared by the two channels (samples = frames x channels) shrunk towards its diagonal with
+        the coefficient rho fixed on the data y (Algorithm 1). Means and covariances are re-estimated on diff = y - A x
+        and differentiated (as the ExoMILD terms). Returns sum over patches and samples of 1/2 (z^T C^-1 z + log|C|)."""
+        q = self._lite_patches(diff)
+        q = q - q.mean(dim=2, keepdim=True)
+        L, C, T, K = q.shape
+        q = q.reshape(L, C * T, K)
+        N = C * T
+        S = q.transpose(1, 2) @ q / N
+        d = torch.diagonal(S, dim1=-2, dim2=-1)
+        key = self._data_key(y)
+        if key not in self.lite_rho:
+            with torch.no_grad():
+                q0 = self._lite_patches(y.to(self.dtype))
+                q0 = (q0 - q0.mean(dim=2, keepdim=True)).reshape(L, N, K)
+                S0 = q0.transpose(1, 2) @ q0 / N
+                d0 = torch.diagonal(S0, dim1=-2, dim2=-1)
+                tr_S2, tr2_S, tr_SS = (d0 ** 2).sum(-1), d0.sum(-1) ** 2, (S0 * S0).sum((-2, -1))
+                self.lite_rho = {key: torch.clip((tr_SS + tr2_S - 2 * tr_S2) / ((N + 1) * (tr_SS - tr_S2)), 0, 1).view(L, 1, 1)}
+        rho = self.lite_rho[key]
+        Ch = (1 - rho) * S + rho * torch.diag_embed(d)
+        Lc = torch.linalg.cholesky(Ch)
+        z = torch.cholesky_solve(q.transpose(1, 2), Lc)              # C^-1 q^T, (L, K, N)
+        maha = (q.transpose(1, 2) * z).sum()
+        logdet = 2 * torch.log(torch.diagonal(Lc, dim1=-2, dim2=-1)).sum()
+        return 0.5 * maha + 0.5 * N * logdet
+
     def objective(self, x_disc, y, mu_sparse, mu_smooth):
+        if self.lite is not None:
+            return self._objective(x_disc, y, mu_sparse, mu_smooth)
         if not self.fixed_rho:
             return self._objective(x_disc, y, mu_sparse, mu_smooth)
         store = self._fixed_rho(y)
@@ -274,7 +318,11 @@ class MDREX:
             n_terms = len(self.exomild.all_terms)
             phi = 0.0
             grad_diff = torch.zeros_like(diff_leaf)
-            for term in self.exomild.all_terms:
+            if self.lite is not None:
+                nll = self._lite_nll(diff_leaf, y)
+                (grad_diff,) = torch.autograd.grad(nll, diff_leaf)
+                phi = float(nll.detach().double())
+            for term in ([] if self.lite is not None else self.exomild.all_terms):
                 p = term.fit_params(diff_leaf, self.lbda)
                 ll = term.get_log_likelihood(diff_leaf, self.lbda, p)
                 phi_term = torch.sum(-ll) / n_terms

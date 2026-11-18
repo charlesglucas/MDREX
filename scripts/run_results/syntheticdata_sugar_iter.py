@@ -125,6 +125,9 @@ parser.add_argument("--gsure-eps", type=float, default=0.1, help="step of the GS
 parser.add_argument("--gsure-kappa", type=float, nargs="*", default=[1e-1, 1e-2, 1e-3, 1e-4],
                     help="tau / lambda_max(G) of the weight W = G (G + tau I)^-1")
 parser.add_argument("--gsure-cg", type=int, default=1000, help="maximum CG iterations of the (G + tau I) solves")
+parser.add_argument("--lite", type=int, nargs=2, default=None, metavar=("PATCH", "STRIDE"),
+                    help="REXPACO-lite data term (one Gaussian per PATCH x PATCH patch, stride STRIDE, no learned "
+                         "projection) instead of the ExoMILD terms; regularization, optimizer, SURE / SUGAR unchanged")
 parser.add_argument("--tv-eps", type=float, default=1e-6,
                     help="epsilon of the edge-preserving term (absolute; 1e-6 = value of all the series before 2026-11-18)")
 parser.add_argument("--bounds", type=float, nargs=4, default=[4, 10, 3, 9],
@@ -262,6 +265,9 @@ def main(cfg):
     mdrex = MDREX(y=y, rot=rot, psf=psf_crop, mask=mask, lbda=lbda, model_state=model_state, **cfg_model)
     mdrex.sparse_abs = args.abs_grad
     mdrex.tv_eps = args.tv_eps
+    if args.lite:
+        mdrex.lite = {"patch": args.lite[0], "stride": args.lite[1]}
+        print(f"[model] REXPACO-lite data term: patches {args.lite[0]} x {args.lite[0]}, stride {args.lite[1]}", flush=True)
 
     def mahalanobis_mse(x_gt, x_tensor_opt):
         residual_gt = y - mdrex.forward_model(x_gt)
