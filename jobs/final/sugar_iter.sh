@@ -22,7 +22,7 @@
 # EXTRA (env): additional options, e.g. EXTRA="--abs-grad" (gradient of sum|x| as run_bfgs) with TAG=sugariterabs.
 ROOT=/srv/storage/thoth1@storage4.grenoble.grid5000.fr/chalucas/codes/EXMILDPACO
 PY=$ROOT/.venv/bin/python
-P="cluster IN ('vercors10','vercors11','vercors12','vercors13')"
+P=${P:-"cluster IN ('vercors10','vercors11','vercors12','vercors13')"}   # P (env): other GPU nodes
 TAG=${TAG:-sugarimp}
 BASE="--angle 0 --hvp-step 1e-2 --normalize --rec-ftol 0 --rec-xtol 1e-10 --tag $TAG ${CKPT:+--ckpt $CKPT} $EXTRA"
 while [ $# -ge 4 ]; do
